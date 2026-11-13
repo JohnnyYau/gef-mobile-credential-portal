@@ -1,0 +1,23 @@
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environment (104 MB, rebuilt from requirements.txt)
+**/.venv/
+
+# Demo chain state + private keys + raw plaintext index
+# The chain auto-seeds on first startup; keys must never be published.
+verification-portal/data/
+
+# Demo video intermediates (keep final MP4 + posters)
+demo-media/narration.wav
+demo-media/clip*.mp4
+demo-media/concat.mp4
+demo-media/concat.txt
+demo-media/shots/
+
+# OS / editor
+Thumbs.db
+.DS_Store
+*.tmp

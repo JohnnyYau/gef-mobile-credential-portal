@@ -1,0 +1,44 @@
+# Render.com free-tier config — Week 3 deployment (updated: public verifier
+# mode + free-tier persistence notes).
+# Push the portal folder to a repo, then "New > Blueprint" with this file.
+# The Dockerfile installs CPU-only torch, keeping the image ~2 GB.
+services:
+  - type: web
+    name: gef26-verifier
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /healthz
+    healthCheckTimeout: 300
+    envVars:
+      # Deploy the verifier as a PUBLIC verifier: verification, student
+      # lookup, chat, log, status list, receipts — no admin endpoints, no
+      # admin UI. Issue/revoke stay in your private instance.
+      - key: PUBLIC_MODE
+        value: "1"
+      # Free instances have ephemeral storage: every restart wipes the chain
+      # unless you restore it. Two options:
+      #  (a) CHAIN_SNAPSHOT_URL — point at a scripts/backup_chain.py export
+      #      (upload the .tar.gz anywhere reachable). On boot with an empty
+      #      chain dir the app restores it. Refresh the export periodically so
+      #      recent issues survive restarts.
+      # - key: CHAIN_SNAPSHOT_URL
+      #   sync: false
+      #  (b) Paid instance + disk: mount /data and point CHAIN_DIR there.
+      # - key: CHAIN_DIR
+      #   value: /data/demo-chain
+      # disk:
+      #   name: chain-data
+      #   mountPath: /data
+      #   sizeGB: 1
+      - key: CHAIN_DIR
+        value: /opt/render/project/src/data/demo-chain
+      - key: SIGNER_ALGO
+        value: ML_DSA_65
+      # Public base URL (used in QR codes and verdict receipts). Set it to
+      # your deployed URL once assigned.
+      - key: PUBLIC_BASE_URL
+        sync: false
+      # Set this to enable LLM chat answers:
+      # - key: DEEPSEEK_API_KEY
+      #   sync: false

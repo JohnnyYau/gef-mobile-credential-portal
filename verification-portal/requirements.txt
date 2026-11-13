@@ -1,0 +1,25 @@
+# Credential verification portal (Week 1 + 2)
+fastapi>=0.116
+uvicorn[standard]>=0.30
+python-multipart>=0.0.9
+cryptography>=49
+jcs>=0.1.0
+pyyaml>=6.0
+
+# Week 2: RAG chat — embeddings + vector search.
+# Optional at runtime: without these, the portal falls back to a hashing
+# embedder + numpy search, so the chat still answers (lower retrieval quality).
+sentence-transformers>=3.0
+faiss-cpu>=1.9
+
+# Tests
+httpx>=0.27
+
+# Post-Week-3: QR codes (pure python). The /api/qr endpoint 503s with a clear
+# message if this is absent.
+qrcode>=7.4
+
+# Extras round 2: verifiable diploma PDFs + IsolationForest anomaly detection.
+reportlab>=4.0
+pypdf>=4.0
+scikit-learn>=1.3

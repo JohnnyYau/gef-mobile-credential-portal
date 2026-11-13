@@ -1,0 +1,9 @@
+# Runtime dependencies
+cryptography>=49
+jcs>=0.1.0
+pyyaml>=6.0
+
+# Only needed to (re)build / headlessly execute the demo notebooks
+nbformat>=5.7
+nbclient>=0.10
+ipykernel>=6
