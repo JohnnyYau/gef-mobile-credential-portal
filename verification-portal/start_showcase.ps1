@@ -106,7 +106,7 @@ if (-not $NoBrowser) {
 }
 
 # ---- 6. say whether the show is actually ready ------------------------------
-# Nine things that break silently (dead tunnel, drifted demo hashes, a QR that
+# Eleven things that break silently (dead tunnel, drifted demo hashes, a QR that
 # points at the wrong video, a preview file where the print file should be).
 # Green here means the booth is safe; red names the one thing to fix.
 Write-Host ""

@@ -165,6 +165,60 @@ def c_qr():
         f", missing {missing}" if missing else "")
 
 
+def c_poster_print():
+    """The A0 PDF has to survive a print shop, not just a screen.
+
+    Each of these has been wrong at least once: the page was a 2:3 image rather
+    than A0, one export left the bottom third blank because the CSS canvas was
+    smaller than the window, and a QR was small enough that a phone at arm's
+    length could not read it.
+    """
+    try:
+        import cv2
+        import numpy as np
+        from PIL import Image
+        import pypdf
+    except ImportError:
+        return False, "pypdf/PIL/opencv not installed"
+
+    pdf = ROOT / "P14-A0-Poster.pdf"
+    png = ROOT / "slides_work_v2" / "poster_assets" / "poster-a0-print.png"
+    if not pdf.exists() or not png.exists():
+        return False, "poster pdf or print png missing"
+
+    box = pypdf.PdfReader(str(pdf)).pages[0].mediabox
+    w_mm, h_mm = float(box.width) / 72 * 25.4, float(box.height) / 72 * 25.4
+    if abs(w_mm - 841) > 2 or abs(h_mm - 1189) > 2:
+        return False, f"page is {w_mm:.0f}x{h_mm:.0f} mm, not A0"
+
+    im = Image.open(png).convert("RGB")
+    px, py_ = im.size
+    dpi = px / (w_mm / 25.4)
+    if dpi < 140:
+        return False, f"only {dpi:.0f} dpi"
+
+    a = np.array(im)
+    ink = np.abs(a.astype(int) - np.array([247, 244, 236])).sum(axis=2) > 18
+    rows, cols = np.where(ink.any(axis=1))[0], np.where(ink.any(axis=0))[0]
+    mm = w_mm / px
+    margins = {"left": cols[0] * mm, "right": (px - 1 - cols[-1]) * mm,
+               "top": rows[0] * mm, "bottom": (py_ - 1 - rows[-1]) * mm}
+    bad = {k: round(v) for k, v in margins.items() if v < 8 or v > 120}
+    if bad:
+        return False, f"ink margins {bad} mm (8-120 expected)"
+
+    ok, decoded, pts, _ = cv2.QRCodeDetector().detectAndDecodeMulti(cv2.imread(str(png)))
+    got = [d for d in decoded if d] if ok else []
+    missing = [w for w in WANT_QR if not any(w in d for d in got)]
+    if missing:
+        return False, f"poster QR missing {missing}"
+    small = [round(float(np.linalg.norm(q[1] - q[0])) * mm) for q in pts]
+    if min(small) < 25:
+        return False, f"a QR is only {min(small)} mm across"
+    return True, (f"A0, {dpi:.0f} dpi, margins {min(margins.values()):.0f}-"
+                  f"{max(margins.values()):.0f} mm, QR {min(small)}-{max(small)} mm")
+
+
 def c_copy():
     out = subprocess.run([sys.executable, "scripts/to_traditional.py", "--check"],
                          cwd=PORTAL, capture_output=True, text=True)
@@ -205,6 +259,7 @@ def main() -> int:
     check("deliverables on disk", c_files)
     check("videos: no audio, sane length", c_videos)
     check("poster QR codes decode to the right URLs", c_qr)
+    check("A0 poster is print-ready", c_poster_print)
     check("served copy is Hong Kong Traditional", c_copy)
     check("submission zip is current", c_zip)
     if args.tests:
