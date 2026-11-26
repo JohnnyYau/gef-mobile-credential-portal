@@ -84,6 +84,16 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --no-proxy-headers   # http://127.0.0.1:8000
 ```
 
+> **The first chat question is slow, deliberately.** The AI assistant embeds
+> questions with `all-MiniLM-L6-v2` and builds its retrieval index lazily. On a
+> machine that has never run it, the first `/api/chat` call downloads the weights
+> before answering — measured at **52 s** from an empty cache. On a server that
+> has been up a while but has not answered a chat yet, the first call was **30 s**;
+> the next two were **379 ms** and **61 ms**. Verification, issuance and revocation
+> never touch the model, so the six checks stay in the tens of milliseconds even
+> during that first slow call. If you demo the chat tab, ask it one throwaway
+> question before the audience arrives.
+
 `--no-proxy-headers` is not optional. Uvicorn trusts `X-Forwarded-For` by
 default (from 127.0.0.1), rewriting the caller address before the app sees it —
 which defeats the app's own `TRUSTED_PROXIES` check, so a forged header picks

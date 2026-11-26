@@ -105,6 +105,19 @@ if (-not $NoBrowser) {
     Start-Process "http://127.0.0.1:$Port/showtime?token=$AdminToken"
 }
 
+# ---- 5b. warm the assistant -------------------------------------------------
+# The first /api/chat call loads MiniLM and builds its retrieval index: 30 s cold,
+# tens of milliseconds after. Paying that here means a judge who taps the chat tab
+# never watches a spinner.
+try {
+    $warm = @{ question = "warm up" } | ConvertTo-Json
+    $null = Invoke-WebRequest -UseBasicParsing -Method POST "http://127.0.0.1:$Port/api/chat" `
+        -ContentType "application/json" -Body $warm -TimeoutSec 180
+    Write-Host "  assistant warmed (first chat is normally ~30 s)" -ForegroundColor DarkGray
+} catch {
+    Write-Host "  assistant warm-up skipped: $($_.Exception.Message)" -ForegroundColor DarkYellow
+}
+
 # ---- 6. say whether the show is actually ready ------------------------------
 # Eleven things that break silently (dead tunnel, drifted demo hashes, a QR that
 # points at the wrong video, a preview file where the print file should be).
