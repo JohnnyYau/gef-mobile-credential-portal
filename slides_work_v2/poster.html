@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>A0 poster — GEF mobile P14</title>
+<style>
+  @page { size: 841mm 1189mm; margin: 0; }
+
+  :root {
+    --paper: #f7f4ec;
+    --ink: #1a1813;
+    --muted: #6b6656;
+    --line: #ddd6c4;
+    --teal: #0f766e;
+    --gold: #a16207;
+    --seal: #b3261e;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body { width: 3507px; height: 4961px; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 190px 200px 170px;
+  }
+
+  .serif { font-family: "SimSun", "Songti SC", "Source Han Serif SC", serif; }
+
+  /* ---------- header ---------- */
+  .head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding-bottom: 46px;
+    border-bottom: 4px solid var(--ink);
+  }
+
+  .brand-line { font-size: 62px; font-weight: 700; letter-spacing: .01em; }
+  .brand-sub { font-size: 40px; color: var(--muted); margin-top: 10px; letter-spacing: .04em; }
+  .head-right { text-align: right; font-size: 40px; color: var(--muted); line-height: 1.4; }
+
+  /* ---------- headline ---------- */
+  .title-block { margin-top: 54px; }
+
+  .eyebrow {
+    font-size: 34px;
+    letter-spacing: .32em;
+    color: var(--teal);
+    text-transform: uppercase;
+  }
+
+  h1 {
+    font-family: "SimSun", "Songti SC", serif;
+    font-size: 232px;
+    line-height: 1.02;
+    letter-spacing: .02em;
+    margin: 26px 0 0;
+    font-weight: 700;
+  }
+
+  .sub {
+    margin-top: 44px;
+    font-size: 66px;
+    line-height: 1.5;
+    color: var(--muted);
+    max-width: 3060px;
+  }
+
+  .sub b { color: var(--ink); font-weight: 600; }
+
+  .cta {
+    margin-top: 34px;
+    font-size: 44px;
+    color: var(--teal);
+    letter-spacing: .02em;
+  }
+
+  /* ---------- four steps ---------- */
+  .steps { display: flex; gap: 38px; margin-top: 96px; }
+
+  .step {
+    flex: 1;
+    border-top: 6px solid var(--teal);
+    padding-top: 26px;
+  }
+
+  .step .no { font-size: 40px; color: var(--teal); letter-spacing: .18em; }
+  .step .what { font-size: 62px; font-weight: 700; margin-top: 12px; }
+  .step .what span { display: block; font-size: 28px; font-weight: 400; letter-spacing: .26em; color: var(--muted); margin-top: 8px; }
+  .step p { font-size: 38px; line-height: 1.55; color: var(--muted); margin-top: 18px; }
+  .step .meta { font-size: 34px; color: var(--gold); margin-top: 18px; font-variant-numeric: tabular-nums; }
+
+  /* ---------- screenshots ---------- */
+  .proof { display: flex; gap: 60px; margin-top: 20px; }
+
+  .shot { flex: 1; }
+
+  .shot img {
+    width: 100%;
+    display: block;
+    border: 2px solid var(--line);
+    border-radius: 10px;
+  }
+
+  .shot h3 {
+    font-size: 44px;
+    font-weight: 700;
+    margin: 26px 0 12px;
+  }
+
+  .shot p { font-size: 34px; line-height: 1.5; color: var(--muted); }
+
+  /* ---------- stats ---------- */
+  .stats {
+    display: flex;
+    border-top: 2px solid var(--line);
+    border-bottom: 2px solid var(--line);
+    padding: 40px 0 36px;
+    margin-top: 24px;
+  }
+
+  .stat { flex: 1; }
+  .stat + .stat { border-left: 2px solid var(--line); padding-left: 60px; }
+  .stat .v { font-family: "SimSun", serif; font-size: 108px; line-height: 1; }
+  .stat .k { font-size: 32px; color: var(--muted); margin-top: 16px; letter-spacing: .08em; }
+
+  /* ---------- claims + qr ---------- */
+  .bottom { display: flex; gap: 90px; align-items: flex-start; margin-top: 10px; }
+
+  .claims { flex: 1; }
+  .claims h4 { font-size: 34px; letter-spacing: .3em; color: var(--teal); font-weight: 400; }
+  .claims ul { list-style: none; margin-top: 26px; }
+  .claims li {
+    font-size: 40px;
+    line-height: 1.5;
+    padding: 18px 0 18px 46px;
+    border-bottom: 2px solid var(--line);
+    position: relative;
+  }
+  .claims li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 34px;
+    width: 22px;
+    height: 22px;
+    background: var(--teal);
+  }
+
+  .codes { display: flex; gap: 70px; }
+
+  .code { width: 470px; text-align: center; }
+  .code img { width: 470px; height: 470px; display: block; }
+  .code .cap { font-size: 34px; margin-top: 20px; line-height: 1.4; }
+  .code .url {
+    font-size: 26px;
+    color: var(--muted);
+    margin-top: 10px;
+    word-break: break-all;
+    font-family: Consolas, monospace;
+  }
+
+  /* ---------- footer ---------- */
+  .foot {
+    border-top: 4px solid var(--ink);
+    padding-top: 34px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .foot .names { font-size: 40px; font-weight: 600; }
+  .foot .aff { font-size: 30px; color: var(--muted); line-height: 1.5; margin-top: 12px; max-width: 2200px; }
+  .foot .tag {
+    text-align: right;
+    font-size: 30px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+  <header class="head">
+    <div>
+      <div class="brand-line">GEF mobile</div>
+      <div class="brand-sub">Credential Verification Portal</div>
+    </div>
+    <div class="head-right">
+      P14 · GEF26<br>
+      November 2026
+    </div>
+  </header>
+
+  <section class="title-block">
+    <div class="eyebrow">post-quantum credentials, on a hash chain</div>
+    <h1>一張證書，四個步驟</h1>
+    <p class="sub">
+      紙本與 PDF 截圖誰都能改，學校網站又只給人看一張圖。我們讓每一張憑證都帶著
+      <b>機構的簽名</b>、一個<b>上鏈的編號</b>，和一句任何人都查得到的結論。
+    </p>
+    <p class="cta">簽發、驗證、註銷、再驗 —— 每一步都是一次真實的 API 調用，也是鏈上一條只可追加的記錄。</p>
+  </section>
+
+  <section class="steps">
+    <div class="step">
+      <div class="no">01</div>
+      <div class="what">簽發<span>ISSUING</span></div>
+      <p>機構以 ML-DSA-65 加 RSA-PSS 雙簽，寫入一個新的塊。</p>
+      <div class="meta">新的一個塊 · 16 ms</div>
+    </div>
+    <div class="step">
+      <div class="no">02</div>
+      <div class="what">驗證<span>VERIFYING</span></div>
+      <p>任何人拿驗證碼或 PDF，免註冊，六項檢查一次做完。</p>
+      <div class="meta">VALID · 10 ms</div>
+    </div>
+    <div class="step">
+      <div class="no">03</div>
+      <div class="what">註銷<span>REVOKING</span></div>
+      <p>追加一條撤銷記錄；PDF 不重簽，簽名本身仍然有效。</p>
+      <div class="meta">撤銷塊 · 10 ms</div>
+    </div>
+    <div class="step">
+      <div class="no">04</div>
+      <div class="what">再驗<span>RE-CHECKING</span></div>
+      <p>簽名與哈希仍然對得上，但機構說它作廢了 —— 這就是區別。</p>
+      <div class="meta">REVOKED · 10 ms</div>
+    </div>
+  </section>
+
+  <section class="proof">
+    <div class="shot">
+      <img src="./poster_assets/shot-verify.png" alt="驗證頁">
+      <h3>驗證頁：一句結論，四行過程</h3>
+      <p>結論下面直接寫出取回第幾塊、簽發時間、驗簽結果、哈希比對、撤銷名單，
+         最後一行是整條鏈的完整性與這次查驗的真實耗時。</p>
+    </div>
+    <div class="shot">
+      <img src="./poster_assets/shot-stage.png" alt="舞台頁">
+      <h3>舞台頁：四步各自留下收據</h3>
+      <p>每一步跑完就在卡片上寫下塊號與毫秒數；跑完停在「↩ 已註銷」，
+         二維碼指向同一張證書，觀眾可以立刻用手機驗。</p>
+    </div>
+  </section>
+
+  <section class="stats">
+    <div class="stat"><div class="v">6</div><div class="k">檢查項 CHECKS</div></div>
+    <div class="stat"><div class="v">2</div><div class="k">簽名方 SIGNERS</div></div>
+    <div class="stat"><div class="v">SHA3-512</div><div class="k">鏈上哈希 ALGO</div></div>
+    <div class="stat"><div class="v">23</div><div class="k">鏈上塊數 BLOCKS</div></div>
+  </section>
+
+  <section class="bottom">
+    <div class="claims">
+      <h4>三件我們不妥協的事</h4>
+      <ul>
+        <li>鏈上只存哈希與簽名，姓名與成績永遠不觸鏈。</li>
+        <li>憑證 PDF 內嵌署名的載荷，沒有網絡也能驗。</li>
+        <li>撤銷走簽名的狀態列表，不是把文件重簽一次。</li>
+      </ul>
+    </div>
+    <div class="codes">
+      <div class="code">
+        <img src="./poster_assets/qr-youtube.png" alt="QR：示範影片">
+        <div class="cap">掃碼看 2 分鐘演示</div>
+        <div class="url">youtu.be/nVgevH43FYA</div>
+      </div>
+      <div class="code">
+        <img src="./poster_assets/qr-github.png" alt="QR：源碼">
+        <div class="cap">掃碼看源碼</div>
+        <div class="url">github.com/JohnnyYau/gef-mobile-credential-portal</div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <div>
+      <div class="names">Yau Ka Chai Johnny · Yu Siu Kui · Yu Yeuk Lan Serena</div>
+      <div class="aff">
+        Hong Kong Baptist University Affiliated School Wong Kam Fai Secondary and Primary School ·
+        HKSYC&amp;IA Wong Tai Shan Memorial College ·
+        Baptist Lui Ming Choi Secondary School
+      </div>
+    </div>
+    <div class="tag">
+      Mobile Credential Verification Portal<br>
+      FastAPI · Python · ML-DSA-65 · SHA3-512
+    </div>
+  </footer>
+
+</body>
+</html>

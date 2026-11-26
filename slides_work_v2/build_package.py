@@ -37,6 +37,8 @@ PII_KEYS = (b'"DOB"', b'"Email"', b'"Name"', b'"MobileNo"', b'"Sex"')
 # Explicit extras that sit outside verification-portal/
 EXTRAS = [
     "P14_Learning_Summary.docx",
+    "P14-A0-Poster.pptx",
+    "P14-A0-Poster-preview.png",
     "USAGE.md",
     "CODE_WALKTHROUGH.md",
     "demo-media",
