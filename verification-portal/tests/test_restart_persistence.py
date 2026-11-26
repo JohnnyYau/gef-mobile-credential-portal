@@ -26,9 +26,18 @@ BASE = f"http://127.0.0.1:{PORT}"
 ROOT = Path(__file__).resolve().parent.parent
 
 
-def _wait_ready(base: str, timeout: float = 30.0) -> bool:
+def _wait_ready(base: str, timeout: float = 30.0, proc=None) -> bool:
+    """Poll /healthz until the server answers — or the process dies first.
+
+    U23b: the previous version only knew "not ready yet", so a server that
+    failed to boot (port taken, import error, missing env) burned the full
+    timeout and then reported nothing. `proc` lets a dead process fail fast,
+    and `_server_log_tail()` says why.
+    """
     deadline = time.time() + timeout
     while time.time() < deadline:
+        if proc is not None and proc.poll() is not None:
+            return False  # the server exited; waiting longer cannot help
         try:
             with urllib.request.urlopen(base + "/healthz", timeout=2) as resp:
                 if resp.status == 200:
@@ -38,12 +47,26 @@ def _wait_ready(base: str, timeout: float = 30.0) -> bool:
     return False
 
 
+_LOG = Path(tempfile.gettempdir()) / "portal-restart-test.log"
+
+
+def _server_log_tail(lines: int = 8) -> str:
+    """The last few lines the spawned uvicorn wrote — empty only if never ran."""
+    try:
+        text = _LOG.read_text(encoding="utf-8", errors="replace").strip()
+    except OSError:
+        return ""
+    tail = text.splitlines()[-lines:]
+    return " | ".join(tail) if tail else ""
+
+
 def _spawn(env: dict) -> subprocess.Popen:
+    log = open(_LOG, "w", encoding="utf-8")  # noqa: SIM115 — lives as long as the server
     return subprocess.Popen(
         [sys.executable, "-m", "uvicorn", "app.main:app",
          "--host", "127.0.0.1", "--port", str(PORT)],
         cwd=ROOT, env={**os.environ, **env},
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        stdout=log, stderr=subprocess.STDOUT)
 
 
 def _issue_via_api() -> str:
@@ -67,13 +90,30 @@ def _issue_via_api() -> str:
 @unittest.skipUnless(shutil.which("uvicorn") or True, "uvicorn required")
 class RestartPersistenceTest(unittest.TestCase):
 
+    def _assert_ready(self, server, what: str = "server did not become ready"):
+        log = _server_log_tail()
+        self.assertTrue(_wait_ready(BASE, proc=server),
+                        what + ("\n--- uvicorn said:\n" + log if log else ""))
+
+    def test_dead_server_does_not_burn_the_timeout(self):
+        """A process that already exited must fail at once, not after 30 s."""
+        proc = subprocess.Popen([sys.executable, "-c", "raise SystemExit(3)"])
+        try:
+            proc.wait(timeout=10)
+            started = time.time()
+            self.assertFalse(_wait_ready("http://127.0.0.1:9/", timeout=5, proc=proc))
+            self.assertLess(time.time() - started, 2.0,
+                            "a dead server must not wait out the full timeout")
+        finally:
+            proc.kill()
+
     def test_issue_survives_restart(self):
         with tempfile.TemporaryDirectory() as tmp:
             chain_dir = Path(tmp) / "chain"
             env = {"CHAIN_DIR": str(chain_dir), "PUBLIC_MODE": "0"}
             server = _spawn(env)
             try:
-                self.assertTrue(_wait_ready(BASE), "server did not become ready")
+                self._assert_ready(server)
                 h = _issue_via_api()
             finally:
                 server.terminate()
@@ -82,7 +122,7 @@ class RestartPersistenceTest(unittest.TestCase):
             # restart against the same CHAIN_DIR
             server = _spawn(env)
             try:
-                self.assertTrue(_wait_ready(BASE), "server did not restart")
+                self._assert_ready(server, "server did not restart")
                 with urllib.request.urlopen(BASE + "/api/verify/" + h, timeout=10) as resp:
                     verdict = json.loads(resp.read())["verdict"]
                 self.assertIn("VALID", verdict)
@@ -100,7 +140,7 @@ class RestartPersistenceTest(unittest.TestCase):
             env = {"CHAIN_DIR": str(src_chain), "PUBLIC_MODE": "0"}
             server = _spawn(env)
             try:
-                self.assertTrue(_wait_ready(BASE))
+                self._assert_ready(server)
             finally:
                 server.terminate()
                 server.wait(timeout=10)
@@ -124,7 +164,7 @@ class RestartPersistenceTest(unittest.TestCase):
                            "PUBLIC_MODE": "0"}
                     server = _spawn(env)
                     try:
-                        self.assertTrue(_wait_ready(BASE))
+                        self._assert_ready(server)
                         with urllib.request.urlopen(BASE + "/healthz", timeout=10) as resp:
                             info = json.loads(resp.read())
                         self.assertEqual(info["height"], src_height(src_chain))

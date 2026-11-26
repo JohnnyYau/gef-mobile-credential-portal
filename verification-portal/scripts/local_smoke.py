@@ -6,7 +6,6 @@ Usage:
 
 Each phase runs in a fresh process so PUBLIC_MODE is evaluated at import time.
 """
-import json
 import os
 import sys
 import tempfile
@@ -18,9 +17,9 @@ PHASE = sys.argv[1] if len(sys.argv) > 1 else "public"
 os.environ["CHAIN_DIR"] = tempfile.mkdtemp(prefix="gef26-smoke-")
 os.environ["PUBLIC_MODE"] = "0" if PHASE == "private" else "1"
 
-from fastapi.testclient import TestClient  # noqa: E402
 from app import chain_service  # noqa: E402
 from app.main import app  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
 
 client = TestClient(app)
 fails = []

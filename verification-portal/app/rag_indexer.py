@@ -4,8 +4,14 @@ Corpus entries: one chain-info record, one per block (heights >= 1), and one
 per raw credential JSON stored under ``<chain>/rawjsondocs/<hash>.json``.
 Embeddings live in a FAISS IndexFlatIP (cosine over L2-normalised vectors).
 The index rebuilds lazily whenever the chain changes (height or file mtimes).
+
+Batch U5.1: the version stamp is a content digest rather than a max-mtime,
+embeddings are cached on disk keyed by (stamp, backend, dim), the exact/vector
+fusion is a standalone function, and an optional lexical reranker can reorder
+vector candidates. Reranking is off by default — see ``RERANK_ENABLED``.
 """
 
+import hashlib
 import json
 import os
 import re
@@ -18,6 +24,14 @@ from .config import CHAIN_DIR
 from .rag_embedder import Embedder
 
 HASH_TOKEN_RE = re.compile(r"[A-Za-z0-9_-]{40,}")
+TOKEN_RE = re.compile(r"[a-z0-9]+")
+
+# Lexical reranking is a reorder-only stage: it never adds or drops candidates.
+# Enabled by default because it measurably improved recall@6 (0.8 -> 1.0) and
+# MRR (0.567 -> 0.653) on the golden set while a wider candidate window alone
+# changed nothing — see docs/U5.1_retrieval.md. Set RAG_RERANK=0 to disable.
+RERANK_ENABLED = os.environ.get("RAG_RERANK", "1") != "0"
+RERANK_WEIGHT = 0.25
 
 
 # --------------------------------------------------------------------------
@@ -34,10 +48,9 @@ def credential_entry(document, hashed_document):
     parts = [
         f"Credential of {person_name}" if person_name else "Credential",
         f"student ID {pp.get('StudentID')}" if pp.get("StudentID") else "",
-        f"date of birth {pp.get('DOB')}" if pp.get("DOB") else "",
         f"sex {pp.get('Sex')}" if pp.get("Sex") else "",
         f"degree {ai.get('DegreeName')}" if ai.get("DegreeName") else "",
-        (f"courses: "
+        ("courses: "
          + ", ".join(str(c.get("CourseDescr", "")) for c in ai.get("Courses", [])))
         if ai.get("Courses") else "",
         f"GPA {ai.get('GPA')}" if ai.get("GPA") else "",
@@ -127,6 +140,80 @@ def build_corpus(chain):
     return entries
 
 
+def _stamp_digest(chain) -> tuple:
+    """(height, digest) describing the chain's retrieval-relevant content.
+
+    A content digest beats a max-mtime: two writes inside the same mtime tick
+    (common on FAT/NTFS at second granularity) would otherwise look unchanged
+    and the index would keep serving the old corpus.
+    """
+    h = hashlib.sha256()
+    info_path = os.path.join(chain, "info.yaml")
+    if os.path.exists(info_path):
+        h.update(f"info:{os.path.getmtime(info_path):.6f}".encode())
+    for directory in ("blocks", "rawjsondocs"):
+        path = os.path.join(chain, directory)
+        if not os.path.isdir(path):
+            continue
+        h.update(directory.encode())
+        for name in sorted(os.listdir(path)):
+            full = os.path.join(path, name)
+            try:
+                st = os.stat(full)
+            except OSError:
+                continue
+            h.update(f"{name}:{st.st_mtime_ns}:{st.st_size}".encode())
+    return blockchain_util.last_height(chain), h.hexdigest()[:32]
+
+
+def cache_path(chain, backend: str, dim: int) -> str:
+    """Embedding cache beside the chain dir, not inside it.
+
+    Keeping it out of the chain directory matters: anything dropped into
+    ``blocks/`` or ``rawjsondocs/`` would change the corpus and the stamp.
+    """
+    parent = os.path.dirname(os.path.abspath(chain))
+    name = os.path.basename(os.path.abspath(chain))
+    safe_backend = re.sub(r"[^A-Za-z0-9_.-]", "_", backend)
+    return os.path.join(parent, "rag-cache", f"{name}-{safe_backend}-{dim}.npz")
+
+
+def load_cached_vectors(path: str, stamp: tuple, entry_ids: list) -> np.ndarray | None:
+    """Vectors from a matching cache file, or None (never raise)."""
+    try:
+        with np.load(path, allow_pickle=False) as data:
+            vectors = data["vectors"]
+            meta = json.loads(str(data["meta"][0]))
+    except (OSError, ValueError, KeyError, IndexError):
+        return None
+    if meta.get("stamp") != list(stamp) or meta.get("entry_ids") != entry_ids:
+        return None
+    if vectors.shape[0] != len(entry_ids):
+        return None
+    return vectors
+
+
+def save_vectors(path: str, vectors: np.ndarray, stamp: tuple,
+                 entry_ids: list, backend: str, dim: int) -> bool:
+    """Write the cache atomically; a failure only costs a rebuild later.
+
+    The temp name must end in ``.npz`` because ``np.savez`` appends that
+    suffix to anything else — writing ``x.npz.tmp`` silently produces
+    ``x.npz.tmp.npz`` and the rename then fails, so the cache would never be
+    written at all.
+    """
+    meta = json.dumps({"stamp": list(stamp), "entry_ids": entry_ids,
+                       "backend": backend, "dim": dim})
+    tmp = path[:-4] + ".tmp.npz" if path.endswith(".npz") else path + ".tmp.npz"
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        np.savez(tmp, vectors=vectors, meta=np.array([meta]))
+        os.replace(tmp, path)
+        return True
+    except (OSError, ValueError):
+        return False
+
+
 # --------------------------------------------------------------------------
 # Index
 # --------------------------------------------------------------------------
@@ -144,30 +231,18 @@ class RagIndex:
     # -- lifecycle ---------------------------------------------------------
 
     def _current_stamp(self):
-        chain = str(CHAIN_DIR)
-        stamps = []
-        info_path = os.path.join(chain, "info.yaml")
-        if os.path.exists(info_path):
-            stamps.append(os.path.getmtime(info_path))
-        for directory in ("blocks", "rawjsondocs"):
-            path = os.path.join(chain, directory)
-            if os.path.isdir(path):
-                stamps.extend(
-                    os.path.getmtime(os.path.join(path, name)) for name in os.listdir(path)
-                )
-        return (blockchain_util.last_height(str(CHAIN_DIR)), max(stamps) if stamps else 0)
+        return _stamp_digest(str(CHAIN_DIR))
 
     def ensure_ready(self):
         with self._lock:
             stamp = self._current_stamp()
             if stamp == self._stamp and self._index is not None:
                 return
-            self._rebuild()
+            self._rebuild(stamp)
 
-    def _rebuild(self):
+    def _rebuild(self, stamp=None):
         chain = str(CHAIN_DIR)
         entries = build_corpus(chain)
-        embedder = Embedder()
         if not entries:
             entries = [{
                 "id": "chain:info", "kind": "chain",
@@ -175,7 +250,18 @@ class RagIndex:
                 "meta": {},
             }]
         texts = [e["text"] for e in entries]
-        vectors = embedder.encode(texts)
+        entry_ids = [e["id"] for e in entries]
+        embedder = Embedder()
+        stamp = stamp or self._current_stamp()
+
+        cache = cache_path(chain, embedder.backend, embedder.dim)
+        vectors = load_cached_vectors(cache, stamp, entry_ids)
+        self._cache_state = "hit" if vectors is not None else "built"
+        if vectors is None:
+            vectors = embedder.encode(texts)
+            if save_vectors(cache, vectors, stamp, entry_ids,
+                            embedder.backend, embedder.dim):
+                self._cache_state = "built+saved"
 
         self._entries = entries
         self._vectors = vectors
@@ -185,7 +271,7 @@ class RagIndex:
             e["hashed_document"]: e
             for e in entries if e.get("hashed_document")
         }
-        self._stamp = self._current_stamp()
+        self._stamp = stamp
 
     @staticmethod
     def _build_vector_index(vectors, dim):
@@ -203,25 +289,25 @@ class RagIndex:
 
     def search(self, query, k=6):
         self.ensure_ready()
-        results = []
 
         # 1. exact hash hit (highest confidence, no embedding needed)
+        exact = []
         for token in HASH_TOKEN_RE.findall(query or ""):
             entry = self._by_hash.get(token)
             if entry is not None:
-                results.append(self._view(entry, 1.0))
+                exact.append(self._view(entry, 1.0))
                 break
 
-        # 2. vector search
+        # 2. vector search (candidates, not yet fused)
         vector = self._embedder.encode([query])[0]
-        scores = self._vector_search(vector, k)
-        for score, idx in scores:
-            entry = self._entries[int(idx)]
-            view = self._view(entry, float(score))
-            if not any(v["id"] == view["id"] for v in results):
-                results.append(view)
+        hits = self._vector_search(vector, max(k, k * 2 if RERANK_ENABLED else k))
+        candidates = [(float(score), self._entries[int(idx)])
+                      for score, idx in hits]
+        if RERANK_ENABLED:
+            candidates = rerank(query, candidates, RERANK_WEIGHT)
+        vector_views = [self._view(entry, score) for score, entry in candidates]
 
-        return results[:k]
+        return fuse_exact_and_vector(exact, vector_views, k)
 
     def _vector_search(self, vector, k):
         if self._index is not None:
@@ -240,6 +326,9 @@ class RagIndex:
             "entries": len(self._entries),
             "embedder": self._embedder.backend,
             "dim": self._embedder.dim,
+            "cache": getattr(self, "_cache_state", "unknown"),
+            "rerank": RERANK_ENABLED,
+            "stamp": list(self._stamp) if self._stamp else None,
         }
 
     @staticmethod
@@ -255,6 +344,46 @@ class RagIndex:
             if entry.get(key):
                 view[key] = entry[key]
         return view
+
+
+def fuse_exact_and_vector(exact, vector_views, k):
+    """Merge the exact-hit list with vector candidates (batch U5.1).
+
+    The exact hit always stays first: a hash the query literally contains is a
+    stronger signal than any similarity score. Duplicates are dropped by id so
+    the same credential cannot occupy two slots.
+    """
+    merged = list(exact)
+    seen = {m["id"] for m in merged}
+    for view in vector_views:
+        if view["id"] in seen:
+            continue
+        merged.append(view)
+        seen.add(view["id"])
+    return merged[:k]
+
+
+def lexical_overlap(query: str, text: str) -> float:
+    """Fraction of query tokens present in the text (0..1)."""
+    q = {t for t in TOKEN_RE.findall((query or "").lower()) if len(t) > 1}
+    if not q:
+        return 0.0
+    d = {t for t in TOKEN_RE.findall((text or "").lower()) if len(t) > 1}
+    return len(q & d) / len(q)
+
+
+def rerank(query, candidates, weight=RERANK_WEIGHT):
+    """Reorder candidates by score + lexical overlap. Never adds or drops.
+
+    ``candidates`` is a list of (score, entry). Reordering only means the fused
+    list can improve without changing recall of the candidate set.
+    """
+    reranked = []
+    for score, entry in candidates:
+        bonus = lexical_overlap(query, entry.get("text", ""))
+        reranked.append((score + weight * bonus, entry))
+    reranked.sort(key=lambda item: item[0], reverse=True)
+    return reranked
 
 
 _index_singleton = None

@@ -21,3 +21,10 @@ demo-media/shots/
 Thumbs.db
 .DS_Store
 *.tmp
+
+# RAG vector cache (rebuildable, versioned by chain stamp)
+**/rag-cache/
+
+# Build output and transient runtime files
+P14-Mobile-Credential-Verification-Portal.zip
+verification-portal/showcase-url.txt

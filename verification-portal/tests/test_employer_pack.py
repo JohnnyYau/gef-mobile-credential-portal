@@ -8,15 +8,15 @@ order-independent within the shared unittest process.
 
 import importlib
 import os
-import tempfile
 import unittest
 
 from fastapi.testclient import TestClient
 
+from tests._bootstrap import isolated_chain_dir
+
 
 def setUpModule():
-    os.environ["CHAIN_DIR"] = os.path.join(
-        tempfile.mkdtemp(prefix="gef26-emp-"), "chain")
+    isolated_chain_dir(prefix="gef26-emp-")
     os.environ.pop("PUBLIC_MODE", None)
     import app.config as cfg_mod
     importlib.reload(cfg_mod)
@@ -81,11 +81,29 @@ class EmployerPackTest(unittest.TestCase):
         self.assertEqual(resp.status_code, 422)
 
     def test_statuslist_signed_and_stable(self):
+        from cryptography.hazmat.primitives import serialization
+
+        from app import crypto_util
+
         payload, etag = statuslist.build(force=True)
-        self.assertEqual(payload["schema"], "gef26.statuslist.v1")
-        self.assertIn("signature", payload)
-        self.assertEqual(payload["signature"]["algo"], "ML_DSA_65")
-        self.assertEqual(payload["signature"]["signer"], "UNIVERSITY OF UTOPIA")
+        self.assertEqual(payload["schema"], "gef26.statuslist.v2")
+        sig = payload["signature"]
+        self.assertEqual(sig["algo"], "ML_DSA_65")
+        # U17: v1 carried no nonce, so the signature could not be recomputed by
+        # anyone — and it stamped SIGNER_NAME from config, which keeps naming the
+        # first signer after a rotation.
+        self.assertTrue(sig["nonce"])
+        self.assertIn("sha256fgpt", sig)
+        names = {s["sha256fgpt"]: s["name"]
+                 for s in chain_service.list_signers()["signers"]}
+        self.assertEqual(sig["signer"], names[sig["sha256fgpt"]])
+
+        body = {k: v for k, v in payload.items() if k != "signature"}
+        entry = next(s for s in chain_service.public_keys()["signers"]
+                     if s["sha256fgpt"] == sig["sha256fgpt"])
+        pub = serialization.load_pem_public_key(entry["pubkey_pem"].encode())
+        self.assertTrue(crypto_util.verify_ds(body, sig["algo"], pub, sig["value"],
+                                              sig["nonce"], "sha3_512"))
         # digest is stable while the chain does not change
         payload2, etag2 = statuslist.build()
         self.assertEqual(etag, etag2)

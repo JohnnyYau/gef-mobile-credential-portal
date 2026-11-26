@@ -11,17 +11,17 @@ process with the other suites.
 
 import importlib
 import os
-import tempfile
 import unittest
 
 from fastapi.testclient import TestClient
+
+from tests._bootstrap import isolated_chain_dir
 
 
 def setUpModule():
     os.environ["PUBLIC_MODE"] = "1"
     os.environ["APP_VERSION"] = "6.0.0"
-    os.environ["CHAIN_DIR"] = os.path.join(
-        tempfile.mkdtemp(prefix="gef26-pub-"), "chain")
+    isolated_chain_dir(prefix="gef26-pub-")
     import app.config as cfg_mod
     importlib.reload(cfg_mod)          # re-evaluate PUBLIC_MODE from env
     import app.chain_service as cs_mod

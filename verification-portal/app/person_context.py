@@ -2,11 +2,14 @@
 keep lightweight per-session memory so follow-ups ("what degree does he hold?")
 stay anchored to the same person.
 
-Privacy rules (hard):
-- Profiles returned to the API are MASKED: StudentID is truncated (2200****)
-  and DOB is never included, ever.
+Privacy rules (batch U5.3: enforced by app/privacy.py, not by convention):
+- Profiles returned to the API are MASKED: fields come only from
+  ``PRIVACY.fields(section)``; StudentID keeps a 4-char prefix; DOB and the
+  other ``NEVER_DISCLOSE`` keys cannot reach a profile at all.
 - The chain itself stores hashes only; this module reads the issuer-side
   rawjsondocs index (the same source the RAG corpus is built from).
+
+Session memory lives behind ``app/session_store.py`` (replaceable backend).
 """
 
 import json
@@ -14,9 +17,10 @@ import os
 import re
 
 from .config import CHAIN_DIR
+from .privacy import PRIVACY
+from .session_store import open_session_store
 
-_SESSION_LIMIT = 200
-_sessions = {}  # session_id -> {"person": {...}, "name": str}
+_sessions = open_session_store()  # session_id -> {"person": {...}, "name": str}
 
 _ID_RE = re.compile(r"\b(\d{8})\b")
 _ANAPHORA_RE = re.compile(
@@ -51,22 +55,20 @@ def _verdict(hashed_document):
         heights = (v.get("status") or {}).get("issue_heights") or []
         return {"verdict": v.get("verdict", "UNKNOWN"),
                 "issued_height": heights[-1] if heights else None}
-    except Exception:
+    except (OSError, ValueError, KeyError, RuntimeError):
         return {"verdict": "UNKNOWN", "issued_height": None}
 
 
 def _profile(entry):
     d = entry["document"]
-    pp = d.get("PersonalParticulars", {})
-    ac = d.get("AcademicInfo", {})
-    di = d.get("DocumentInfo", {})
-    sid = str(pp.get("StudentID", ""))
-    masked = (sid[:4] + "****") if len(sid) == 8 else ("****" if sid else "")
+    pp = PRIVACY.build("PersonalParticulars", d.get("PersonalParticulars", {}))
+    ac = PRIVACY.build("AcademicInfo", d.get("AcademicInfo", {}))
+    di = PRIVACY.build("DocumentInfo", d.get("DocumentInfo", {}))
     v = _verdict(entry["hashed_document"])
-    return {
+    profile = {
         "name": f"{pp.get('Surname', '')} {pp.get('GivenNames', '')}".strip(),
         "surname": str(pp.get("Surname", "")),
-        "student_id_masked": masked,
+        "student_id_masked": PRIVACY.mask_student_id(pp.get("StudentID", "")),
         "credential": {
             "doc_type": str(di.get("DocType", "")),
             "degree": str(ac.get("DegreeName", "")),
@@ -82,6 +84,9 @@ def _profile(entry):
         "hash_prefix": entry["hashed_document"][:12],
         "hashed_document": entry["hashed_document"],  # public on-chain id (QR/verify use it)
     }
+    # Cheap last line of defence: build() should already make this impossible.
+    PRIVACY.assert_clean(profile, label=f"profile:{entry['hashed_document'][:12]}")
+    return profile
 
 
 def resolve_person(question):
@@ -118,18 +123,19 @@ def resolve_person(question):
 def remember(session_id, person):
     if not session_id or not person:
         return
-    if len(_sessions) >= _SESSION_LIMIT:
-        _sessions.pop(next(iter(_sessions)))
-    _sessions[session_id] = {"person": person, "name": person["name"]}
+    _sessions.set(session_id, {"person": person, "name": person["name"]})
 
 
 def context_person(session_id, question):
     """Return the remembered person when the question refers to them
     anaphorically ("he", "his degree", "this student"), else None."""
-    if not session_id or session_id not in _sessions:
+    if not session_id:
+        return None
+    entry = _sessions.get(session_id)
+    if entry is None:
         return None
     if _ANAPHORA_RE.search(question or ""):
-        return _sessions[session_id]["person"]
+        return entry["person"]
     return None
 
 

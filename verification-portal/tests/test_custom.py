@@ -6,17 +6,16 @@ generated PDF/JSON land in a temp folder, never in the user's project dir.
 
 import json
 import os
-import tempfile
 import unittest
 
-_TMP = tempfile.mkdtemp(prefix="portal-custom-test-")
-os.environ["CHAIN_DIR"] = os.path.join(_TMP, "test-chain")
-os.environ["CUSTOM_OUTPUT_DIR"] = os.path.join(_TMP, "custom-out")
+from tests._bootstrap import isolated_chain_dir
 
-from fastapi.testclient import TestClient  # noqa: E402
+_TMP = isolated_chain_dir(prefix="portal-custom-test-")
+os.environ["CUSTOM_OUTPUT_DIR"] = os.path.join(_TMP, "custom-out")
 
 import app.main as main  # noqa: E402
 from app import chain_service, custom_service  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
 
 
 class CustomTestCase(unittest.TestCase):

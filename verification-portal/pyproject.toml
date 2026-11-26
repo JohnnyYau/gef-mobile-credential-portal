@@ -1,0 +1,44 @@
+[project]
+name = "gef-mobile-portal"
+version = "6.0.0"
+description = "QuantumGuard / GEF Mobile post-quantum credential verification portal"
+requires-python = ">=3.12"
+
+# ---------------------------------------------------------------------------
+# Test runner configuration (pytest can also run the existing unittest cases;
+# the project keeps scripts/run_all_tests.py as the subprocess-per-module runner).
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+
+# ---------------------------------------------------------------------------
+# Ruff: lint + format. Baseline ruleset kept deliberately small in U0; tighten
+# ignored rules in later batches.
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["app", "tests", "scripts"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "Q"]
+# E501 (line too long) is enforced by the formatter, not the linter, in U0.
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B011"]
+
+# ---------------------------------------------------------------------------
+# Mypy: relaxed baseline in U0. `check_untyped_defs` stays off until the U0.3
+# annotation pass raises coverage; errors are tracked per module afterwards.
+[tool.mypy]
+python_version = "3.12"
+files = ["app"]
+ignore_missing_imports = true
+warn_redundant_casts = true
+no_implicit_optional = true
+check_untyped_defs = false
+strict_equality = false

@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Credential Verification Portal · 凭证验证门户</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Cpath d='M9 22V10h9a4 4 0 0 1 0 8h-4v4zm4-7h4a1.5 1.5 0 0 0 0-3h-4z' fill='%23fff'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/static/css/portal.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="hero-inner">
+      <div>
+        <h1>凭证验证门户 <span style="font-weight:400;font-size:15px;color:#bfd8d8">Credential Verification Portal</span></h1>
+        <div class="sub">上传毕业证 / 成绩单，几秒钟出加密验证结果。无需钱包、无需节点、无需注册。</div>
+        <div class="badge" id="health">connecting&hellip;</div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="k">链高度 Chain height</div><div class="v" id="statHeight">—</div></div>
+        <div class="stat"><div class="k">可信签发方 Signers</div><div class="v" id="statSigners">—</div></div>
+        <div class="stat"><div class="k">验证次数 Checks</div><div class="v" id="statVerifs">—</div></div>
+        <div class="stat"><div class="k">哈希算法 Algo</div><div class="v" id="statAlgo">—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note" id="staffBanner">
+    <span>教职员页面 Staff console — 只在配置了 ADMIN_TOKEN / ISSUER_TOKEN 时可用。</span>
+    <span class="badge" id="staffRole" style="display:none;margin-left:8px"></span>
+    <button class="btn sm ghost" id="staffLogoutAll" style="float:right;margin-top:-3px;margin-left:6px">退出所有设备</button>
+    <button class="btn sm ghost" id="staffLogout" style="float:right;margin-top:-3px">退出 Sign out</button>
+  </div>
+  <div class="tabs">
+    <button class="active" data-tab="home">开始 Start</button>
+    <button data-tab="verify">验证 Verify</button>
+    <button data-tab="student">学生 Student</button>
+    <button data-tab="chat">AI 助手 Chat</button>
+    <button data-tab="log">日志 Log</button>
+    <button data-tab="custom">自制 Self-issue<span class="admin-tag">ADMIN</span></button>
+    <button data-tab="issue">签发 Issue<span class="admin-tag">ADMIN</span></button>
+    <button data-tab="revoke">注销 Revoke<span class="admin-tag">ADMIN</span></button>
+    <button data-tab="signers">签发方 Signers<span class="admin-tag">ADMIN</span></button>
+  </div>
+
+  <!-- ============ HOME ============ -->
+  <div class="panel active" id="panel-home">
+    <div class="home-hero">
+      <h2>工作台<span style="font-weight:400;color:var(--muted);font-size:15px">Staff console</span></h2>
+      <p>签发、注销与签发方管理都在这里。学生看到的只是校方发给他的那条持证人链接。</p>
+    </div>
+    <div class="role-grid">
+      <div class="role-card" id="goVerify">
+        <div class="ico">🔍</div>
+        <h3>核验一份凭证</h3>
+        <p>上传毕业证 PDF 或粘贴凭证编号，六项检查后得到结果与报告。</p>
+        <div class="go">开始验证 →</div>
+      </div>
+      <div class="role-card" id="goRegistrar">
+        <div class="ico">🏛️</div>
+        <h3>签发工作台</h3>
+        <p>批量签发毕业证：上传名单 CSV 或单份签发，预览后一键上链，下载全部 PDF 与 QR，并给每份凭证生成持证人链接。</p>
+        <div class="go">进入签发工作台 →</div>
+      </div>
+      <div class="role-card" id="goCustom">
+        <div class="ico">🧾</div>
+        <h3>自制并签发</h3>
+        <p>没有现成 PDF？填资料一键生成定制 PDF + JSON 并签发上链——上传即可验证为真实有效。</p>
+        <div class="go">去自制凭证 →</div>
+      </div>
+    </div>
+    <div class="role-note" id="publicNote" style="display:none">本实例为公开验证模式 —— 签发与注销功能已禁用（运行方需使用管理员模式）。</div>
+    <div class="card" style="margin-top:18px">
+      <h2>先试试？Try the samples</h2>
+      <p class="hint">一键体验三种结果：真实有效 / 已注销 / 查无此证。</p>
+      <div class="samples">
+        <button class="chipq" id="sampleBtn-valid">✅ 真实有效 VALID</button>
+        <button class="chipq" id="sampleBtn-revoked">↩ 已注销 REVOKED</button>
+        <button class="chipq" id="sampleBtn-invalid">⚠ 查无此证 NOT FOUND</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ VERIFY ============ -->
+  <div class="panel" id="panel-verify">
+    <div class="card">
+      <h2>验证学历证书 Verify a credential</h2>
+      <p class="hint">拖入文件，或粘贴凭证编号。系统对链上记录做 6 项安全检查，并生成可下载的验证报告。</p>
+
+      <div class="dropzone" id="dropzone">
+        <div class="dz-ico">📄</div>
+        <div class="dz-main">把毕业证 PDF 或 JSON 文件拖到这里</div>
+        <div class="dz-sub">或点击选择文件 · PDF 自动填表、JSON 直接验证</div>
+        <div class="dz-file" id="dropFileName"></div>
+        <input type="file" id="dropfile" accept=".json,.txt,.pdf,application/json,text/plain,application/pdf" style="display:none">
+      </div>
+      <div class="extract-note" id="extractNote"></div>
+
+      <div class="hashrow">
+        <input type="text" id="hashinput" placeholder="或粘贴凭证编号（HashedDocument / credential hash）">
+        <button class="btn" id="verifyHashBtn">验证 Verify</button>
+      </div>
+
+      <div class="samples">
+        <span class="lbl">样例：</span>
+        <button class="chipq" id="sampleBtn2-valid">✅ 真实有效</button>
+        <button class="chipq" id="sampleBtn2-revoked">↩ 已注销</button>
+        <button class="chipq" id="sampleBtn2-invalid">⚠ 查无此证</button>
+      </div>
+    </div>
+
+    <div class="card" id="advancedCard">
+      <details>
+        <summary>高级：粘贴完整凭证 JSON（开发/测试用）</summary>
+        <textarea id="docjson" placeholder='{"PersonalParticulars": {...}, "AcademicInfo": {...}, "DocumentInfo": {...}}'></textarea>
+        <div class="row">
+          <button class="btn ghost sm" id="verifyDocBtn">验证 JSON 文档</button>
+          <button class="btn ghost sm" id="loadDiploma">载入样例文凭</button>
+          <button class="btn ghost sm" id="loadTranscript">载入样例成绩单</button>
+        </div>
+      </details>
+    </div>
+
+    <div class="card">
+      <h2>批量验证 Batch verify</h2>
+      <p class="hint">粘贴最多 500 个凭证编号（每行一个）。适用于候选人名单核验。</p>
+      <textarea id="batchHashes" rows="4" placeholder="凭证编号1&#10;凭证编号2&#10;凭证编号3"></textarea>
+      <div class="row">
+        <button class="btn ghost" id="batchBtn">批量验证 Verify batch</button>
+        <button class="btn ghost sm" id="batchCsvBtn" style="display:none">下载结果 CSV</button>
+      </div>
+      <div class="batchOut" id="batchOut"></div>
+    </div>
+
+    <div class="err" id="err"></div>
+    <div class="verdict" id="verdict">
+      <div class="banner">
+        <span class="ico" id="verdictIco">✓</span>
+        <div>
+          <div class="vt" id="verdictText">—</div>
+          <div class="ve" id="verdictEn">—</div>
+        </div>
+      </div>
+      <div class="body">
+        <div class="holder" id="holderCard">
+          <h4>凭证信息 Credential</h4>
+          <table class="holder-tbl" id="holderTable"></table>
+        </div>
+        <div class="hashbox"><span class="mono" id="hashValue"></span><button class="btn ghost sm" id="copyHash">复制 Copy</button></div>
+        <div class="row" style="margin-top:14px">
+          <button class="btn ghost sm" id="receiptBtn" style="display:none">下载验证报告 Receipt</button>
+          <button class="btn ghost sm" id="printReceiptBtn" style="display:none">打印 Print</button>
+          <button class="btn ghost sm" id="qrBtn" style="display:none">生成 QR（放简历）</button>
+          <button class="btn ghost sm" id="pdfFetchBtn" style="display:none">下载 PDF 凭证</button>
+        </div>
+        <img id="qrImg" class="qrimg" alt="QR code" style="display:none;margin-top:12px;width:176px;height:176px">
+        <div class="note" id="qrLink"></div>
+        <div class="note" id="verdictNote"></div>
+        <details id="checksDetails">
+          <summary>查看 6 项安全检查（详细）</summary>
+          <p class="note" style="margin-top:8px">
+            1. <b>链完整性 Chain integrity</b> —— 整条链从创世块开始可完整重放。<br>
+            2. <b>签发方可信 Signer trusted</b> —— 签发方在可信注册表中。<br>
+            3. <b>链上存在记录 On-chain record</b> —— 该凭证编号存在 ISSUE 区块。<br>
+            4. <b>文件与链上一致 Hash match</b> —— 上传文件重算哈希与链上一致（需要完整文档）。<br>
+            5. <b>签名有效 Signature valid</b> —— 签发区块的密码学签名验证通过。<br>
+            6. <b>未被注销 Not revoked</b> —— 链上无 REVOKE 区块引用该凭证。
+          </p>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ HOLDER (staff preview) ============ -->
+  <div class="panel" id="panel-student">
+    <div class="card">
+      <h2>持证人链接 Holder links</h2>
+      <p class="hint">学生不再凭「学号 + 出生日期」查询。给一份凭证签发链接，把链接随凭证一起发给学生；一条链接只打开那一份。</p>
+      <div class="row">
+        <input type="text" id="linkSid" placeholder="学号 Student ID" style="max-width:180px">
+        <input type="text" id="linkHash" placeholder="凭证哈希 HashedDocument" style="max-width:380px">
+        <button class="btn" id="mintLinkBtn">生成链接</button>
+      </div>
+      <div class="ok" id="mintOk" style="display:none"></div>
+      <div class="err" id="mintErr"></div>
+      <div class="row" style="margin-top:12px">
+        <input type="text" id="holderlink" placeholder="或粘贴一条已有链接试打开，如 https://…/me/abc.def" style="max-width:420px">
+        <button class="btn ghost" id="holderBtn">打开</button>
+      </div>
+      <div class="err" id="holderErr2"></div>
+    </div>
+  </div>
+
+  <!-- ============ ISSUE (admin) ============ -->
+  <div class="panel" id="panel-custom">
+    <div class="card">
+      <h2>自制凭证并上链 Self-issue <span class="admin-tag">ADMIN</span></h2>
+      <p class="hint">填写你自己的资料 → 一键生成定制 PDF + JSON，<b>同时作为签发端直接上链</b>（文件同步保存到主项目目录）。之后任何人上传这份 PDF，都能直接验证为「真实有效」。</p>
+      <div class="grid2">
+        <div class="col">
+          <label class="fld">姓 Surname *</label>
+          <input type="text" id="csSurname" placeholder="如 CHAN">
+          <label class="fld">名 Given Names *</label>
+          <input type="text" id="csGiven" placeholder="如 TAI MAN / 烧鸡">
+          <label class="fld">学号 Student ID *</label>
+          <input type="text" id="csStudentId" placeholder="如 99001001">
+          <label class="fld">出生日期 DOB</label>
+          <input type="text" id="csDob" placeholder="19880808 或 1988-08-08">
+          <label class="fld">性别 Sex</label>
+          <input type="text" id="csSex" placeholder="M / F">
+          <label class="fld">学位/专业 Degree *</label>
+          <input type="text" id="csDegree" placeholder="如 Bachelor of Culinary Arts">
+        </div>
+        <div class="col">
+          <label class="fld">学制起 Degree start</label>
+          <input type="text" id="csDStart" placeholder="20220901">
+          <label class="fld">学制止 Degree end</label>
+          <input type="text" id="csDEnd" placeholder="20260801">
+          <label class="fld">荣誉 Honour</label>
+          <input type="text" id="csHonour" placeholder="如 First Class Honours">
+          <label class="fld">备注 Observations</label>
+          <input type="text" id="csObs" placeholder="可选">
+          <label class="fld">签发机构 Issuing org</label>
+          <input type="text" id="csIssuer" placeholder="UNIVERSITY OF UTOPIA">
+          <label class="fld">签发单位 Issuing unit</label>
+          <input type="text" id="csUnit" placeholder="RECORD OFFICE">
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn" id="customBuildBtn">生成并签发上链 Build + Issue</button>
+        <button class="btn ghost" id="customDraftBtn">仅生成草稿（不上链）</button>
+      </div>
+      <div class="ok" id="customOk"></div>
+      <div class="err" id="customErr"></div>
+      <div id="customResult" class="custom-result" style="display:none"></div>
+    </div>
+
+    <div class="card">
+      <h2>已生成的凭证 Generated files</h2>
+      <p class="hint">文件同步保存在项目目录：<code id="customOutDir"></code></p>
+      <div class="tbl-scroll"><table class="tbl" id="customTable"></table></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-issue">
+    <div class="card" data-role="admin issuer">
+      <h2>批量签发毕业证 Batch issue <span class="admin-tag">ADMIN</span></h2>
+      <p class="hint">上传名单 CSV（或粘贴），预览确认后一键签发到链上。每行独立处理：失败行会标出原因，不影响其他行。</p>
+      <div class="row" style="margin-top:0">
+        <button class="btn ghost sm" id="batchRegTemplateBtn">下载 CSV 模板</button>
+        <input type="file" id="batchRegCsv" accept=".csv,text/csv,text/plain" style="max-width:260px">
+      </div>
+      <div class="row">
+        <input type="text" id="batchOrg" placeholder="签发机构（缺省）Issuing org，如 UNIVERSITY OF UTOPIA" style="flex:1">
+      </div>
+      <textarea id="batchRegText" rows="6" placeholder="或直接粘贴 CSV 内容（第一行为表头）&#10;surname,given_names,dob,student_id,degree,email&#10;CHAN,TAI MAN,19880808,22000000,Bachelor of Engineering,student@example.com"></textarea>
+      <div class="row">
+        <button class="btn" id="batchRegBtn" disabled>预览 Preview</button>
+      </div>
+      <div class="batchreg-preview" id="batchRegPreview"></div>
+      <div class="progress-bar" id="batchRegProgress"><div class="fill" id="batchRegFill"></div></div>
+      <div class="ok" id="batchRegOk"></div>
+      <div class="err" id="batchRegErr"></div>
+      <div class="batchOut" id="batchRegOut"></div>
+    </div>
+
+    <div class="card" data-role="admin">
+      <h2>单个签发 Issue one <span class="admin-tag">ADMIN</span></h2>
+      <p class="hint">由当前激活签发方签名并追加 ISSUE 区块。链上只存哈希，学生保留 JSON、QR 与可验证 PDF。</p>
+      <textarea id="issuejson" placeholder='粘贴完整凭证 JSON（PersonalParticulars, AcademicInfo, DocumentInfo）'></textarea>
+      <div class="row">
+        <input type="file" id="issuePdfInput" accept=".pdf,application/pdf" style="display:none">
+        <button class="btn ghost" id="issueExtractBtn">上传 PDF 自动填充</button>
+      </div>
+      <div class="extract-note" id="issueExtractNote"></div>
+      <p class="hint" style="margin-top:6px">通知不会发到任何人手上填的地址：签发后只记录一条事件，邮件收件人由部署方的 <code>NOTIFY_TO</code> 决定。</p>
+      <div class="row">
+        <button class="btn" id="issueBtn">签发上链 Issue</button>
+        <button class="btn ghost" id="issueLoadDiploma">载入样例文凭</button>
+      </div>
+      <div class="ok" id="issueOk"></div>
+      <div class="err" id="issueErr"></div>
+      <div class="row" id="issueQrRow" style="display:none">
+        <button class="btn ghost" id="issueQrBtn">显示 QR（可放简历）</button>
+        <a class="btn ghost" id="issuePdfLink" style="text-decoration:none" download>下载可验证 PDF</a>
+        <img id="issueQrImg" class="qrimg" alt="QR code" style="display:none;width:140px;height:140px">
+      </div>
+    </div>
+
+    <div class="card" data-role="admin">
+      <h2>公开 API 密钥 Public API keys <span class="admin-tag">ADMIN</span></h2>
+      <p class="hint">为集成方创建密钥（批量验证、状态列表、收据查询）。原始密钥只显示一次。</p>
+      <div class="row">
+        <input type="text" id="apikeyName" placeholder="密钥名称，如 HR 系统" style="max-width:240px">
+        <button class="btn ghost" id="apikeyCreateBtn">创建密钥</button>
+      </div>
+      <div class="ok" id="apikeyOk"></div>
+      <div class="err" id="apikeyErr"></div>
+      <div class="tbl-scroll"><table class="tbl" id="apikeyTable"></table></div>
+    </div>
+  </div>
+
+  <!-- ============ REVOKE (admin) ============ -->
+  <div class="panel" id="panel-revoke">
+    <div class="card">
+      <h2>注销凭证 Revoke a credential <span class="admin-tag">ADMIN</span></h2>
+      <p class="hint">追加 REVOKE 区块（只追加、不可撤销）。建议填写原因与生效时间，将显示在验证结果与状态列表中。</p>
+      <input type="text" id="revokehash" placeholder="要注销的凭证编号（on-chain hash）">
+      <div class="row" style="gap:8px">
+        <input type="text" id="revokeReason" placeholder="注销原因（可选）Reason" style="flex:1">
+        <input type="text" id="revokeEffective" placeholder="生效时间（可选，Unix 秒）" style="flex:1">
+      </div>
+      <div class="row"><button class="btn danger" id="revokeBtn">注销 Revoke</button></div>
+      <div class="ok" id="revokeOk"></div>
+      <div class="err" id="revokeErr"></div>
+    </div>
+  </div>
+
+  <!-- ============ SIGNERS (admin) ============ -->
+  <div class="panel" id="panel-signers">
+    <div class="card">
+      <h2>可信签发方 Trusted signers <span class="admin-tag">ADMIN</span></h2>
+      <p class="hint">谁可以为凭证区块签名。激活的签发方签署每个新 ISSUE/REVOKE。演示密钥存于 <span class="mono">data/demo-chain/keys/</span>（生产环境应使用 KMS/HSM）。</p>
+      <div class="tbl-scroll">
+        <table class="tbl" id="signersTable"></table>
+      </div>
+      <div class="hint" style="margin-top:10px">
+        离线校验：先下载这两份 JSON，再在另一台机器上跑
+        <span class="mono">python scripts/verify_statuslist.py statuslist.json signer-keys.json</span>
+        —— 验签不需要联网，也不需要读这里的链。加上
+        <span class="mono">--pin</span> 可在首次获取后锁定信任根；一手已知指纹请用
+        <span class="mono">--expect</span>。轮换密钥后不要删 pin，用
+        <span class="mono">--pin-update</span> 记录这次轮换（只在列表验签通过时才改写，并把新旧指纹集合写入 pin 的 <span class="mono">history</span>）。<br>
+        <a class="btn ghost sm" style="text-decoration:none" href="/api/signers/keys" download="signer-keys.json">下载信任根</a>
+        <a class="btn ghost sm" style="text-decoration:none;margin-left:6px" href="/api/statuslist" download="statuslist.json">下载状态列表</a>
+        <a class="btn ghost sm" style="text-decoration:none;margin-left:6px" href="/api/diagnostics" target="_blank" rel="noopener">诊断原文</a>
+        <br><span style="display:inline-block;margin-top:8px">诊断原文 = <span class="mono">/api/diagnostics</span>（U19）：<span class="mono">/healthz</span> 只给配置警告的<b>条数</b>，这里给<b>正文</b>，外加链完整性、签发方退役边界与 uptime。当前 staff 会话即可读。</span>
+      </div>
+      <div class="row">
+        <input type="text" id="signerName" placeholder="签发方名称，如 DEPT OF COMPUTING" style="max-width:260px">
+        <select id="signerAlgo" style="padding:9px;border:1px solid var(--border);border-radius:9px;background:#fafbfc;font-size:13px">
+          <option>ML_DSA_65</option><option>RSA_PSS_2048</option><option>ec.secp256r1</option>
+        </select>
+        <button class="btn" id="addSignerBtn">注册签发方</button>
+      </div>
+      <div class="ok" id="signerOk"></div>
+      <div class="err" id="signerErr"></div>
+    </div>
+  </div>
+
+  <!-- ============ CHAT ============ -->
+  <div class="panel" id="panel-chat">
+    <div class="card">
+      <h2>AI 凭证助手 Ask the credential assistant</h2>
+      <p class="hint">用自然语言提问，回答带来源引用。例如：“CHAN TAI MAN 的文凭被注销了吗？” 检索：<span id="genHint">checking&hellip;</span></p>
+      <div id="chatlog"></div>
+      <div id="chips"></div>
+      <div class="row">
+        <input type="text" id="chatinput" placeholder="输入问题，如：CHAN TAI MAN 的文凭被注销了吗？">
+        <button class="btn" id="chatSend">提问 Ask</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ LOG ============ -->
+  <div class="panel" id="panel-log">
+    <div class="grid2">
+      <div class="card">
+        <h2>公开验证日志 Recent verifications</h2>
+        <p class="hint">匿名：只显示 12 位哈希前缀；跨重启持久化到 <span class="mono">public-log.jsonl</span>。</p>
+        <div class="tbl-scroll"><table class="tbl" id="logTable"></table></div>
+      </div>
+      <div class="card">
+        <h2>链尾 Chain tail（只追加）</h2>
+        <p class="hint">链上最近区块。</p>
+        <div class="tbl-scroll"><table class="tbl" id="chainTable"></table></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>异常监控 Anomaly watch</h2>
+      <p class="hint">IsolationForest（scikit-learn）对每个签发方的小时签发量做异常检测，带确定性阈值兜底。</p>
+      <div id="anomalyBox"><div class="note">checking&hellip;</div></div>
+      <div id="anomalyChart"></div>
+    </div>
+    <div class="card" data-role="admin">
+      <h2>通知记录 Notifications</h2>
+      <p class="hint">最近记录的通知（未配置 SMTP 时为 dry-run）。</p>
+      <div class="tbl-scroll"><table class="tbl" id="notifTable"></table></div>
+    </div>
+  </div>
+
+  <footer>凭证链演示系统 · 单一节点 · ML-DSA / RSA-PSS / ECDSA 签发 · 链上仅存哈希与签名，明文永不触链</footer>
+</div>
+
+<script src="/static/js/core.js"></script>
+<script src="/static/js/format.js"></script>
+<script src="/static/js/verify.js"></script>
+<script src="/static/js/registrar.js"></script>
+<script src="/static/js/student.js"></script>
+<script src="/static/js/log.js"></script>
+<script src="/static/js/chat.js"></script>
+<script src="/static/js/main.js"></script>
+</body>
+</html>
+
+
+

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Staff sign-in · Credential Verification Portal</title>
+<link rel="stylesheet" href="/static/css/portal.css">
+<style>
+  .login-wrap{width:100%;max-width:420px;margin:0 auto;padding:16px;box-sizing:border-box;
+    min-height:100vh;display:flex;align-items:center;justify-content:center}
+  .login-wrap .card{width:100%;padding:26px;border-radius:14px;box-shadow:0 10px 30px rgba(15,42,52,.10)}
+  .login-wrap h1{font-size:16px;margin:0 0 4px}
+  .login-wrap .sub{font-size:12.5px;color:var(--muted);margin:0 0 18px}
+  .login-wrap label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0 6px}
+  .login-wrap input{display:block;width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13.5px;font-family:inherit;background:#fff;margin:0 0 14px}
+  .login-wrap input:focus{outline:none;border-color:var(--teal)}
+  .login-wrap .btn{display:block;width:100%;margin:0;padding:11px}
+  .login-err{font-size:12.5px;color:var(--red);background:var(--red-soft);border-radius:8px;padding:8px 10px;margin-top:12px;display:none}
+  .login-err.on{display:block}
+  .login-foot{font-size:11.5px;color:var(--muted);margin-top:14px;text-align:center}
+  .login-foot a{color:var(--teal);text-decoration:none}
+</style>
+</head>
+<body>
+<div class="login-wrap">
+  <div class="card">
+    <h1>Staff sign-in</h1>
+    <p class="sub">Issuing, revocation and signer management live in the staff console. Verification stays public.</p>
+    <form id="loginForm" autocomplete="off">
+      <label for="token">Staff token</label>
+      <input id="token" name="token" type="password" placeholder="Paste your staff token" required autofocus>
+      <button class="btn" type="submit" id="loginBtn">Sign in</button>
+      <div class="login-err" id="loginErr" role="alert"></div>
+    </form>
+    <p class="login-foot"><a href="/">← Back to public verification</a></p>
+  </div>
+</div>
+<script>
+(function () {
+  "use strict";
+  var form = document.getElementById("loginForm");
+  var btn = document.getElementById("loginBtn");
+  var err = document.getElementById("loginErr");
+  var input = document.getElementById("token");
+
+  function showError(msg) {
+    err.textContent = msg;
+    err.classList.add("on");
+  }
+
+  form.addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    err.classList.remove("on");
+    var token = input.value.trim();
+    if (!token) { showError("Enter the staff token."); return; }
+    btn.disabled = true;
+    fetch("/staff/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: token })
+    }).then(function (res) {
+      if (res.ok) {
+        input.value = "";          // token is never kept in JS after success
+        window.location.replace("/staff");
+        return null;
+      }
+      return res.json().catch(function () { return {}; }).then(function (body) {
+        showError(body && body.detail ? body.detail : "Sign-in failed.");
+      });
+    }).catch(function () {
+      showError("Network error — is the server running?");
+    }).then(function () {
+      btn.disabled = false;
+    });
+  });
+})();
+</script>
+</body>
+</html>
+
+
+

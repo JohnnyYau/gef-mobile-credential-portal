@@ -1,19 +1,16 @@
 """API tests for the credential verification portal (Week 1)."""
 
 import json
-import os
 import shutil
-import tempfile
 import unittest
 
-# Use an isolated chain for tests (must be set before importing the app).
-_TMP = tempfile.mkdtemp(prefix="portal-test-")
-os.environ["CHAIN_DIR"] = os.path.join(_TMP, "test-chain")
+from tests._bootstrap import isolated_chain_dir
 
-from fastapi.testclient import TestClient  # noqa: E402
+# Use an isolated chain for tests (must be set before importing the app).
+_TMP = isolated_chain_dir(prefix="portal-test-")
 
 from app.main import app  # noqa: E402
-
+from fastapi.testclient import TestClient  # noqa: E402
 
 SAMPLE_DIPLOMA = {
     "PersonalParticulars": {

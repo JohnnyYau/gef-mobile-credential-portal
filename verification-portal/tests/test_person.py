@@ -5,20 +5,18 @@ ever touches the network; the mock-mode fixture is tested directly.
 """
 
 import json
-import os
 import shutil
-import tempfile
 import unittest
 from unittest.mock import patch
 
-_TMP = tempfile.mkdtemp(prefix="portal-person-test-")
-os.environ["CHAIN_DIR"] = os.path.join(_TMP, "test-chain")
+from tests._bootstrap import isolated_chain_dir
 
-from fastapi.testclient import TestClient  # noqa: E402
+_TMP = isolated_chain_dir(prefix="portal-person-test-")
 
 import app.main as main  # noqa: E402
-from app import chat_service, chain_service, person_context, web_research  # noqa: E402
+from app import chain_service, person_context, web_research  # noqa: E402
 from app.chain_service import SAMPLE_DIPLOMA  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
 
 
 def _issue(client, surname, given, sid, degree="Bachelor of Arts in History"):
@@ -166,6 +164,116 @@ class PersonContextTestCase(unittest.TestCase):
         for q in res.get("queried", []):
             self.assertNotIn("88990011", q)
             self.assertNotIn("20010101", q)
+
+
+class PrivacyPolicyTests(unittest.TestCase):
+    """U5.3: the masking rules are a policy object, not a habit."""
+
+    def setUp(self):
+        from app.privacy import PRIVACY, PrivacyPolicy
+        self.policy = PRIVACY
+        self.Policy = PrivacyPolicy
+
+    def test_whitelist_is_the_only_way_in(self):
+        dirty = {
+            "Surname": "NG", "GivenNames": "KA LOK", "StudentID": "88990011",
+            "DOB": "20010101", "Email": "ng@example.com", "Sex": "M",
+            "Nationality": "HK",
+        }
+        built = self.policy.build("PersonalParticulars", dirty)
+        self.assertEqual(set(built), {"Surname", "GivenNames", "StudentID"})
+        for key in ("DOB", "Email", "Sex", "Nationality"):
+            self.assertNotIn(key, built)
+
+    def test_even_a_whitelisted_name_cannot_smuggle_a_forbidden_field(self):
+        # if someone ever adds "DOB" to the whitelist by accident, build() still
+        # refuses it — the denylist is checked after the whitelist
+        weird = self.Policy(whitelist={"PersonalParticulars":
+                                       ("Surname", "DOB")})
+        built = weird.build("PersonalParticulars",
+                            {"Surname": "NG", "DOB": "20010101"})
+        self.assertEqual(built, {"Surname": "NG"})
+
+    def test_mask_student_id_keeps_prefix_and_drops_rest(self):
+        self.assertEqual(self.policy.mask_student_id("88990011"), "8899****")
+        self.assertEqual(self.policy.mask_student_id("123"), "****")
+        self.assertEqual(self.policy.mask_student_id(""), "")
+        self.assertEqual(self.policy.mask_student_id(None), "")
+
+    def test_violations_finds_nested_forbidden_keys(self):
+        bad = {"credential": {"degree": "BA"}, "DOB": "20010101",
+               "extra": [{"Email": "x@y"}]}
+        found = self.policy.violations(bad)
+        self.assertEqual(len(found), 2, found)
+        self.assertTrue(found[0].startswith("DOB"), found)
+
+    def test_clean_profile_has_no_violations(self):
+        clean = {"name": "NG KA LOK", "student_id_masked": "8899****",
+                 "credential": {"degree": "BSc"}}
+        self.assertEqual(self.policy.violations(clean), [])
+
+    def test_real_profile_uses_only_whitelisted_credential_fields(self):
+        # PersonContextTestCase drops its temp chain in tearDownClass, so seed
+        # again here and use the demo person that ensure_chain() always writes.
+        chain_service.ensure_chain()
+        person = person_context.resolve_person("CHAN TAI MAN")
+        self.assertIsNotNone(person)
+        allowed = set(self.policy.fields("DocumentInfo")) \
+            | set(self.policy.fields("AcademicInfo"))
+        mapped = {"doc_type": "DocType", "degree": "DegreeName",
+                  "start": "DegreeStartDate", "end": "DegreeEndDate",
+                  "honour": "Honour", "issuing_org": "IssuingO",
+                  "issuing_ou": "IssuingOU", "issued_on": "DateOfIssue"}
+        for key in person["credential"]:
+            self.assertIn(mapped[key], allowed, key)
+        self.assertEqual(self.policy.violations(person), [])
+
+
+class SessionStoreTests(unittest.TestCase):
+    """U5.3: session memory sits behind a replaceable interface."""
+
+    def setUp(self):
+        from app import session_store
+        self.ss = session_store
+        self._saved = person_context._sessions
+
+    def tearDown(self):
+        person_context._sessions = self._saved
+
+    def test_default_backend_is_in_memory_and_capped_by_config(self):
+        from app.config import SESSION_LIMIT
+        store = self.ss.open_session_store()
+        self.assertEqual(store.limit, SESSION_LIMIT)
+
+    def test_unknown_backend_falls_back_to_memory(self):
+        store = self.ss.open_session_store("nowhere")
+        self.assertIsInstance(store, self.ss.InMemorySessionStore)
+
+    def test_redis_backend_is_an_honest_placeholder(self):
+        # declaring it must not pretend to be a Redis implementation
+        store = self.ss.open_session_store("redis")
+        self.assertIsInstance(store, self.ss.InMemorySessionStore)
+
+    def test_store_evicts_least_recently_used(self):
+        store = self.ss.InMemorySessionStore(limit=2)
+        store.set("a", {"name": "A"})
+        store.set("b", {"name": "B"})
+        self.assertEqual(store.get("a"), {"name": "A"})   # touch a
+        store.set("c", {"name": "C"})                     # evicts b
+        self.assertIsNone(store.get("b"))
+        self.assertIsNotNone(store.get("a"))
+        self.assertEqual(len(store), 2)
+
+    def test_person_context_works_against_a_swapped_store(self):
+        person_context._sessions = self.ss.InMemorySessionStore(limit=1)
+        person = {"name": "NG KA LOK", "student_id_masked": "8899****",
+                  "credential": {"degree": "BSc"}}
+        person_context.remember("sA", person)
+        self.assertIsNotNone(person_context.context_person("sA", "his degree"))
+        # limit 1: the second session pushes the first out
+        person_context.remember("sB", person)
+        self.assertIsNone(person_context.context_person("sA", "his degree"))
+        self.assertIsNotNone(person_context.context_person("sB", "his degree"))
 
 
 if __name__ == "__main__":

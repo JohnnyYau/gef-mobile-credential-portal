@@ -1,0 +1,11 @@
+# Development and test tooling — not required to run the portal.
+# Runtime dependencies stay in requirements.txt.
+-r requirements.txt
+
+# Test runner + static analysis. Licences: pytest MIT, ruff MIT, mypy MIT,
+# hypothesis MPL-2.0 (permissive / file-level copyleft — not GPL, acceptable
+# here; the project's rule is to reject GPL-3.0 and paid or closed tools only).
+pytest>=8.0
+ruff>=0.6
+mypy>=1.11
+hypothesis>=6.112

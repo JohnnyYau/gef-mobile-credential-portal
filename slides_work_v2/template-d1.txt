@@ -1,0 +1,19 @@
+# Dimension 1: sections
+source: C:\Users\johnn\Downloads\Template_Learning_Summary.docx
+syntax: SECTION is OOXML data and API_SECTION is python-docx data.
+section_defaults: height=15840, margins={"bottom":"1871","top":"1276","left":"868","right":"868","header":"709","footer":"720"}, orientation="portrait", page_size={"h":"15840","w":"12240","orient":"portrait"}, part="word/document.xml", start={"val":"continuous"}, width=12240
+api_section_defaults: footer_distance=720, header_distance=709, height=15840, margin_bottom=1871, margin_left=868, margin_right=868, margin_top=1276, orientation="PORTRAIT (0)", start="CONTINUOUS (0)", width=12240
+omitted: record_type; repeated defaults; raw sectPr XML.
+normalized: geometry is in twips.
+
+[SECTION1 header_references=[{"r:id":"rId7","type":"first"}] numbering={"start":"1"} start=null]
+
+[SECTION2 margins={"bottom":"1021","top":"1021","left":"936","right":"936","header":"709","footer":"720"} header_references=[{"r:id":"rId11","type":"first"},{"r:id":"rId12","type":"even"}]]
+
+[SECTION3 header_references=[{"r:id":"rId13","type":"default"},{"r:id":"rId14","type":"first"},{"r:id":"rId15","type":"even"}]]
+
+[API_SECTION1 start="NEW_PAGE (2)"]
+
+[API_SECTION2 margin_top=1021 margin_bottom=1021 margin_left=936 margin_right=936]
+
+[API_SECTION3]

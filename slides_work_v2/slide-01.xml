@@ -1,0 +1,55 @@
+<slide xmlns="https://www.larkoffice.com/sml/2.0">
+  <style>
+    <fill>
+      <fillColor color="rgb(255,255,255)"/>
+    </fill>
+  </style>
+  <data>
+    <shape type="rect" topLeftX="0" topLeftY="0" width="12" height="540">
+      <fill>
+        <fillColor color="rgb(0,48,135)"/>
+      </fill>
+    </shape>
+    <shape type="text" topLeftX="96" topLeftY="120" width="768" height="28">
+      <content textType="headline" fontSize="16" color="rgba(0,112,186,1)" bold="true" letterSpacing="1.5" wrap="false">
+        <p>POST-QUANTUM CREDENTIAL VERIFICATION · COURSE PROJECT</p>
+      </content>
+    </shape>
+    <shape type="text" topLeftX="96" topLeftY="176" width="800" height="64">
+      <content textType="title" fontSize="40" color="rgba(0,28,84,1)" bold="true" lineSpacing="multiple:1.15" wrap="false">
+        <p>QuantumGuard 学历凭证验证门户</p>
+      </content>
+    </shape>
+    <shape type="text" topLeftX="96" topLeftY="256" width="800" height="40">
+      <content textType="headline" fontSize="22" color="rgba(0,28,84,1)" lineSpacing="multiple:1.1" wrap="false">
+        <p>A Post-Quantum Credential Verification Portal</p>
+      </content>
+    </shape>
+    <line startX="96" startY="320" endX="560" endY="320">
+      <border color="rgb(0,112,186)" width="2"/>
+    </line>
+    <shape type="text" topLeftX="96" topLeftY="344" width="768" height="64">
+      <content textType="body" fontSize="16" color="rgba(71,85,105,1)" lineSpacing="multiple:1.5">
+        <p>链上只存哈希与签名；六项检查判定 VALID / REVOKED / NOT FOUND / INVALID，附可下载验证收据。</p>
+      </content>
+    </shape>
+    <shape type="text" topLeftX="96" topLeftY="472" width="768" height="32">
+      <content textType="caption" fontSize="12" color="rgba(71,85,105,1)" wrap="false">
+        <p>CityUHK EE GenAIC · v6.0.0 · 2026 · FastAPI · ML-DSA-65 / RSA-PSS / ECDSA · SHA3-512</p>
+      </content>
+    </shape>
+    <icon iconType="iconpark/Money/blockchain.svg" topLeftX="812" topLeftY="176" width="72" height="72">
+      <fill>
+        <fillColor color="rgba(0,48,135,1)"/>
+      </fill>
+    </icon>
+  </data>
+  <note>
+    <content textType="body">
+      <p>开场：这是 CityUHK EE GenAIC 课程项目 QuantumGuard，一个后量子学历凭证验证门户。</p>
+      <p>一句话定位：链上只存凭证哈希和签名，个人明文数据不上链，验证者凭六项检查得到明确判定。</p>
+      <p>技术栈：FastAPI 浏览器门户，签名支持 ML-DSA-65 后量子算法、RSA-PSS-2048 与 ECDSA secp256r1，链上哈希使用 SHA3-512。</p>
+      <p>接下来先用一页 TL;DR 概括交付内容，再展开架构、六项检查、演示与 AI 层。</p>
+    </content>
+  </note>
+</slide>

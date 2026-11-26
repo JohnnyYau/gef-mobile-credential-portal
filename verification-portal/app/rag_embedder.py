@@ -25,7 +25,7 @@ def _try_load_sentence_transformer():
         model = SentenceTransformer(EMBED_MODEL)
         logger.info("Embedder: sentence-transformers %s", EMBED_MODEL)
         return model
-    except Exception as exc:  # pragma: no cover — environment dependent
+    except (ImportError, OSError, ValueError, RuntimeError, TypeError, KeyError) as exc:  # pragma: no cover — environment dependent
         logger.warning("sentence-transformers unavailable (%s); using hashing embedder", exc)
         return None
 
@@ -36,7 +36,11 @@ class Embedder:
     def __init__(self):
         self._st = _try_load_sentence_transformer()
         if self._st is not None:
-            self.dim = self._st.get_sentence_embedding_dimension()
+            dim_fn = getattr(self._st, "get_embedding_dimension", None)
+            self.dim = (
+                dim_fn() if dim_fn is not None
+                else self._st.get_sentence_embedding_dimension()
+            )
             self.backend = "sentence-transformers/" + EMBED_MODEL.split("/")[-1]
         else:
             self.dim = FALLBACK_DIM

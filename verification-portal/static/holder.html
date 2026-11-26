@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>我的凭证 · My credential</title>
+<link rel="stylesheet" href="/static/css/portal.css">
+<style>
+  .holder-wrap{max-width:720px;margin:0 auto;padding:0}
+  .holder-head{font-size:12.5px;color:var(--muted);margin:0 0 10px}
+  .tbl td{vertical-align:top}
+  .meta{font-size:12px;color:var(--muted);margin-top:12px}
+  .qr-box{display:none;gap:14px;align-items:center;margin-top:16px;
+    padding-top:14px;border-top:1px solid var(--border)}
+  .qr-box .note{font-size:12px;color:var(--muted);line-height:1.6}
+  .why{display:block;font-size:11.5px;color:var(--muted);margin-top:4px}
+  .renew-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+    margin-top:14px;align-self:stretch}
+  .renew-row .btn{white-space:nowrap;flex:none}
+  .renew-row .note{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="hero-inner">
+      <div>
+        <h1>我的凭证 <span style="font-weight:400;font-size:15px;color:#bfd8d8">My credential</span></h1>
+        <div class="sub">此页面只能通过签发方发给你的专属链接打开。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="holderCard">
+    <h2>凭证资料 Credential</h2>
+    <p class="hint" id="holderHint">正在读取…</p>
+    <div class="err" id="holderErr" style="display:none"></div>
+    <div class="tbl-scroll" id="holderWrap" style="display:none">
+      <table class="tbl" id="holderTable"></table>
+    </div>
+    <div class="qr-box" id="holderQr">
+      <img class="qrimg" id="holderQrImg" alt="QR code" width="132" height="132">
+      <div class="note" id="holderQrNote"></div>
+    </div>
+    <p class="meta" id="holderMeta"></p>
+    <div class="renew-row" id="holderRenew" style="display:none">
+      <button class="btn sm ghost" id="renewBtn">续期这个链接 Renew link</button>
+      <span class="note" id="renewNote"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>这份链接能做什么 What this link does</h2>
+    <p class="hint">只显示这一份凭证。它不能查询其他学号，也不能签发、注销或查看别人的资料。凭证一旦被签发方注销，这里下一次打开就会显示 REVOKED。</p>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var cap = decodeURIComponent(location.pathname.replace(/^\/me\//, ""));
+  var hint = document.getElementById("holderHint");
+  var err = document.getElementById("holderErr");
+  var wrap = document.getElementById("holderWrap");
+  var table = document.getElementById("holderTable");
+  var meta = document.getElementById("holderMeta");
+  var qrBox = document.getElementById("holderQr");
+  var qrImg = document.getElementById("holderQrImg");
+  var qrNote = document.getElementById("holderQrNote");
+  var renewBox = document.getElementById("holderRenew");
+  var renewBtn = document.getElementById("renewBtn");
+  var renewNote = document.getElementById("renewNote");
+
+  renewBtn.addEventListener("click", function () {
+    renewBtn.disabled = true;
+    renewNote.textContent = "正在续期…";
+    fetch("/api/me/" + encodeURIComponent(cap) + "/renew", { method: "POST" })
+      .then(function (res) {
+        return res.json().catch(function () { return {}; }).then(function (b) {
+          if (!res.ok) throw new Error((b && b.detail) || "续期失败。");
+          return b;
+        });
+      })
+      .then(function (data) {
+        // Same credential, new token: reload onto it so every link on this
+        // page carries the renewed capability.
+        window.location.replace(data.path);
+      })
+      .catch(function (e) {
+        renewNote.textContent = e.message || "续期失败。";
+        renewBtn.disabled = false;
+      });
+  });
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function pill(verdict) {
+    var revoked = verdict === "REVOKED";
+    var bg = revoked ? "var(--red-soft,#fee2e2)" : "var(--teal-soft,#e0f2ef)";
+    var fg = revoked ? "var(--red,#dc2626)" : "var(--teal,#0f766e)";
+    return '<span style="display:inline-block;padding:2px 9px;border-radius:999px;' +
+      'font-size:12px;font-weight:700;background:' + bg + ';color:' + fg + '">' +
+      esc(verdict) + "</span>";
+  }
+
+  function fail(msg) {
+    hint.style.display = "none";
+    err.textContent = msg;
+    err.style.display = "block";
+  }
+
+  fetch("/api/me/" + encodeURIComponent(cap), { credentials: "omit" })
+    .then(function (res) {
+      if (!res.ok) {
+        return res.json().catch(function () { return {}; }).then(function (b) {
+          throw new Error(b && b.detail ? b.detail : "链接无效或已过期。");
+        });
+      }
+      return res.json();
+    })
+    .then(function (data) {
+      var rows = (data.credentials || []).map(function (c) {
+        var why = "";
+        if (c.revoked) {
+          var line = c.revoked_reason
+            ? "撤销原因：" + esc(c.revoked_reason)
+            : "签发方没有留下撤销原因。";
+          if (c.revoked_height) line += "（区块 #" + esc(c.revoked_height) + "）";
+          why = "<span class=\"why\">" + line + "</span>";
+        }
+        return "<tr><td>" + esc(c.doc_type) + "</td><td>" + esc(c.degree) +
+          "</td><td>" + pill(c.verdict) + why + "</td><td class=\"mono\">" +
+          esc(String(c.hashed_document || "").slice(0, 24)) + "…</td>" +
+          "<td><a class=\"btn ghost sm\" style=\"text-decoration:none\" href=\"/api/me/" +
+          encodeURIComponent(cap) + "/pdf\" download>下载凭证 PDF</a> " +
+          "<a class=\"btn ghost sm\" style=\"text-decoration:none\" href=\"/verify?hash=" +
+          encodeURIComponent(c.hashed_document) + "\">公开验证</a></td></tr>";
+      }).join("");
+      table.innerHTML = "<tr><th>类型</th><th>学位 / 内容</th><th>状态</th>" +
+        "<th>凭证编号</th><th></th></tr>" + rows;
+      hint.textContent = "学号 " + data.student_id + " · 共 " +
+        data.credentials.length + " 份。";
+      wrap.style.display = "block";
+      var first = data.credentials[0] || {};
+      if (first.hashed_document) {
+        qrImg.src = "/api/qr/" + encodeURIComponent(first.hashed_document);
+        qrImg.alt = "公开验证二维码";
+        qrBox.style.display = "flex";
+      }
+      var issued = first.issued_at
+        ? new Date(first.issued_at * 1000).toLocaleString() : "";
+      var block = first.issued_height ? "（区块 #" + esc(first.issued_height) + "）" : "";
+      qrNote.innerHTML = "扫码打开公开验证页，只显示凭证是否在链上、是否被撤销，" +
+        "不含姓名与生日。" +
+        (issued ? "<br>签发时间：" + esc(issued) + block : "");
+      if (data.expires_at) {
+        var left = data.expires_at - Math.floor(Date.now() / 1000);
+        meta.textContent = "此链接到期时间：" +
+          new Date(data.expires_at * 1000).toLocaleString();
+        // U14: self-service renewal opens in the last 7 days. Earlier it would
+        // only extend how long a leaked link keeps working.
+        if (left > 0 && left <= 7 * 86400) {
+          renewBox.style.display = "flex";
+          renewNote.textContent = left <= 86400
+            ? "链接将在 24 小时内到期。"
+            : "链接将在 " + Math.floor(left / 86400) + " 天内到期。";
+        }
+      }
+    })
+    .catch(function (e) { fail(e.message || "链接无效或已过期。"); });
+})();
+</script>
+</body>
+</html>
+
+
+

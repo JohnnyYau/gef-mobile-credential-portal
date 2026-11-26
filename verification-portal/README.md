@@ -1,4 +1,4 @@
-# Credential Verification Portal — Weeks 1–3 + extras rounds 1–8
+# Credential Verification Portal — Weeks 1–3 + extras rounds 1–9 + hardening U12–U19
 
 A browser-accessible verification portal for the Gef26 private credential
 chain. A verifier uploads (or pastes) a credential — JSON **or a portal-issued
@@ -15,8 +15,97 @@ What's in the box, per the 3-week plan:
   handling), deployment configs (Render / Railway), README, demo video.
 - **Extras round 1** — QR codes, public (anonymized) log, anomaly watch.
 - **Extras round 2** — verifiable diploma PDFs, real IsolationForest anomaly
-  detection, persistent log, student self-service lookup, multi-signer admin,
-  email notifications, and a full visual/mobile polish pass.
+  detection, persistent log, multi-signer admin, email notifications, and a
+  full visual/mobile polish pass. (The original "student self-service lookup"
+  from this round was replaced by holder links in U12 — see below.)
+- **U12 (2026-11)** — role and entry-point separation: `/` public, `/me/<link>`
+  holder, `/staff` staff console behind a token login; signed holder links
+  replace the StudentID + DOB lookup; notifications become queued events with
+  a fixed recipient; a PII-free holder index lets the bundle ship without
+  `rawjsondocs/`. See `docs/U12_role_ux_plan_radical.md`.
+- **U13–U18 (2026-11, hardening)** — a hash is a lookup key, not a credential:
+  the public PDF becomes a report with withheld identity, staff surfaces move
+  behind sessions, login/global throttles share one IP rule, chain integrity
+  is surfaced on `/healthz`, `/api/version` and the public page, signers can be
+  retired with a trust window, and the revocation status list became
+  **offline-verifiable** (`gef26.statuslist.v2` + `GET /api/signers/keys` +
+  `scripts/verify_statuslist.py`, with `--expect` for an out-of-band
+  fingerprint and `--pin` for TOFU). Docs: `docs/U13…U18`.
+- **U19 (truthful surface)** — `GET /api/diagnostics` (staff) returns the *text*
+  behind `/healthz`'s counts; every PDF prints `CHAIN INTEGRITY FAILED` when the
+  chain is broken; and the PDF's QR is actually drawn for the first time —
+  `drawImage` had rejected a `BytesIO`, and the `TypeError` was swallowed by
+  `except ... pass`, so six rounds of notes described a QR that never existed.
+  Now `ImageReader`, plus a printed-URL fallback and two tests. Docs:
+  `docs/U19_truthful_surface.md`.
+- **U20 (pin rotation)** — U18's strict pin had no legitimate way to follow a
+  key rotation except deleting the file (the very reset it was meant to block).
+  `--pin-update` records the rotation: only when the list verifies, into a
+  v2 pin with an append-only `history` of old/new fingerprint sets and UTC
+  timestamps, and it warns when no `--expect` was supplied. Docs:
+  `docs/U20_pin_rotation.md`.
+- **U21 (PDF layout as data)** — every position on the diploma card now lives in
+  one `LAYOUT` table with `layout_zones` / `layout_conflicts`, so "does the QR
+  collide with the revocation band" is an assertion instead of an eyeball
+  review. Over-long fields are explicitly **truncated** with a note (full values
+  stay in the embedded JSON) rather than pushing the hash box, QR and red bands
+  off the page; the QR degrades 28mm → 20mm → printed URL. Also fixed the
+  second hash row printing **outside** the grey box. Docs:
+  `docs/U21_pdf_layout.md`.
+- **U22 (text fitted by width)** — every single-line string is now measured,
+  not cut by character count: `IssuingO[:44]` was ~150mm for Latin text and
+  ~310mm for 44 CJK glyphs on a 210mm page. `_fit_text` binary-searches the
+  longest prefix that fits and appends `...`; `_wrap_text` hard-breaks a token
+  wider than the column (a 300-character ID, a URL); the constant footer
+  sentences are measured too, so editing a sentence fails a test instead of
+  leaving the page. Docs: `docs/U22_text_fit.md`.
+- **U23 (honest caching)** — the integrity verdict is cached for 30 s, so both
+  `/healthz` and `/api/diagnostics` now carry `checked_at` + `age_s`; a cache
+  hit keeps the original timestamp (refreshing it on read would make the field
+  always read `0.0`). A verdict whose scan outlasts its TTL is no longer stored
+  at all — it used to be cached already-expired, i.e. never readable. The
+  chain-cache test's TTL went from 0.05 s (same order as one scan, hence flaky)
+  to 0.5 s, and `test_restart_persistence` now fails fast when the spawned
+  uvicorn dies and prints its log tail instead of hiding it. `smoke_portal.py`
+  grew to **20** checks: diagnostics anonymous/authenticated, the integrity age,
+  and **the PDF actually containing an embedded image** — the operational guard
+  for the U19 QR failure. Docs: `docs/U23_integrity_age.md`.
+- **U24 (who is the client)** — `X-Forwarded-For` used to be believed
+  unconditionally, so on an instance with no proxy in front, a rotating forged
+  header produced a fresh rate-limit bucket per request (nine forged sign-ins
+  were measured, none locked). The header is now read only when the direct peer
+  is in `TRUSTED_PROXIES` (default empty), and the address taken is the nearest
+  hop that is not itself a trusted proxy. Then the second layer showed up:
+  uvicorn's default `--proxy-headers` rewrites the peer before the app runs, so
+  every launch line now passes `--no-proxy-headers` — with a real proxy, set
+  `--forwarded-allow-ips` *and* `TRUSTED_PROXIES` to the same address.
+  `/healthz` says `client_ip_source`, `whoami` echoes the bucket key, and
+  `smoke_portal.py` probes a forged header (**22** checks). Docs:
+  `docs/U24_proxy_trust.md`.
+- **U25 (one screen, three fields)** — the landing page was a five-tab console
+  asking a stranger to choose a role before it would do anything. It is now a
+  single question — 这张证书是真的吗？ — with one input (paste the hash *or*
+  pick a PDF), one button, and one sentence back. The six checks are still
+  there, folded under 「为什么」, and the old console moved to `/portal` (no
+  route removed). The issuing side got its own page, `/issue`: three fields
+  (name / student id / degree), one button, and the result is a hash, a PDF and
+  a `/verify?hash=…` link that closes the loop in one click. The form posts to
+  the same guarded `POST /api/custom/build`; the token box only appears when
+  there is no staff session. New tests pin the shape (no inline markup, no
+  `innerHTML`, exactly three `required` fields); the frontend module is **27**
+  tests. Docs: `docs/U25_one_screen.md`.
+- **U26 (reachable, and watchable)** — a demo on `127.0.0.1` is a demo nobody
+  can join. `start_showcase.bat` boots the portal, opens a Cloudflare quick
+  tunnel (with the 429 retry that quick tunnels need), starts the app with
+  `PUBLIC_BASE_URL` set to that tunnel and `TRUSTED_PROXIES=127.0.0.1` so the
+  limiter keys on real visitors, then opens `/showtime`. That page is the
+  stage: issue → verify → revoke → verify again, four steps, ~12 s, every
+  step a real API call, ending on 「签名仍然有效，失效的是机构的承诺」 with a
+  scannable QR. The first public run exposed a real bug: the cross-origin
+  guard only accepted `127.0.0.1/localhost`, so every POST from the tunneled
+  page was 403 even with a valid token — `_origin_allowed()` now compares
+  against the request's own `Host`. `test_hardening` is **11** tests. Docs:
+  `docs/U26_showcase.md`.
 - **Extras round 3** — *person in context*: the AI resolves who you're asking
   about into a masked profile card, keeps that person across follow-ups
   ("what degree does he hold?"), and can search the web for public info about
@@ -63,14 +152,24 @@ What's in the box, per the 3-week plan:
 
 ![Public log: verifications, chain tail, anomaly watch, notifications](docs/screenshot-log.png)
 
-![Student self-service: own credentials by StudentID + DOB](docs/screenshot-student.png)
+![Retired: the StudentID + DOB lookup that holder links replaced](docs/screenshot-student.png)
+
+> Screenshots from here down predate the U12 split and are kept as a
+> before/after record, not as current UI: they were taken when all nine tabs
+> lived in one page. The behaviour they show (verify, QR, log, issuing) still
+> exists, but issuing, revocation and signer management now live behind
+> `/staff`, and the StudentID + DOB form has been replaced by holder links.
+> The demo video has been rebuilt on top of the current screenshots.
 
 ![Multi-signer admin: registry, key generation, active signer](docs/screenshot-signers.png)
 
-**Demo video:** [`demo.mp4`](demo.mp4) — ~2-minute walkthrough: upload → VALID,
-tamper → INVALID, Ask the AI → cited answer, revoke → REVOKED, QR, verifiable
-PDF, public log, student lookup, signer admin, ship it. Rebuild with
-`python3 scripts/build_demo_video.py`.
+**Demo video:** [`demo.mp4`](demo.mp4) — two-minute walkthrough in the U12 order:
+public entry → upload → VALID, tamper → INVALID, revoke → REVOKED, holder link
+→ one credential only, staff sign-in → issue + holder link, QR → verdict, ask
+the AI → cited answer, public log. Rebuild with
+`.venv/bin/python scripts/build_demo_video.py` (needs `ffmpeg` on PATH); the
+script stitches `docs/screenshot-*.png`, so refreshing a screenshot refreshes
+the video.
 
 ---
 
@@ -90,25 +189,72 @@ python3 -m venv --system-site-packages .venv
 .venv/bin/pip install torch --index-url https://download.pytorch.org/whl/cpu
 .venv/bin/pip install -r requirements.txt
 
-# run (use `.venv/bin/python -m` if you made the venv)
-uvicorn app.main:app --host 127.0.0.1 --port 8000
+# run (use `.venv/bin/python -m` if you made the venv). `--no-proxy-headers`
+# is mandatory: uvicorn otherwise rewrites the caller address from
+# X-Forwarded-For (it trusts 127.0.0.1 by default), which bypasses the app's
+# own TRUSTED_PROXIES check — see docs/U24_proxy_trust.md.
+uvicorn app.main:app --host 127.0.0.1 --port 8000 --no-proxy-headers
 ```
 
 Open **http://127.0.0.1:8000** — the chain is created and seeded on first
 startup (a trusted ML-DSA_65 signer + two sample credentials: a diploma and a
-transcript). The landing page routes you by role:
+transcript).
+
+The UI is split into **three entry points**, not one page with nine tabs
+(U12). A visitor only ever downloads the code for the role they are in:
+
+| Entry | Who | What it can do |
+| --- | --- | --- |
+| `/` | anyone | verify a credential, read the public log, ask the assistant, open a holder link |
+| `/me/<link>` | one holder, via a signed link | see that one credential and its live status |
+| `/staff` | school staff, behind a token login | issue, revoke, manage signers and API keys |
+
+`/staff` asks for the staff token once and keeps it server-side in an
+HttpOnly cookie; the token is not written to `localStorage` or into the page.
+On a deployment with no staff token configured, `/staff` answers 404 — the
+route does not advertise itself.
+
+The three entries, captured after U12 (the older screenshots further down are
+from the single-page build):
+
+![Public entry: verify, public log, assistant, holder link](docs/screenshot-u12-public.png)
+
+![Holder entry: one credential, opened by a signed link](docs/screenshot-u12-holder.png)
+
+![Staff entry: token sign-in, then the console](docs/screenshot-u12-staff-login.png)
+
+**Public landing page (`/`)**:
 
 - **我要验证 (Verify)** — drag a PDF/JSON onto the drop zone, or paste a
   credential hash, or click a sample (真实有效 / 已注销 / 查无此证). The
-  verdict card shows plain language (真实有效 VALID …), a holder summary when a
-  document was uploaded, and collapsible six-check details; one click downloads
-  the verification receipt.
-- **我是学生 (Student)** — Student ID + DOB → your credentials, with Verify /
-  QR / share-link shortcuts.
-- **我是学校管理员 (Registrar)** — batch-issue wizard: download the CSV
-  template, paste/upload a roster, preview (valid rows vs. problem rows),
-  one-click issue → per-row PDF / QR download; single-issue card and public
-  API-key management are on the same tab.
+  verdict card shows plain language (真实有效 VALID …), a holder summary,
+  collapsible six-check details, and a downloadable receipt.
+- **持证人 (Holder)** — paste the link the school gave you (`/me/<token>`)
+  and open your own credential. The holder page shows the credential's
+  issue point (block height and time), a verification QR, a **下载凭证 PDF**
+  button (that link is the only anonymous-free path to the full file), and
+  the revocation reason if it was revoked (U13 F3). There is **no** Student
+  ID + DOB form any more: that was an enumerable privacy gate (see
+  *Holder links*). A link whose 30-day life is down to its last week grows a
+  **续期这个链接** button (U14): renewal re-signs the same credential in
+  place, so a holder whose employer kept the link does not have to ask the
+  office for a new one.
+
+**Staff console (`/staff`)** — batch-issue wizard (CSV template, preview of
+valid vs. problem rows, per-row full-PDF / QR / **holder link** buttons plus
+a *导出全部持证人链接 CSV* export, U13 F5), single-issue card, revocation,
+signer management and public API keys. The console is **role-aware** (U13
+F4): it asks `/api/staff/whoami` on boot and hides `ADMIN` tabs the session
+cannot use (an `ISSUER` session sees only the batch card, not single issue,
+API keys, signer management or self-issue). The session chip counts down
+(U13 F6) and returns to the login page when it expires. Two sign-out buttons
+sit next to it (U14): **退出** closes this browser, **退出所有设备** drops
+every live session of that role on the server, so a forgotten tab or a
+shared laptop cannot hold the console open. Each role keeps at most three
+live sessions (the fourth login evicts the oldest), and the login form brakes
+after five wrong tokens from one address within ten minutes. The notification
+recipient is **not** a field here: the server records the event and mails
+only its configured `NOTIFY_TO`.
 - **Ask the AI tab** — click a suggested question or type your own — answers
   come with source citations.
 - **Log tab** — anonymized verification log, chain tail, IsolationForest
@@ -132,26 +278,43 @@ python -m unittest discover tests -v
 
 | Method | Path | Purpose |
 |---|---|---|
-| GET  | `/` | Portal UI (plain HTML + fetch) |
-| GET  | `/healthz` | Chain status: name, algo, height, registered signers |
-| GET  | `/api/version` | Verifier identity + version + chain snapshot + status-list digest (public in both modes) |
-| POST | `/api/issue` | Issue a credential (`{"document": {...}, "student_email": "..."}` optional) — returns hash, height, `pdf_url`, notification |
-| POST | `/api/issue/batch` | Registrar wizard: `{"credentials": [{"document", "student_email"?}, ...]}` (≤`BATCH_ISSUE_MAX`) — per-row ok/error + hash + `pdf_url` + `qr_url` + summary; bad rows never block good rows (admin) |
+| GET  | `/` | One-screen verify page (U25): paste a hash or pick a PDF, read one sentence. Assets: `simple.css` + `simple_verify.js` |
+| GET  | `/issue` | Three-field issuing page (U25): name / student id / degree → hash, PDF, verify link. The action stays admin-guarded and the page only reveals the token box when no staff session is present |
+| GET  | `/portal` | The previous multi-tab console (six checks, batch, log, chat) — no issuing code in the bundle |
+| GET  | `/showtime` | Stage screen (U26): issue → verify → revoke → verify, four real API calls, scannable QR pointing at `PUBLIC_BASE_URL` |
+| GET  | `/staff` | Staff console — 404 without a configured staff token; 303 to `/staff/login` without a session |
+| GET  | `/staff/login` | Staff token form (posts the token once, gets an HttpOnly session cookie) |
+| POST | `/staff/login` | Exchange `{"token"}` for a `staff_sid` cookie; 401 on a bad token |
+| POST | `/staff/logout` | Drop the session server-side and clear the cookie |
+| POST | `/staff/logout/all` | Drop every live session of the caller's role (U14) — `{ok, role, dropped}`; 401 without a session |
+| GET  | `/me/{cap}` | Holder page for a signed link (404 for forged/expired/wrong-scope) |
+| GET  | `/healthz` | Chain status: name, algo, height, registered signers, and `integrity` (`ok` + `bad_blocks` + `checked_at`/`age_s`). A false integrity flips the top-level status to `degraded` (U15); the age makes the 30 s cache visible (U23) |
+| GET  | `/api/version` | Verifier identity + version + uptime (seconds) + chain snapshot (incl. `integrity`) + status-list digest (public in both modes) |
+| GET  | `/api/diagnostics` | **Staff only** (U19): the *text* behind `/healthz`'s counts — config `fatal`/`warnings` messages, chain integrity, signers with `retired_at_height`, version, `uptime_s`. `/healthz` stays public and count-only |
+| POST | `/api/issue` | Issue a credential (`{"document": {...}}`; `student_email` is accepted but **ignored** since U12 R4) — returns hash, height, `pdf_url`, notification status (`queued`/`duplicate`) |
+| POST | `/api/issue/batch` | Registrar wizard: `{"credentials": [{"document"}, ...]}` (≤`BATCH_ISSUE_MAX`) — per-row ok/error + hash + `pdf_url` + `qr_url` + summary; bad rows never block good rows (admin/issuer) |
 | POST | `/api/revoke` | Revoke by hash or by full document (creates a REVOKE block) |
 | GET  | `/api/verify/{hash}` | Hash-level verdict: checks 1,2,3,5,6 (4 needs the document) |
 | GET  | `/api/status/{hash}` | Raw lifecycle: issued/revoked + block heights |
 | POST | `/api/verify/document` | Full six-check verdict — JSON body, multipart `.json` file, or multipart **portal-issued PDF** |
 | POST | `/api/extract/pdf` | PDF auto-fill (round 9): upload a certificate PDF → `{mode, confidence, document, field_confidence, warnings}` — a JSON *draft* for the form, never a verdict |
 | POST | `/api/verify/batch` | Employer pack: `{"hashes": [...]}` (≤500) → per-row verdicts + receipt IDs + summary |
-| GET  | `/api/statuslist` | Signed revocation status list (ETag-cacheable, rebuilt on chain change) |
+| GET  | `/api/statuslist` | Signed revocation status list (ETag-cacheable, rebuilt on chain change); v2 signature carries nonce + signer fingerprint |
+| GET  | `/api/signers/keys` | Public keys in PEM + fingerprints + retirement boundaries — the offline trust anchor (U17) |
 | GET  | `/api/receipt/{id}` | Receipt registry lookup (`RCP-...`) — was this receipt issued by our verifier? |
 | GET/POST/DELETE | `/api/admin/apikeys[/{id}]` | Public API-key lifecycle (create / list / revoke; admin) |
-| GET  | `/api/pdf/{hash}` | Download the verifiable diploma PDF (embeds the exact JSON) |
-| GET  | `/api/student/{id}?dob=YYYYMMDD` | Student self-service lookup (DOB gate required) |
+| GET  | `/api/pdf/{hash}` | **Verification report** PDF for a public hash: identity withheld, no embedded JSON (U13 F1). Anyone can fetch it; it proves what the chain says, not who holds it |
+| GET  | `/api/admin/pdf/{hash}` | The **full credential** PDF (embedded JSON attachment) — staff only, U13 F1 |
+| GET  | `/api/me/{cap}` | The one credential behind a holder link, with live status, `issued_at`, `issued_height`, and `revoked_reason` (404 for invalid/expired) |
+| GET  | `/api/me/{cap}/pdf` | The holder's own full credential PDF — only through a signed link, U13 F1 |
+| POST | `/api/me/{cap}/renew` | Re-sign the same credential with a fresh 30-day link (U14) — only in the last 7 days of the current one, otherwise 403 |
+| GET  | `/api/staff/whoami` | `{role, demo_open, session_seconds_left, client_ip}` for the console's role-aware UI (U13 F4/F6); `client_ip` is the bucket key actually used (U24) |
+| GET  | `/api/holder-link?student_id=&hashed_document=` | Mint a holder link (staff only) — `{token, path, expires_in}` |
 | GET  | `/api/signers` | Registered signers + which one is active |
 | POST | `/api/signers` | Register a new signer key (`{"name", "ds_algo"}`; admin) |
 | POST | `/api/signers/active` | Switch the active signer (`{"sha256fgpt"}`; admin) |
-| GET  | `/api/notifications` | Recent email notifications (dry-run records included) |
+| POST | `/api/signers/retire` | Retire a signer without deleting it: keeps its pre-retirement blocks valid, refuses new ones (`{"sha256fgpt"}`; 422 on the active signer; admin) |
+| GET  | `/api/notifications` | Recent email notifications (dry-run records included) — **staff only** (U13 F2) |
 | POST | `/api/chat` | RAG answer: `{"question", "session_id"?, "web"?}` → answer + sources + `person` (masked profile) + `web` (public lookups) |
 | GET  | `/api/chat/suggestions` | Suggested questions for the UI chips |
 | GET  | `/api/rag/status` | Which embedder/generator are active + index size |
@@ -258,6 +421,15 @@ which installs CPU-only torch first to keep the image ~2 GB. Steps:
    public verification link.
 6. The service exposes `/healthz` for the platform health check.
 
+Every launch path in this repo already passes `--no-proxy-headers` (uvicorn
+trusts `X-Forwarded-For` from 127.0.0.1 by default, which would let a forged
+header pick its own rate-limit bucket). If you *do* put a proxy in front,
+configure both layers with the same address — `--forwarded-allow-ips=<proxy>`
+for uvicorn and `TRUSTED_PROXIES=<proxy>` for the app — otherwise one of them
+will silently be the deciding vote. `GET /api/staff/whoami` echoes the bucket
+key and `scripts/smoke_portal.py` probes a forged header, so the mismatch is
+visible rather than silent.
+
 The sandbox cannot hold a hosting account, so the URL step is left for you —
 everything else is one click once the repo exists.
 
@@ -274,14 +446,46 @@ everything else is one click once the repo exists.
 
 ## Post-Week-3 extras (round 2)
 
-- **Verifiable diploma PDFs** — `GET /api/pdf/{hash}` renders a printable
-  diploma card (student name, degree, dates, on-chain hash, QR) and **embeds
-  the exact credential JSON as a PDF attachment**. The verifier uploads that
-  PDF and the portal reads the embedded JSON and runs the exact six checks —
-  no OCR, no false verdicts. `POST /api/verify/document` accepts the PDF
-  directly. The PDF is a carryable artifact: a student can print it, email it,
-  or put it on a CV; anyone can verify it at the portal. (`app/pdf_diploma.py`,
-  reportlab + pypdf.)
+- **Verifiable diploma PDFs** — three forms since U13 F1, because a hash is a
+  public identifier and not a credential:
+  - `GET /api/pdf/{hash}` → **verification report**: identity fields read
+    `withheld`, no JSON attachment, `Cache-Control: public`; `verification-*.pdf`.
+  - `GET /api/admin/pdf/{hash}` → **full credential** (student name, degree,
+    dates, on-chain hash, QR, embedded JSON), staff only; `credential-*.pdf`.
+  - `GET /api/me/{cap}/pdf` → the same full file, but only through the holder's
+    signed link.
+
+  A PDF is a static artefact, so since U14 both full-file routes also paint a
+  red **REVOKED ON CHAIN — block #N** band (with the issuer's reason, or "no
+  reason was recorded") when the hash has a REVOKE record. The chain is still
+  the authority; the band only stops a revoked file being mistaken for a live
+  credential.
+
+  U19 adds the same treatment for a **broken chain**: when `chain_integrity()`
+  reports `ok: false`, every PDF (report, full credential, holder copy) prints
+  `CHAIN INTEGRITY FAILED: block #N.` plus one line explaining that the verdict
+  may be unreliable, and the footer moves down to make room. `integrity=None`
+  means "not checked", never "clean".
+
+  The QR on the page had never actually been drawn until U19 — the buffer was
+  passed straight to `canvas.drawImage`, which rejects a `BytesIO` with a
+  `TypeError` that a `except ... pass` swallowed. It now goes through
+  `ImageReader`, and if a QR still cannot be produced the page prints
+  `Verify online: <url>` instead, so a printed report always has an entry point.
+
+  U21 puts every vertical position into `LAYOUT` and exposes `layout_zones` /
+  `layout_conflicts`, so the gaps between the hash box, QR, revocation band,
+  integrity lines and footer are asserted in tests rather than eyeballed. A
+  field too long for the card stops the row loop at `body_floor`, prints
+  `(fields too long for the card are complete in the embedded JSON)`, and leaves
+  the QR room intact; the QR itself falls back 28mm → 20mm → printed URL.
+
+  The verifier uploads a **full** credential PDF and the portal reads the
+  embedded JSON to run the exact six checks — no OCR, no false verdicts.
+  `POST /api/verify/document` accepts that PDF directly; a report PDF is
+  rejected on purpose (there is no credential inside it). A student can print
+  the full PDF, email it, or put it on a CV; anyone can verify it at the
+  portal. (`app/pdf_diploma.py`, reportlab + pypdf.)
 - **IsolationForest anomaly detection** — `GET /api/anomalies` now fits a real
   scikit-learn `IsolationForest` over each signer's hourly issue counts
   (contamination 0.15, per-signer) and merges the flags with the deterministic
@@ -292,20 +496,34 @@ everything else is one click once the repo exists.
 - **Persistent public log** — every verification is appended to
   `data/public-log.jsonl` and reloaded on startup, so the log survives
   restarts (bounded file, unwritable-FS fallback to memory-only).
-- **Student self-service** — `GET /api/student/{id}?dob=YYYYMMDD` lists the
-  student's own credentials (type, degree, verdict, hash) from the issuer's
-  `rawjsondocs/` index. The chain itself stores only hashes — plaintext never
-  touches the ledger — and the DOB gate prevents revealing whether a StudentID
-  exists at all. The Student tab renders the table with Verify/QR shortcuts.
+- **Holder links** — the school mints a signed link per credential
+  (`GET /api/holder-link`, staff only), and the holder opens `/me/<token>`.
+  The token is `base64url(payload).HMAC-SHA256` and carries the StudentID, the
+  credential hash and an expiry; a forged, edited, expired or out-of-scope
+  token all answer the same 404. The link is scoped to **one** credential, so
+  a leaked link cannot enumerate the rest. Status is re-read from the chain on
+  every open, so a revocation shows up without reissuing the link.
+  `GET /api/student/{id}?dob=` is **gone**: an eight-digit DOB with no token
+  and no rate limit was an enumerable gate.
 - **Multi-signer admin** — `GET/POST /api/signers` lists and registers trusted
   signers (generates fresh ML-DSA_65 / RSA-PSS_2048 / ec.secp256r1 keys,
   private keys held under `data/demo-chain/keys/`); `POST /api/signers/active`
   switches which signer signs new blocks. The Signers tab shows the registry,
   the active badge, and the Make-active control.
-- **Email notifications** — optional `student_email` on `/api/issue` triggers
-  the notifier: real SMTP+TLS when `EMAIL_ENABLED=1` + `SMTP_*` are set,
-  otherwise a recorded **dry-run** (shown on the Issue tab and the Log tab's
-  notification feed). The message includes the verification link.
+  `POST /api/signers/retire` retires a key **without deleting it**: the entry and
+  public key stay in `info.yaml` and gain a `retired_at_height` boundary, so blocks
+  it signed before that height still verify while anything after it does not. The
+  active signer cannot be retired (422) — switch first, or its next block would be
+  signed by an untrusted key and the whole chain would read INVALID, which is
+  exactly how the U15 demo chain broke. Re-registering the same public key clears
+  the boundary.
+- **Email notifications, worker-ised (U12 R4)** — `/api/issue` only **queues**
+  an event; a daemon thread started by the app lifespan delivers it. The
+  recipient is the deployment's `NOTIFY_TO`, never a value from the request
+  body (a `student_email` field is accepted and ignored). One notification per
+  credential, at most `NOTIFY_PER_HOUR` attempts per hour, `logged` when
+  `NOTIFY_TO` is unset. Real SMTP+TLS when `EMAIL_ENABLED=1` + `SMTP_*` are
+  set, otherwise a recorded dry-run.
 
 ## Post-Week-3 extras (rounds 5–7)
 
@@ -335,12 +553,29 @@ legal certification.* No DOB and no Student ID appear in the receipt.
 - **Signed revocation status list** — `GET /api/statuslist` returns
   `{schema, snapshot, counts, revoked[], signature}` signed by the active
   signer, cached per chain snapshot, ETag-negotiated (`304`). Employers can
-  cache it and answer "is this revoked?" offline.
+  cache it and answer "is this revoked?" offline — and, since U17, they can
+  actually **check** the signature: `signature` carries the nonce, the signing
+  key's `sha256fgpt` and its registry name, and `GET /api/signers/keys`
+  publishes the matching public keys in PEM with retirement boundaries.
+  `scripts/verify_statuslist.py` does the offline check (and `--hash` lookup)
+  from two saved JSON files, with no call back to the portal. Schema is
+  `gef26.statuslist.v2`; v1 lists cannot be verified (they had no nonce) and
+  should be refetched. A signature only proves the list and the anchor agree —
+  so `--expect <fingerprint>` (the fingerprint you already know out of band)
+  pins *which* key must have signed, and `--pin <file>` records the anchor's
+  fingerprint set on first use and refuses any later variation; a corrupt pin
+  fails closed rather than quietly restarting trust. Since U20 a legitimate
+  rotation is `--pin-update`: it rewrites the pin **only when the list
+  verifies**, appends the old/new sets plus a UTC timestamp to the pin's
+  `history`, and warns when no `--expect` was given (see
+  `docs/U20_pin_rotation.md`).
 - **Receipt registry** — `GET /api/receipt/{id}` confirms a receipt was
   issued by this verifier (ring-buffered to `RECEIPT_REGISTRY_CAP`).
 - **Revocation reason / effective date** — `POST /api/revoke` accepts
   `reason` + `effective_at`; both are recorded on the REVOKE block and
-  surfaced on verdicts, batch rows and the status list.
+  surfaced on verdicts, batch rows and the status list. `effective_at` is
+  metadata (verdicts do not consult it), so it is **rejected when in the future**
+  (422, tolerance 60 s) rather than being silently ignored while revoking at once.
 
 **Persistence (round 7).** `scripts/backup_chain.py export|import` produces a
 single `.tar.gz` of the chain (+ raw docs, optionally excluding private keys).
@@ -400,12 +635,16 @@ Upload a certificate PDF and the portal fills the credential JSON for you:
 ## Quick API demo
 
 ```bash
-# Issue a credential (returns hash + pdf_url + notification)
+# Issue a credential (returns hash + pdf_url + notification status)
+# Note: student_email is accepted for backward compatibility but ignored —
+# the notification goes to the deployment's NOTIFY_TO.
 curl -X POST http://127.0.0.1:8000/api/issue -H 'Content-Type: application/json' \
-  -d '{"document":{"PersonalParticulars":{"Surname":"LEE","GivenNames":"SIU MING","Sex":"M","DOB":"19901212","StudentID":"87654321"},"AcademicInfo":{"DegreeName":"Bachelor of Science in Computing","DegreeStartDate":"20190901","DegreeEndDate":"20230501","Honour":"2ND HON","Observations":""},"DocumentInfo":{"DateOfIssue":"20230520","AuthorizedSignature":"PRESIDENT Prof. QUO, Vadis","IssuingO":"UNIVERSITY OF UTOPIA","IssuingOU":"DEPT OF COMPUTING","DocType":"CERTIFICATE OF DIPLOMA"}},"student_email":"lee@example.com"}'
+  -d '{"document":{"PersonalParticulars":{"Surname":"LEE","GivenNames":"SIU MING","Sex":"M","DOB":"19901212","StudentID":"87654321"},"AcademicInfo":{"DegreeName":"Bachelor of Science in Computing","DegreeStartDate":"20190901","DegreeEndDate":"20230501","Honour":"2ND HON","Observations":""},"DocumentInfo":{"DateOfIssue":"20230520","AuthorizedSignature":"PRESIDENT Prof. QUO, Vadis","IssuingO":"UNIVERSITY OF UTOPIA","IssuingOU":"DEPT OF COMPUTING","DocType":"CERTIFICATE OF DIPLOMA"}}}'
 
-# Student self-service
-curl "http://127.0.0.1:8000/api/student/87654321?dob=19901212"
+# Mint a holder link for that credential (staff only), then open it
+curl "http://127.0.0.1:8000/api/holder-link?student_id=87654321&hashed_document=<hash>" \
+  -H "X-Admin-Token: $ADMIN_TOKEN"
+curl "http://127.0.0.1:8000/api/me/<token>"
 
 # Ask the AI — person in context + web research
 curl -X POST http://127.0.0.1:8000/api/chat \
@@ -424,7 +663,15 @@ curl -X POST http://127.0.0.1:8000/api/chat \
 | `CHAIN_NAME` | `Gef26-credential-chain` | Chain name in info.yaml |
 | `SIGNER_ALGO` | `ML_DSA_65` | Initial signer algorithm (ML-DSA / RSA-* / ec.*) |
 | `SIGNER_NAME` | `UNIVERSITY OF UTOPIA` | Initial signer display name |
-| `ADMIN_TOKEN` | *(unset)* | If set, admin endpoints require header `X-Admin-Token: <token>` |
+| `GEF_KEY_PASSPHRASE` | *(unset)* | Encrypt signer private keys at rest (PKCS#8 PBES2). When set, newly written keys are encrypted and an existing plaintext key is re-encrypted on first load; a passphrase that does not match the key on disk stops issuing with a clear error instead of generating a new key |
+| `ADMIN_TOKEN` | *(unset)* | Staff token. When set: `X-Admin-Token: <token>` for CLI, and the `/staff` login form for a browser. Required for `/staff` and `/staff/login` to exist at all |
+| `ISSUER_TOKEN` | *(unset)* | Optional narrower token that can only bulk-issue (no revoke / signer / API-key rights) |
+| `DEMO_OPEN` | `1` | U13 F7: what an instance with **no** role token does on admin routes. `1` = allow (the old demo behaviour, and `/api/version` + the public page say so); `0` = fail closed with 401 and a message naming the variable. Set `0` on anything reachable from a network |
+| `CAPABILITY_SECRET` | *(derived from ADMIN_TOKEN)* | HMAC key for holder links. Unset *and* no `ADMIN_TOKEN` → a per-process random key, so links die on restart. Set it explicitly before demoing |
+| `CAPABILITY_TTL` | `2592000` (30 days) | Holder link lifetime in seconds (clamped to 5 min … 1 year) |
+| `CAPABILITY_RENEW_WINDOW` | `604800` (7 days) | U14: how close to expiry a holder may self-renew (`POST /api/me/{cap}/renew`) before the button appears |
+| `NOTIFY_TO` | *(unset)* | The **only** notification recipient. Unset → events are recorded (`logged`) and nothing is sent |
+| `NOTIFY_PER_HOUR` | `60` | Max notification attempts per hour; beyond it, `throttled` |
 | `EMBED_MODEL` | `sentence-transformers/all-MiniLM-L6-v2` | Embedding model id |
 | `DEEPSEEK_API_KEY` | *(unset)* | Enables DeepSeek generation (`deepseek-chat`) |
 | `OLLAMA_BASE_URL` | *(unset)* | Enables Ollama generation (e.g. `http://127.0.0.1:11434`) |
@@ -457,10 +704,14 @@ curl -X POST http://127.0.0.1:8000/api/chat \
   verification stays exact by embedding the credential JSON inside the PDF the
   portal issues. Foreign PDFs get a clear error telling the user to upload the
   JSON instead.
-- **Student lookup is issuer-side.** The chain deliberately stores only
-  hashes; `rawjsondocs/` is the portal's own index (also used by RAG). A
-  production deployment would back it with a database, still without touching
-  the chain.
+- **Holder lookup has two sources, split by sensitivity.** `rawjsondocs/`
+  holds the issuer's full copies (names, DOB, e-mail) and is used by RAG,
+  PDF rendering and disclosure. `holder_index/` holds one PII-free row per
+  credential (StudentID, hash, type, degree) and is what the holder flow and
+  the holder-link mint read. A public instance can therefore be deployed with
+  `holder_index/` and **no** `rawjsondocs/`, and the submission bundle ships
+  neither (it carries no `data/` at all, and the build fails if the finished
+  zip contains a `rawjsondocs` path, a `.pem`, or a `"DOB"`/`"Email"` key).
 - **The offline generator is the demo default** (no API key needed). Set
   `DEEPSEEK_API_KEY` or `OLLAMA_BASE_URL` for LLM answers; both fall back to
   the offline engine on failure.
@@ -490,52 +741,53 @@ curl -X POST http://127.0.0.1:8000/api/chat \
 
 ```
 verification-portal/
-├── app/
-│   ├── main.py            # FastAPI app + endpoints + hardening middleware
-│   ├── chain_service.py   # seeding + issue/revoke/verify + signers + student registry
-│   ├── chat_service.py    # RAG orchestration: retrieve -> generate -> sources + person/web
-│   ├── person_context.py  # masked person profiles + session anaphora (extras round 3)
-│   ├── web_research.py    # Wikipedia/DuckDuckGo lookups + demo fixture (extras round 3)
-│   ├── rag_indexer.py     # corpus + FAISS index (numpy fallback)
-│   ├── rag_embedder.py    # MiniLM-L6-v2 embeddings (hashing fallback)
-│   ├── rag_generator.py   # DeepSeek / Ollama / offline engine
-│   ├── rate_limit.py      # sliding-window limiter (Week 3)
-│   ├── pdf_diploma.py     # verifiable diploma PDFs (extras round 2)
-│   ├── pdf_extractor.py   # PDF auto-fill: embedded payload + text-layer fields (round 9)
-│   ├── notifier.py        # email notifications, dry-run default (extras round 2)
-│   ├── public_log.py      # persistent anonymized log (extras)
-│   ├── anomaly.py         # IsolationForest + rule signer-velocity watch (extras)
-│   ├── config.py          # env-driven config
-│   ├── schemas.py         # pydantic request models
-│   ├── apikeys.py         # public API keys (employer pack, round 6)
-│   ├── receipt_registry.py# verification receipt registry (round 6)
-│   ├── statuslist.py      # signed revocation status list (round 6)
-│   ├── blockchain_util.py # core chain (copied + hardened)
-│   └── crypto_util.py     # core crypto (copied from repo)
-├── static/index.html      # single-page UI, responsive, bilingual, no frameworks (round 8 UX)
-├── tests/test_api.py      # 16 API tests (isolated chain)
-├── tests/test_hardening.py# 7 hardening tests (rate/body/corrupt chain)
-├── tests/test_rag.py      # 10 RAG/chat tests (isolated chain)
-├── tests/test_features.py # 8 QR/log/anomaly tests (isolated chain)
-├── tests/test_extra2.py   # 18 PDF/student/signer/notify/persist tests
-├── tests/test_person.py   # 13 person-in-context + web-research tests
-├── tests/test_employer_pack.py  # 8 employer-pack tests (round 6)
-├── tests/test_public_mode.py    # 6 public-mode tests (round 5)
-├── tests/test_restart_persistence.py # 2 restart/snapshot tests (round 7)
-├── tests/test_issue_batch.py    # 5 batch-issue wizard tests (round 8)
-├── tests/test_pdf_extract.py    # 6 PDF auto-fill tests (round 9)
-├── scripts/build_demo_video.py
-├── scripts/batch_verify.py # employer-pack CLI: CSV in → CSV out (round 6)
-├── scripts/backup_chain.py # export/import chain dir (round 7)
-├── scripts/run_all_tests.py # per-module test runner (10 modules, isolated)
-├── scripts/local_smoke.py  # 2-phase in-process smoke (public/private)
-├── start_portal.bat        # one-click launcher (Windows) — round 8
-├── start_portal.sh         # one-click launcher (macOS/Linux) — round 8
-├── docs/screenshot-*.png   # 9 UI screenshots (verify/chat/tampered/revoked/issue/qr/log/student/signers)
-├── docs/DEPLOY.md          # Render/Railway deploy + persistence + drill
-├── docs/demo-script.md     # 3-minute demo script + pilot + judge Q&A
-├── docs/registrar-outreach.md # outreach kit for one pilot registrar
-├── demo.mp4               # ~2-minute walkthrough
+├── app/                    # 37 modules (U0–U10 refactor; see docs/U1..U10 reports)
+│   ├── main.py             # FastAPI app + endpoints + hardening middleware
+│   ├── config.py           # env-driven config (all constants live here)
+│   ├── errors.py           # domain exception hierarchy
+│   ├── chain_core.py       # chain lock, paths, signer keys, seeding, snapshot restore
+│   ├── blockchain_util.py  # core chain: blocks, verification, read caches
+│   ├── crypto_util.py      # core crypto: ML-DSA / RSA-PSS / ECDSA, JCS hash
+│   ├── chain_service.py    # issue/revoke/verify + signers + student registry
+│   ├── issuance_service.py # issuance + batch issuance (request-model driven)
+│   ├── signer_service.py   # multi-signer management + signed chain snapshot
+│   ├── query_service.py    # verify/status/statuslist read paths
+│   ├── disclosure.py       # chapter-level selective disclosure
+│   ├── privacy.py          # person-record masking rules
+│   ├── repository.py       # five stores × JSON|SQLite + migration
+│   ├── audit.py            # audit trail + operator identity (ContextVar)
+│   ├── apikeys.py          # API keys: create / rotate / revoke / quota
+│   ├── authz.py            # role model (admin / issuer)
+│   ├── rate_limit.py       # sliding-window limiter
+│   ├── session_store.py    # chat session memory seam (TODO[external-redis])
+│   ├── chat_service.py     # RAG orchestration: retrieve -> generate -> sources
+│   ├── person_context.py   # masked person profiles + session anaphora
+│   ├── web_research.py     # Wikipedia/DuckDuckGo lookups + demo fixture
+│   ├── rag_indexer.py      # corpus + FAISS index (numpy fallback)
+│   ├── rag_embedder.py     # MiniLM-L6-v2 embeddings (hashing fallback)
+│   ├── rag_generator.py    # DeepSeek / Ollama / offline engine
+│   ├── pdf_diploma.py      # verifiable diploma PDFs
+│   ├── pdf_extractor.py    # PDF auto-fill: embedded payload + text layer
+│   ├── notifier.py         # email notifications, dry-run default
+│   ├── public_log.py       # persistent anonymized log
+│   ├── anomaly.py          # IsolationForest + rule signer-velocity watch
+│   ├── observability.py    # structured request log + request ids
+│   ├── startup.py          # boot-time config validation (counts in /healthz, text in /api/diagnostics)
+│   ├── backup.py           # chain backup / restore drill primitives
+│   ├── statuslist.py       # signed revocation status list
+│   ├── receipt_registry.py # verification receipt registry (append-only JSONL)
+│   ├── custom_service.py   # self-service credential maker
+│   └── schemas.py          # pydantic request models
+├── static/                 # index.html + app.js + styles.css (U6 split from 1799 → 392 lines)
+├── tests/                  # 39 modules; scripts/run_all_tests.py runs them per-module
+├── scripts/                # run_all_tests.py, smoke_portal.py (read-only check of a
+│                           # running instance), local_smoke.py (in-process, temp chain),
+│                           # batch_verify.py, backup_chain.py, restore_drill.py,
+│                           # license_audit.py, verify_statuslist.py (offline list check)
+├── docs/                   # U0–U10 acceptance reports, DEPLOY.md, SBOM, demo script
+├── Dockerfile              # three-layer build (base / app / app+ML), non-root, healthcheck
+├── start_portal.bat/.sh    # one-click launchers
+├── demo.mp4                # ~2-minute walkthrough
 ├── Dockerfile             # CPU-torch first, ~2 GB image
 ├── render.yaml            # Render blueprint (free tier, public verifier)
 ├── railway.toml           # Railway config (public verifier)

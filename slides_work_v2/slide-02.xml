@@ -1,0 +1,104 @@
+<slide xmlns="https://www.larkoffice.com/sml/2.0">
+  <style>
+    <fill>
+      <fillColor color="rgb(255,255,255)"/>
+    </fill>
+  </style>
+  <data>
+    <shape type="text" topLeftX="80" topLeftY="48" width="800" height="48">
+      <content textType="title" fontSize="28" color="rgba(0,28,84,1)" bold="true" wrap="false">
+        <p>TL;DR · 覆盖签发到核验的凭证全流程</p>
+      </content>
+    </shape>
+    <shape type="text" topLeftX="80" topLeftY="104" width="800" height="28">
+      <content textType="body" fontSize="14" color="rgba(71,85,105,1)" wrap="false">
+        <p>Issue → Verify → Receipt → Revoke，全部可运行、可复现、有测试与 AI 辅助</p>
+      </content>
+    </shape>
+    <line startX="80" startY="142" endX="880" endY="142">
+      <border color="rgb(212,229,247)" width="1"/>
+    </line>
+    <shape type="text" topLeftX="80" topLeftY="160" width="56" height="40">
+      <content textType="body" fontSize="20" color="rgba(0,112,186,1)" bold="true" fontFamily="Roboto Mono" wrap="false">
+        <p>01</p>
+      </content>
+    </shape>
+    <shape type="text" topLeftX="150" topLeftY="158" width="730" height="44">
+      <content textType="body" fontSize="17" color="rgba(0,28,84,1)" bold="true" wrap="false">
+        <p>链上只存哈希与签名，明文个人数据不上链</p>
+      </content>
+    </shape>
+    <shape type="text" topLeftX="150" topLeftY="202" width="730" height="24">
+      <content textType="body" fontSize="12" color="rgba(71,85,105,1)" wrap="false">
+        <p>SHA3-512（JCS 规范化）锚定凭证；注册端明文索引留在链外，收据不含出生日期与学号</p>
+      </content>
+    </shape>
+    <line startX="80" startY="236" endX="880" endY="236">
+      <border color="rgb(212,229,247)" width="1"/>
+    </line>
+    <shape type="text" topLeftX="80" topLeftY="252" width="56" height="40">
+      <content textType="body" fontSize="20" color="rgba(0,112,186,1)" bold="true" fontFamily="Roboto Mono" wrap="false">
+        <p>02</p>
+      </content>
+    </shape>
+    <shape type="text" topLeftX="150" topLeftY="250" width="730" height="44">
+      <content textType="body" fontSize="17" color="rgba(0,28,84,1)" bold="true" wrap="false">
+        <p>六项检查全过才 VALID，任一失败即 INVALID</p>
+      </content>
+    </shape>
+    <shape type="text" topLeftX="150" topLeftY="294" width="730" height="24">
+      <content textType="body" fontSize="12" color="rgba(71,85,105,1)" wrap="false">
+        <p>链完整性 · 签发方可信 · 链上有记录 · 哈希匹配 · 签名有效 · 未撤销；纯哈希查询另给链上状态</p>
+      </content>
+    </shape>
+    <line startX="80" startY="328" endX="880" endY="328">
+      <border color="rgb(212,229,247)" width="1"/>
+    </line>
+    <shape type="text" topLeftX="80" topLeftY="344" width="56" height="40">
+      <content textType="body" fontSize="20" color="rgba(0,112,186,1)" bold="true" fontFamily="Roboto Mono" wrap="false">
+        <p>03</p>
+      </content>
+    </shape>
+    <shape type="text" topLeftX="150" topLeftY="342" width="730" height="44">
+      <content textType="body" fontSize="17" color="rgba(0,28,84,1)" bold="true" wrap="false">
+        <p>三角色 FastAPI 门户：验证者 / 学生 / 注册管理员</p>
+      </content>
+    </shape>
+    <shape type="text" topLeftX="150" topLeftY="386" width="730" height="24">
+      <content textType="body" fontSize="12" color="rgba(71,85,105,1)" wrap="false">
+        <p>CSV 批量签发与批量撤销；雇主包支持批量核验、API Key 限流、签名状态列表与收据注册表</p>
+      </content>
+    </shape>
+    <line startX="80" startY="420" endX="880" endY="420">
+      <border color="rgb(212,229,247)" width="1"/>
+    </line>
+    <shape type="text" topLeftX="80" topLeftY="436" width="56" height="40">
+      <content textType="body" fontSize="20" color="rgba(0,112,186,1)" bold="true" fontFamily="Roboto Mono" wrap="false">
+        <p>04</p>
+      </content>
+    </shape>
+    <shape type="text" topLeftX="150" topLeftY="434" width="730" height="44">
+      <content textType="body" fontSize="17" color="rgba(0,28,84,1)" bold="true" wrap="false">
+        <p>108 项测试 / 12 模块，RAG 助手带引用，重启可持久化</p>
+      </content>
+    </shape>
+    <shape type="text" topLeftX="150" topLeftY="478" width="730" height="24">
+      <content textType="body" fontSize="12" color="rgba(71,85,105,1)" wrap="false">
+        <p>脱敏人档案、隐私保护联网检索、异常检测、快照备份恢复与限流/体积/嵌套防护</p>
+      </content>
+    </shape>
+    <shape type="text" topLeftX="80" topLeftY="506" width="800" height="20">
+      <content textType="caption" fontSize="11" color="rgba(71,85,105,1)" textAlign="right" wrap="false">
+        <p>QuantumGuard · 02</p>
+      </content>
+    </shape>
+  </data>
+  <note>
+    <content textType="body">
+      <p>这一页用四条结论概括项目：哈希签名上链、六项检查、三角色门户、测试与 AI 辅助。</p>
+      <p>强调链上不存个人明文数据；收据里也不含出生日期和学号，这是后续隐私设计的主线。</p>
+      <p>第三条对应雇主包与注册端功能，后面按角色功能包一页展开。</p>
+      <p>第四条给出工程基线：108 项自动化测试覆盖 12 个模块，重启后链数据可从快照恢复。</p>
+    </content>
+  </note>
+</slide>

@@ -7,7 +7,7 @@ Layout:
     student self-service lookup, multi-signer admin, email notifier,
     responsive UI, + person-in-context AI (masked profile cards, session
     memory) and web research (Wikipedia/DuckDuckGo; demo-fixture mode).
-    run: cd verification-portal && .venv/bin/python -m uvicorn app.main:app --port 8000
+    run: cd verification-portal && .venv/bin/python -m uvicorn app.main:app --port 8000 --no-proxy-headers
     (fresh install: python3 -m venv --system-site-packages .venv, then
      .venv/bin/pip install torch --index-url https://download.pytorch.org/whl/cpu
      and .venv/bin/pip install -r requirements.txt)

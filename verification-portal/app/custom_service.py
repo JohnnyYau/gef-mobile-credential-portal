@@ -18,7 +18,8 @@ import re
 import time
 from pathlib import Path
 
-from . import chain_service, config as cfg, pdf_diploma
+from . import chain_service, pdf_diploma
+from . import config as cfg
 
 # defaults for an UNKNOWN value are left empty on purpose — never invent data
 _FIELD_DEFAULTS = {

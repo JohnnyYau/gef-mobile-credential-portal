@@ -22,8 +22,10 @@ import re
 import secrets
 
 import jcs
-from cryptography.hazmat.primitives import hashes, hmac as crypto_hmac, serialization
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives import hmac as crypto_hmac
 from cryptography.hazmat.primitives.asymmetric import ec, padding, rsa
+
 try:
     from cryptography.hazmat.primitives.asymmetric import mldsa
 except ImportError:  # pragma: no cover — cryptography < 43 has no ML-DSA
@@ -111,6 +113,25 @@ def merkle_root(leaf_hashes, hashalgo="sha3_512"):
             nxt.append(hash_bytes((left + right).encode("ascii"), hashalgo))
         level = nxt
     return level[0]
+
+
+def signature_message(json_input, nonce: str, content_hash_algo="sha3_512") -> bytes:
+    """The exact bytes that get signed: b64url(HMAC(key=nonce, msg=payloadHash)).
+
+    Single source for both signing and verification, so the two can never drift
+    apart on what "the message" is.
+    """
+    payload_hash = hash_json(json_input, content_hash_algo)
+    return _hmac_b64(payload_hash, nonce, content_hash_algo).encode("utf-8")
+
+
+def message_digest_b64(json_input, nonce: str, content_hash_algo="sha3_512") -> str:
+    """Base64url digest of the signed message (the value stored on chain).
+
+    Recording the digest in the signature record lets a verifier recompute it
+    and spot a mismatched record without re-deriving anything else.
+    """
+    return signature_message(json_input, nonce, content_hash_algo).decode("ascii")
 
 
 # --------------------------------------------------------------------------
@@ -265,10 +286,8 @@ def sign_json(json_input, ds_algo, private_key, content_hash_algo="sha3_512", no
     ``b64urlsafe(HMAC(key=nonce, msg=payloadHash, algo=contentHashAlgo))``
     where ``payloadHash = hash_json(json_input, content_hash_algo)``.
     """
-    payload_hash = hash_json(json_input, content_hash_algo)
     nonce = nonce or secrets.token_urlsafe(32)
-    message = _hmac_b64(payload_hash, nonce, content_hash_algo).encode("utf-8")
-
+    message = signature_message(json_input, nonce, content_hash_algo)
     if mldsa is not None and isinstance(private_key, (mldsa.MLDSA44PrivateKey, mldsa.MLDSA65PrivateKey, mldsa.MLDSA87PrivateKey)):
         signature = private_key.sign(message)
     elif isinstance(private_key, rsa.RSAPrivateKey):
@@ -293,8 +312,7 @@ def verify_ds(json_input, ds_algo, public_key, signature_b64, nonce, content_has
     verification itself dispatches on the key type.
     """
     try:
-        payload_hash = hash_json(json_input, content_hash_algo)
-        message = _hmac_b64(payload_hash, nonce, content_hash_algo).encode("utf-8")
+        message = signature_message(json_input, nonce, content_hash_algo)
         raw_signature = base64.urlsafe_b64decode(signature_b64 + "=" * (-len(signature_b64) % 4))
 
         if mldsa is not None and isinstance(public_key, (mldsa.MLDSA44PublicKey, mldsa.MLDSA65PublicKey, mldsa.MLDSA87PublicKey)):

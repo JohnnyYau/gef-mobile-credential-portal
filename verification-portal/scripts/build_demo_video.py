@@ -23,20 +23,43 @@ OUT = ROOT / "demo.mp4"
 W, H = 1280, 720
 FPS = 25
 SEG_SECONDS = 10
-FONT_BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-FONT_REG = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+_FONT_CANDIDATES_BOLD = [
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+    r"C:\Windows\Fonts\arialbd.ttf",
+    r"C:\Windows\Fonts\msyhbd.ttc",
+]
+_FONT_CANDIDATES_REG = [
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+    r"C:\Windows\Fonts\arial.ttf",
+    r"C:\Windows\Fonts\msyh.ttc",
+]
+FONT_BOLD = next((p for p in _FONT_CANDIDATES_BOLD if Path(p).exists()), None)
+FONT_REG = next((p for p in _FONT_CANDIDATES_REG if Path(p).exists()), None)
 
+
+def _font(path, size):
+    """Truetype when the platform has the font, otherwise Pillow's default."""
+    if path:
+        return ImageFont.truetype(path, size)
+    return ImageFont.load_default(size)
+
+# U12 order: the visitor sees the public entry first, then the two gated
+# entries, then what each role can actually do.
 SEGMENTS = [
     ("title.png", ""),
-    ("screenshot-verify.png", "1 · Upload a diploma → six checks → VALID"),
-    ("screenshot-tampered.png", "2 · Tampered document → INVALID (hash mismatch)"),
-    ("screenshot-chat.png", "3 · Ask the AI → answers with sources"),
+    ("screenshot-u12-public.png",
+     "1 · Public entry — verify, read the log, ask the assistant. No issuing in sight."),
+    ("screenshot-verify.png", "2 · Upload a diploma → six checks → VALID"),
+    ("screenshot-tampered.png", "3 · Tampered document → INVALID (hash mismatch)"),
     ("screenshot-revoked.png", "4 · Revoke → REVOKED, append-only"),
-    ("screenshot-qr.png", "5 · QR code → scan straight to a verdict"),
-    ("screenshot-issue.png", "6 · Issue → QR + verifiable PDF + email"),
-    ("screenshot-log.png", "7 · Public log + anomaly watch"),
-    ("screenshot-student.png", "8 · Student self-service"),
-    ("screenshot-signers.png", "9 · Multi-signer admin"),
+    ("screenshot-u12-holder.png",
+     "5 · Holder entry — one signed link opens exactly one credential"),
+    ("screenshot-u12-staff-login.png",
+     "6 · Staff entry — token in, HttpOnly session out"),
+    ("screenshot-issue.png", "7 · Issue → QR + verifiable PDF + holder link (staff only)"),
+    ("screenshot-qr.png", "8 · QR code → scan straight to a verdict"),
+    ("screenshot-chat.png", "9 · Ask the AI → answers with sources"),
+    ("screenshot-log.png", "10 · Public log + anomaly watch"),
     ("outro.png", ""),
 ]
 
@@ -60,9 +83,9 @@ def center_text(draw, y, text, font, fill=(255, 255, 255)):
 def make_title(path, title, subtitle, footer):
     img = gradient_bg()
     draw = ImageDraw.Draw(img)
-    f_title = ImageFont.truetype(FONT_BOLD, 66)
-    f_sub = ImageFont.truetype(FONT_REG, 30)
-    f_footer = ImageFont.truetype(FONT_REG, 24)
+    f_title = _font(FONT_BOLD, 66)
+    f_sub = _font(FONT_REG, 30)
+    f_footer = _font(FONT_REG, 24)
     center_text(draw, 220, title, f_title)
     center_text(draw, 330, subtitle, f_sub, fill=(200, 228, 216))
     draw.line([(W / 2 - 120, 420), (W / 2 + 120, 420)], fill=(90, 160, 130), width=3)
@@ -73,9 +96,9 @@ def make_title(path, title, subtitle, footer):
 def make_outro():
     img = gradient_bg()
     draw = ImageDraw.Draw(img)
-    f_big = ImageFont.truetype(FONT_BOLD, 72)
-    f_mid = ImageFont.truetype(FONT_REG, 34)
-    f_small = ImageFont.truetype(FONT_REG, 26)
+    f_big = _font(FONT_BOLD, 72)
+    f_mid = _font(FONT_REG, 34)
+    f_small = _font(FONT_REG, 26)
     center_text(draw, 200, "Ship it", f_big)
     center_text(draw, 320, "uvicorn app.main:app", f_mid, fill=(200, 228, 216))
     center_text(draw, 392, "Dockerfile · render.yaml · railway.toml", f_small,
@@ -89,15 +112,21 @@ def segment(source, caption, idx):
     out = WORK / f"seg{idx}.mp4"
     src = WORK / source if (WORK / source).exists() else DOCS / source
     vf = (
-        "scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720,"
+        "scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720:0:0,"
         f"zoompan=z='min(1.0+0.0012*on,1.12)':d={SEG_SECONDS * FPS}:"
         "x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=1280x720:fps=25"
     )
     if caption:
         safe = caption.replace(":", "\\:").replace("'", "\u2019")
-        vf += (f",drawtext=text='{safe}':fontsize=26:fontcolor=white:"
-               "x=40:y=36:box=1:boxcolor=black@0.55:boxborderw=12")
-    vf += ",fade=t=in:st=0:d=0.5,fade=t=out:st={}:d=0.5".format(SEG_SECONDS - 0.5)
+        font = ""
+        if FONT_REG and "Windows" in FONT_REG:
+            # Windows paths need the drive colon escaped and the value quoted.
+            font = ":fontfile='" + FONT_REG.replace("\\", "/").replace(":", "\\:") + "'"
+        elif FONT_REG:
+            font = ":fontfile=" + FONT_REG
+        vf += (f",drawtext=text='{safe}'{font}:fontsize=26:fontcolor=white:"
+               "x=40:y=636:box=1:boxcolor=black@0.55:boxborderw=12")
+    vf += f",fade=t=in:st=0:d=0.5,fade=t=out:st={SEG_SECONDS - 0.5}:d=0.5"
     cmd = [
         "ffmpeg", "-y", "-i", str(src),
         # no -loop/-t: zoompan itself emits d frames (250 = 10s @ 25fps)
@@ -119,8 +148,8 @@ def main():
         f.unlink()
     make_title("title.png",
                "Credential Verification Portal",
-               "Verify diplomas on the Gef26 credential chain — 60-second demo",
-               "ML-DSA · SHA3-512 · MiniLM + FAISS chat · 33 tests green")
+               "Verify diplomas on the Gef26 credential chain — two-minute walkthrough",
+               "ML-DSA · SHA3-512 · three entries (public / holder / staff) · 27 test modules")
     make_outro()
 
     segs = [segment(src, cap, i) for i, (src, cap) in enumerate(SEGMENTS)]

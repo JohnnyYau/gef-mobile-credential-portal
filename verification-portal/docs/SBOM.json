@@ -1,0 +1,318 @@
+{
+  "generated_from": "importlib.metadata",
+  "python": "3.13.16",
+  "policy": {
+    "accepted": [
+      "MIT",
+      "BSD",
+      "Apache",
+      "ISC",
+      "PSF"
+    ],
+    "annotated": [
+      "MPL-2.0",
+      "LGPL"
+    ],
+    "rejected": [
+      "GPL",
+      "AGPL",
+      "proprietary"
+    ]
+  },
+  "distributions": [
+    {
+      "name": "annotated-doc",
+      "version": "0.0.5",
+      "license": "MIT",
+      "verdict": "OK"
+    },
+    {
+      "name": "annotated-types",
+      "version": "0.8.0",
+      "license": "MIT | MIT License",
+      "verdict": "OK"
+    },
+    {
+      "name": "anyio",
+      "version": "4.15.1",
+      "license": "MIT",
+      "verdict": "OK"
+    },
+    {
+      "name": "ast_serialize",
+      "version": "0.13.1",
+      "license": "MIT",
+      "verdict": "OK"
+    },
+    {
+      "name": "certifi",
+      "version": "2026.10.19",
+      "license": "MPL-2.0 | Mozilla Public License 2.0 (MPL 2.0)",
+      "verdict": "NOTE"
+    },
+    {
+      "name": "cffi",
+      "version": "2.1.1",
+      "license": "MIT-0",
+      "verdict": "OK"
+    },
+    {
+      "name": "charset-normalizer",
+      "version": "3.5.2",
+      "license": "MIT",
+      "verdict": "OK"
+    },
+    {
+      "name": "click",
+      "version": "8.5.0",
+      "license": "BSD-3-Clause",
+      "verdict": "OK"
+    },
+    {
+      "name": "colorama",
+      "version": "0.4.6",
+      "license": "BSD License",
+      "verdict": "OK"
+    },
+    {
+      "name": "cryptography",
+      "version": "50.0.2",
+      "license": "Apache-2.0 OR BSD-3-Clause",
+      "verdict": "NOTE"
+    },
+    {
+      "name": "fastapi",
+      "version": "0.159.1",
+      "license": "MIT",
+      "verdict": "OK"
+    },
+    {
+      "name": "h11",
+      "version": "0.16.0",
+      "license": "MIT | MIT License",
+      "verdict": "OK"
+    },
+    {
+      "name": "httpcore",
+      "version": "1.0.9",
+      "license": "BSD-3-Clause | BSD License",
+      "verdict": "OK"
+    },
+    {
+      "name": "httptools",
+      "version": "0.9.0",
+      "license": "MIT",
+      "verdict": "OK"
+    },
+    {
+      "name": "httpx",
+      "version": "0.28.1",
+      "license": "BSD-3-Clause | BSD License",
+      "verdict": "OK"
+    },
+    {
+      "name": "hypothesis",
+      "version": "6.170.15",
+      "license": "MPL-2.0",
+      "verdict": "NOTE"
+    },
+    {
+      "name": "idna",
+      "version": "3.20",
+      "license": "BSD-3-Clause",
+      "verdict": "OK"
+    },
+    {
+      "name": "iniconfig",
+      "version": "2.3.1",
+      "license": "MIT",
+      "verdict": "OK"
+    },
+    {
+      "name": "jcs",
+      "version": "0.2.1",
+      "license": "Apache-2.0 | Apache Software License",
+      "verdict": "OK"
+    },
+    {
+      "name": "librt",
+      "version": "0.16.0",
+      "license": "MIT",
+      "verdict": "OK"
+    },
+    {
+      "name": "lxml",
+      "version": "6.0.2",
+      "license": "BSD-3-Clause",
+      "verdict": "OK"
+    },
+    {
+      "name": "mypy",
+      "version": "2.4.1",
+      "license": "MIT",
+      "verdict": "OK"
+    },
+    {
+      "name": "mypy_extensions",
+      "version": "1.2.0",
+      "license": "MIT",
+      "verdict": "OK"
+    },
+    {
+      "name": "numpy",
+      "version": "2.5.4",
+      "license": "BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0",
+      "verdict": "OK"
+    },
+    {
+      "name": "opentelemetry-api",
+      "version": "1.45.1",
+      "license": "Apache-2.0",
+      "verdict": "OK"
+    },
+    {
+      "name": "packaging",
+      "version": "26.3",
+      "license": "Apache-2.0 OR BSD-2-Clause",
+      "verdict": "NOTE"
+    },
+    {
+      "name": "pathspec",
+      "version": "1.1.1",
+      "license": "Mozilla Public License 2.0 (MPL 2.0)",
+      "verdict": "NOTE"
+    },
+    {
+      "name": "pillow",
+      "version": "13.0.0",
+      "license": "MIT-CMU",
+      "verdict": "OK"
+    },
+    {
+      "name": "pluggy",
+      "version": "1.7.0",
+      "license": "MIT | MIT License",
+      "verdict": "OK"
+    },
+    {
+      "name": "pycparser",
+      "version": "3.11",
+      "license": "BSD-3-Clause",
+      "verdict": "OK"
+    },
+    {
+      "name": "pydantic",
+      "version": "2.14.1",
+      "license": "MIT",
+      "verdict": "OK"
+    },
+    {
+      "name": "pydantic_core",
+      "version": "2.50.1",
+      "license": "MIT",
+      "verdict": "OK"
+    },
+    {
+      "name": "Pygments",
+      "version": "2.21.0",
+      "license": "BSD-2-Clause",
+      "verdict": "OK"
+    },
+    {
+      "name": "pypdf",
+      "version": "6.21.2",
+      "license": "BSD-3-Clause",
+      "verdict": "OK"
+    },
+    {
+      "name": "pytest",
+      "version": "9.2.0",
+      "license": "MIT",
+      "verdict": "OK"
+    },
+    {
+      "name": "python-docx",
+      "version": "1.2.0",
+      "license": "MIT | MIT License",
+      "verdict": "OK"
+    },
+    {
+      "name": "python-dotenv",
+      "version": "1.2.4",
+      "license": "BSD-3-Clause",
+      "verdict": "OK"
+    },
+    {
+      "name": "python-multipart",
+      "version": "0.0.32",
+      "license": "Apache-2.0 | Apache Software License",
+      "verdict": "OK"
+    },
+    {
+      "name": "PyYAML",
+      "version": "6.0.3",
+      "license": "MIT | MIT License",
+      "verdict": "OK"
+    },
+    {
+      "name": "qrcode",
+      "version": "8.2",
+      "license": "BSD | BSD License | Other/Proprietary License",
+      "verdict": "OK"
+    },
+    {
+      "name": "reportlab",
+      "version": "5.1.0",
+      "license": "BSD license (see license.txt for details), Copyright (c) 2000-2025, ReportLab Inc. | BSD License",
+      "verdict": "OK"
+    },
+    {
+      "name": "ruff",
+      "version": "0.17.5",
+      "license": "MIT",
+      "verdict": "OK"
+    },
+    {
+      "name": "sortedcontainers",
+      "version": "2.4.0",
+      "license": "Apache 2.0 | Apache Software License",
+      "verdict": "OK"
+    },
+    {
+      "name": "starlette",
+      "version": "1.9.0",
+      "license": "BSD-3-Clause",
+      "verdict": "OK"
+    },
+    {
+      "name": "typing-inspection",
+      "version": "0.4.4",
+      "license": "MIT",
+      "verdict": "OK"
+    },
+    {
+      "name": "typing_extensions",
+      "version": "4.16.0",
+      "license": "PSF-2.0",
+      "verdict": "OK"
+    },
+    {
+      "name": "uvicorn",
+      "version": "0.54.0",
+      "license": "BSD-3-Clause",
+      "verdict": "OK"
+    },
+    {
+      "name": "watchfiles",
+      "version": "1.3.0",
+      "license": "MIT | MIT License",
+      "verdict": "OK"
+    },
+    {
+      "name": "websockets",
+      "version": "17.3",
+      "license": "BSD-3-Clause",
+      "verdict": "OK"
+    }
+  ]
+}

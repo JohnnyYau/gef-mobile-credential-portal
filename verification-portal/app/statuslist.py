@@ -6,15 +6,24 @@ signature by the active signer. An employer can cache it (ETag / max-age) and
 answer "is this credential revoked?" offline until the next refresh — the same
 trust model as a certificate status list. It is rebuilt only when the chain
 changes (snapshot id), so it is cheap under load.
+
+U17: the v1 signature carried only ``algo``, ``value`` and a ``signer`` name
+lifted from ``SIGNER_NAME`` in config — no nonce, no fingerprint, no public
+key. The nonce is required to recompute the signed message, so that signature
+was unverifiable by anyone, which quietly falsified the "offline" promise above.
+v2 signs with :func:`chain_service.sign_payload_envelope`: the nonce, the real
+signing key's fingerprint, and its registry name all travel with the value, and
+``GET /api/signers/keys`` publishes the matching public keys.
 """
 
 import threading
 import time
 
-from . import chain_service, config as cfg
+from . import chain_service
+from . import config as cfg
 from .crypto_util import hash_json
 
-SCHEMA = "gef26.statuslist.v1"
+SCHEMA = "gef26.statuslist.v2"
 
 _cache = {"etag": None, "payload": None, "snapshot_id": None}
 _lock = threading.Lock()
@@ -44,12 +53,7 @@ def build(force: bool = False):
             "counts": {"revoked": len(revoked)},
             "revoked": revoked,
         }
-        algo, signature = chain_service.sign_payload(payload)
-        payload["signature"] = {
-            "algo": algo,
-            "value": signature,
-            "signer": cfg.SIGNER_NAME,
-        }
+        payload["signature"] = chain_service.sign_payload_envelope(payload)
         etag = '"' + hash_json(payload)[:32] + '"'
         _cache.update(etag=etag, payload=payload, snapshot_id=snap)
         return payload, etag

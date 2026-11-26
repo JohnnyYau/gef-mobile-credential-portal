@@ -12,6 +12,8 @@ set -e
 cd "$(dirname "$0")"
 
 PY=python3
+# Optional local LLM (unreachable host -> offline fallback)
+export OLLAMA_BASE_URL=http://127.0.0.1:11434
 export PUBLIC_MODE=0
 
 if [ ! -x ".venv/bin/python" ]; then
@@ -27,4 +29,4 @@ fi
 echo "[portal] Starting server on http://127.0.0.1:8000"
 echo "[portal] Press Ctrl+C to stop."
 ( sleep 1.5; open "http://127.0.0.1:8000" 2>/dev/null || xdg-open "http://127.0.0.1:8000" 2>/dev/null || true ) &
-exec .venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+exec .venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --no-proxy-headers

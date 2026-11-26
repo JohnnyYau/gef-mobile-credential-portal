@@ -21,10 +21,10 @@ never invents values for fields it cannot read.
 """
 
 import io
-import json
 import re
 import warnings
-from typing import Dict, List, Optional, Tuple
+
+from pypdf.errors import PyPdfError as _PdfReadError
 
 from . import pdf_diploma
 
@@ -34,10 +34,10 @@ from . import pdf_diploma
 
 # (label regex, value regex, json field, normalizer)
 # value groups: group(2) is the value on a single line after the label.
-_FIELD_RULES: List[Tuple[re.Pattern, re.Pattern, str, Optional[str]]] = []
+_FIELD_RULES: list[tuple[re.Pattern, re.Pattern, str, str | None]] = []
 
 
-def _rule(label_pat: str, value_pat: str, field: str, hint: Optional[str] = None):
+def _rule(label_pat: str, value_pat: str, field: str, hint: str | None = None):
     _FIELD_RULES.append((re.compile(label_pat, re.IGNORECASE),
                          re.compile(value_pat, re.IGNORECASE), field, hint))
 
@@ -88,7 +88,7 @@ def _clean(value: str) -> str:
     return value
 
 
-def _norm_date(value: str) -> Tuple[str, bool]:
+def _norm_date(value: str) -> tuple[str, bool]:
     """Normalize 2022-09-01 / 2022/09/01 / 2022年9月1日 / 20220901 → 20220901.
     Returns (value, ok) — ok=False when the pattern was ambiguous/partial."""
     s = (value or "").strip()
@@ -112,13 +112,13 @@ def _extract_text(raw: bytes) -> str:
         from pypdf import PdfReader
         try:
             reader = PdfReader(io.BytesIO(raw))
-        except Exception as exc:  # not a parseable PDF
+        except (OSError, ValueError, TypeError, _PdfReadError) as exc:  # not a parseable PDF
             raise ValueError("无法读取该 PDF 文件（可能已损坏或不是 PDF）。") from exc
         parts = []
         for page in reader.pages:
             try:
                 parts.append(page.extract_text() or "")
-            except Exception:
+            except (ValueError, TypeError, KeyError, IndexError):
                 continue
         text = "\n".join(parts)
     if not text.strip():
@@ -137,7 +137,7 @@ def extract_text_fields(raw: bytes) -> dict:
     module never invents values it cannot read.
     """
     text = _extract_text(raw)
-    found: Dict[str, Tuple[str, float, str]] = {}  # field -> (value, conf, hint)
+    found: dict[str, tuple[str, float, str]] = {}  # field -> (value, conf, hint)
 
     for label_re, value_re, field, hint in _FIELD_RULES:
         m = label_re.search(text)
@@ -169,8 +169,8 @@ def extract_text_fields(raw: bytes) -> dict:
 
     # build the document
     doc = {"PersonalParticulars": {}, "AcademicInfo": {}, "DocumentInfo": {}}
-    field_conf: Dict[str, float] = {}
-    warnings_out: List[str] = []
+    field_conf: dict[str, float] = {}
+    warnings_out: list[str] = []
     doc_type = (found.get("DocType", ("", 0, ""))[0] or "").upper()
 
     def put(section, key, value, conf, hint):

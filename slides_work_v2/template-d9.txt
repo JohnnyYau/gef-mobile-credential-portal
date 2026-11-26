@@ -1,0 +1,30 @@
+# Dimension 9: special nodes and parts
+source: C:\Users\johnn\Downloads\Template_Learning_Summary.docx
+syntax: [NODE<n>] is an inline special node, [RUN<n>] its semantic Run reference, [PART<n>] a comments/notes part, [ENTRY<n>] one part entry, [PROPERTY<n>] document metadata, and [MACRO<n>] a VBA payload.
+text_policy: full text is emitted without truncation.
+omitted: record_type; enclosing part XML duplicated by entry structures; raw Run and drawing XML.
+normalized: OOXML structures use compact prefix:tag(attribute,child) notation.
+
+[NODE1 tag="w:hyperlink" part="word/document.xml" loc="/w:document/w:body/w:p[7]/w:hyperlink" attrs={"r:id":"rId6"} relationship={"record_type":"relationship","part":"word/_rels/document.xml.rels","source_part":"word/document.xml","id":"rId6","type":"hyperlink","target":"mailto:First.Author@email.com","resolved_target":"mailto:First.Author@email.com","target_mode":"External"}]
+First.Author@email.com
+structure=w:hyperlink(r:id="rId6",w:r(w:rsidDel="00000000",w:rsidR="00000000",w:rsidRPr="00000000",w:rPr(w:rFonts(w:ascii="Times New Roman",w:cs="Times New Roman",w:eastAsia="Times New Roman",w:hAnsi="Times New Roman"),w:b(w:val="0"),w:bCs(w:val="0"),w:i(w:val="1"),w:iCs(w:val="1"),w:smallCaps(w:val="0"),w:strike(w:val="0"),w:color(w:val="0000ff"),w:sz(w:val="18"),w:szCs(w:val="18"),w:u(w:val="single"),w:shd(w:fill="auto",w:val="clear"),w:vertAlign(w:val="baseline"),w:rtl(w:val="0")),w:t(space="preserve",text="First.Author@email.com")))
+
+[NODE2 tag="w:tblGridChange" part="word/document.xml" loc="/w:document/w:body/w:tbl/w:tblGrid/w:tblGridChange" attrs={"w:id":"0"}]
+structure=w:tblGridChange(w:id="0",w:tblGrid(w:gridCol(w:w="741"),w:gridCol(w:w="1559"),w:gridCol(w:w="1080"),w:gridCol(w:w="1605")))
+
+[NODE3 tag="w:drawing" part="word/document.xml" loc="/w:document/w:body/w:p[38]/w:r[1]/w:drawing"]
+structure=w:drawing(wp:inline(distB="0",distT="0",distL="0",distR="0",wp:extent(cx="2466975",cy="1790700"),wp:effectExtent(b="0",l="0",r="0",t="0"),wp:docPr(id="1",name="image2.png"),a:graphic(a:graphicData(uri="http://schemas.openxmlformats.org/drawingml/2006/picture",pic:pic(pic:nvPicPr(pic:cNvPr(id="0",name="image2.png"),pic:cNvPicPr(preferRelativeResize="0")),pic:blipFill(a:blip(r:embed="rId8"),a:srcRect(b="0",l="0",r="0",t="0"),a:stretch(a:fillRect())),pic:spPr(a:xfrm(a:off(x="0",y="0"),a:ext(cx="2466975",cy="1790700")),a:prstGeom(prst="rect"),a:ln()))))))
+
+[NODE4 tag="w:drawing" part="word/document.xml" loc="/w:document/w:body/w:p[49]/w:r[1]/w:drawing"]
+structure=w:drawing(wp:inline(distB="0",distT="0",distL="0",distR="0",wp:extent(cx="654073",cy="937122"),wp:effectExtent(b="0",l="0",r="0",t="0"),wp:docPr(id="3",name="image1.png"),a:graphic(a:graphicData(uri="http://schemas.openxmlformats.org/drawingml/2006/picture",pic:pic(pic:nvPicPr(pic:cNvPr(id="0",name="image1.png"),pic:cNvPicPr(preferRelativeResize="0")),pic:blipFill(a:blip(r:embed="rId9"),a:srcRect(b="0",l="0",r="0",t="0"),a:stretch(a:fillRect())),pic:spPr(a:xfrm(a:off(x="0",y="0"),a:ext(cx="654073",cy="937122")),a:prstGeom(prst="rect"),a:ln()))))))
+
+[NODE5 tag="w:drawing" part="word/document.xml" loc="/w:document/w:body/w:p[51]/w:r[1]/w:drawing"]
+structure=w:drawing(wp:inline(distB="0",distT="0",distL="0",distR="0",wp:extent(cx="628632",cy="917568"),wp:effectExtent(b="0",l="0",r="0",t="0"),wp:docPr(id="2",name="image3.png"),a:graphic(a:graphicData(uri="http://schemas.openxmlformats.org/drawingml/2006/picture",pic:pic(pic:nvPicPr(pic:cNvPr(id="0",name="image3.png"),pic:cNvPicPr(preferRelativeResize="0")),pic:blipFill(a:blip(r:embed="rId10"),a:srcRect(b="0",l="0",r="0",t="0"),a:stretch(a:fillRect())),pic:spPr(a:xfrm(a:off(x="0",y="0"),a:ext(cx="628632",cy="917568")),a:prstGeom(prst="rect"),a:ln()))))))
+
+[RUN1 part="word/document.xml" loc="/w:document/w:body/w:p[7]/w:hyperlink/w:r" paragraph_loc="/word/document.xml/w:body/*[7]" paragraph=7 run=2 link={"relationship_id":"rId6","target":"mailto:First.Author@email.com","resolved_target":"mailto:First.Author@email.com","target_mode":"External"}]
+
+[RUN2 part="word/document.xml" loc="/w:document/w:body/w:p[38]/w:r[1]" paragraph_loc="/word/document.xml/w:body/*[39]" paragraph=69 run=1 drawings=[{"relationship_id":"rId8","relationship_ids":["rId8"],"target":"media/image2.png","resolved_target":"word/media/image2.png","targets":[{"relationship_id":"rId8","target":"media/image2.png","resolved_target":"word/media/image2.png","target_mode":null}],"name":"image2.png","size_emu":{"cx":"2466975","cy":"1790700"},"positioning":"wp:inline","location":"/w:document/w:body/w:p[38]/w:r[1]/w:drawing"}]]
+
+[RUN3 part="word/document.xml" loc="/w:document/w:body/w:p[49]/w:r[1]" paragraph_loc="/word/document.xml/w:body/*[50]" paragraph=80 run=1 drawings=[{"relationship_id":"rId9","relationship_ids":["rId9"],"target":"media/image1.png","resolved_target":"word/media/image1.png","targets":[{"relationship_id":"rId9","target":"media/image1.png","resolved_target":"word/media/image1.png","target_mode":null}],"name":"image1.png","size_emu":{"cx":"654073","cy":"937122"},"positioning":"wp:inline","location":"/w:document/w:body/w:p[49]/w:r[1]/w:drawing"}]]
+
+[RUN4 part="word/document.xml" loc="/w:document/w:body/w:p[51]/w:r[1]" paragraph_loc="/word/document.xml/w:body/*[52]" paragraph=82 run=1 drawings=[{"relationship_id":"rId10","relationship_ids":["rId10"],"target":"media/image3.png","resolved_target":"word/media/image3.png","targets":[{"relationship_id":"rId10","target":"media/image3.png","resolved_target":"word/media/image3.png","target_mode":null}],"name":"image3.png","size_emu":{"cx":"628632","cy":"917568"},"positioning":"wp:inline","location":"/w:document/w:body/w:p[51]/w:r[1]/w:drawing"}]]

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>签发证书 · Credential Verification Portal</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23a16207'/%3E%3Cpath d='M9 22V10h9a4 4 0 0 1 0 8h-4v4zm4-7h4a1.5 1.5 0 0 0 0-3h-4z' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/static/css/simple.css">
+</head>
+<body>
+<main class="card">
+  <a class="brand" href="/">Credential Verification Portal</a>
+  <h1>开一张证书</h1>
+  <p class="lede">填三格，签一下就上链。签完立刻能在验证页查到。</p>
+
+  <form id="issueForm" autocomplete="off">
+    <label class="field" for="nameInput">
+      <span>姓名</span>
+      <input type="text" id="nameInput" placeholder="例如 CHAN TAI MAN" required>
+    </label>
+    <label class="field" for="sidInput">
+      <span>学号</span>
+      <input type="text" id="sidInput" placeholder="例如 22000001" required>
+    </label>
+    <label class="field" for="degreeInput">
+      <span>学位 / 课程</span>
+      <input type="text" id="degreeInput" placeholder="例如 Bachelor of Engineering" required>
+    </label>
+
+    <details class="why">
+      <summary>补充信息（可选）</summary>
+      <label class="field" for="honourInput">
+        <span>荣誉</span>
+        <input type="text" id="honourInput" placeholder="例如 1ST HON">
+      </label>
+      <label class="field" for="issuerInput">
+        <span>签发机构</span>
+        <input type="text" id="issuerInput" placeholder="默认 UNIVERSITY OF UTOPIA">
+      </label>
+      <label class="field" for="dateInput">
+        <span>签发日期</span>
+        <input type="text" id="dateInput" placeholder="例如 20261121">
+      </label>
+    </details>
+
+    <details class="why" id="tokenBlock" hidden>
+      <summary>机构口令</summary>
+      <label class="field" for="tokenInput">
+        <span>口令（只存在这台浏览器里）</span>
+        <input type="password" id="tokenInput" placeholder="向管理员索取">
+      </label>
+      <p class="hint" id="tokenHint">签发需要机构权限。已登录控制台的话这一项会自动隐藏。</p>
+    </details>
+
+    <button type="submit" class="primary" id="issueBtn">签发并上链</button>
+    <p class="note" id="error" hidden></p>
+  </form>
+
+  <section class="result" id="result" hidden></section>
+
+  <footer>
+    你有证书要验？<a href="/">去验证页</a> · 完整控制台 <a href="/staff">/staff</a>
+    <div class="hint">签发会写入一条新区块；链上记录只追加，不能删。</div>
+  </footer>
+</main>
+<script src="/static/js/simple_issue.js"></script>
+</body>
+</html>

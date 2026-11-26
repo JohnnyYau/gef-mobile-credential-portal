@@ -1,0 +1,274 @@
+﻿
+=== tests.test_api ===
+--- tests.test_api: ok (2.3s)
+test_verify_tampered_document (tests.test_api.PortalApiTestCase.test_verify_tampered_document) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 0.586s
+
+OK
+
+=== tests.test_hardening ===
+--- tests.test_hardening: ok (2.0s)
+ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.463s
+
+OK
+
+=== tests.test_features ===
+--- tests.test_features: ok (5.6s)
+test_verify_page_serves_ui (tests.test_features.FeatureTestCase.test_verify_page_serves_ui) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 3.797s
+
+OK
+
+=== tests.test_extra2 ===
+--- tests.test_extra2: ok (5.1s)
+test_verify_pdf_upload_endpoint (tests.test_extra2.Extra2TestCase.test_verify_pdf_upload_endpoint) ... ok
+
+----------------------------------------------------------------------
+Ran 18 tests in 3.294s
+
+OK
+
+=== tests.test_employer_pack ===
+--- tests.test_employer_pack: ok (2.4s)
+test_statuslist_signed_and_stable (tests.test_employer_pack.EmployerPackTest.test_statuslist_signed_and_stable) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 1.494s
+
+OK
+
+=== tests.test_public_mode ===
+--- tests.test_public_mode: ok (2.3s)
+test_version_identity_public (tests.test_public_mode.PublicModeTest.test_version_identity_public) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 1.307s
+
+OK
+
+=== tests.test_rag ===
+--- tests.test_rag: ok (22.4s)
+ok
+
+----------------------------------------------------------------------
+Ran 33 tests in 19.648s
+
+OK
+
+=== tests.test_person ===
+--- tests.test_person: ok (13.4s)
+ok
+
+----------------------------------------------------------------------
+Ran 24 tests in 10.936s
+
+OK
+
+=== tests.test_restart_persistence ===
+--- tests.test_restart_persistence: ok (10.9s)
+ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 10.598s
+
+OK
+
+=== tests.test_issue_batch ===
+--- tests.test_issue_batch: ok (2.3s)
+test_batch_valid_two_rows (tests.test_issue_batch.IssueBatchTest.test_batch_valid_two_rows) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 1.444s
+
+OK
+
+=== tests.test_pdf_extract ===
+--- tests.test_pdf_extract: ok (1.8s)
+test_text_layer_extraction (tests.test_pdf_extract.PdfExtractTest.test_text_layer_extraction) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.951s
+
+OK
+
+=== tests.test_custom ===
+--- tests.test_custom: ok (2.1s)
+ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.520s
+
+OK
+
+=== tests.test_property_crypto ===
+--- tests.test_property_crypto: ok (1.3s)
+test_unsupported_hash_algo_is_false (tests.test_property_crypto.VerifyRobustnessTests.test_unsupported_hash_algo_is_false) ... ok
+
+----------------------------------------------------------------------
+Ran 23 tests in 0.710s
+
+OK
+
+=== tests.test_chain_integrity ===
+--- tests.test_chain_integrity: ok (1.1s)
+test_untrusted_fingerprint_is_reported (tests.test_chain_integrity.ChainIntegrityTests.test_untrusted_fingerprint_is_reported) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.845s
+
+OK
+
+=== tests.test_disclosure ===
+--- tests.test_disclosure: ok (1.9s)
+test_wrong_credential_hash_is_rejected (tests.test_disclosure.DisclosureTests.test_wrong_credential_hash_is_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 0.333s
+
+OK
+
+=== tests.test_frontend ===
+--- tests.test_frontend: ok (2.9s)
+test_page_still_renders (tests.test_frontend.StaticMount.test_page_still_renders) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 2.578s
+
+OK
+
+=== tests.test_observability ===
+--- tests.test_observability: ok (2.2s)
+ok
+
+----------------------------------------------------------------------
+Ran 15 tests in 1.898s
+
+OK
+
+=== tests.test_fuzz ===
+--- tests.test_fuzz: ok (13.2s)
+ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 12.096s
+
+OK
+
+=== tests.test_concurrency ===
+--- tests.test_concurrency: ok (1.5s)
+Every issued credential ends in a definite verdict, none in ERROR. ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 1.292s
+
+OK
+
+=== tests.test_storage_parity ===
+--- tests.test_storage_parity: ok (0.8s)
+test_unknown_receipt_is_none_in_both (tests.test_storage_parity.ReceiptAndRevocationParityTests.test_unknown_receipt_is_none_in_both) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.602s
+
+OK
+
+=== tests.test_backup ===
+--- tests.test_backup: ok (1.1s)
+ok
+
+----------------------------------------------------------------------
+Ran 15 tests in 0.936s
+
+OK
+
+=== tests.test_startup ===
+--- tests.test_startup: ok (1.8s)
+test_repository_close_is_a_noop_on_the_json_backend (tests.test_startup.ShutdownTests.test_repository_close_is_a_noop_on_the_json_backend) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 1.446s
+
+OK
+
+=== tests.test_optional_deps ===
+--- tests.test_optional_deps: ok (1.9s)
+test_numpy_search_ranks_by_cosine (tests.test_optional_deps.VectorSearchFallbackTests.test_numpy_search_ranks_by_cosine) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 1.448s
+
+OK
+
+=== tests.test_chain_cache ===
+--- tests.test_chain_cache: ok (0.9s)
+test_tampered_block_breaks_the_cached_verdict (tests.test_chain_cache.VerifyChainCacheTests.test_tampered_block_breaks_the_cached_verdict) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.685s
+
+OK
+
+=== tests.test_receipts_store ===
+--- tests.test_receipts_store: ok (0.4s)
+test_legacy_array_is_migrated_on_first_write (tests.test_receipts_store.RegisterIsAppendOnlyTests.test_legacy_array_is_migrated_on_first_write) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.208s
+
+OK
+
+=== tests.test_audit_actor ===
+--- tests.test_audit_actor: ok (2.1s)
+test_sqlite_store_writes_the_actor (tests.test_audit_actor.StorePersistsActorTests.test_sqlite_store_writes_the_actor) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 1.212s
+
+OK
+
+=== tests.test_key_at_rest ===
+--- tests.test_key_at_rest: ok (1.3s)
+test_unencrypted_key_without_passphrase_is_reported (tests.test_key_at_rest.StartupWarningsTests.test_unencrypted_key_without_passphrase_is_reported) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.920s
+
+OK
+
+==================== SUMMARY ====================
+PASS  tests.test_api
+PASS  tests.test_hardening
+PASS  tests.test_features
+PASS  tests.test_extra2
+PASS  tests.test_employer_pack
+PASS  tests.test_public_mode
+PASS  tests.test_rag
+PASS  tests.test_person
+PASS  tests.test_restart_persistence
+PASS  tests.test_issue_batch
+PASS  tests.test_pdf_extract
+PASS  tests.test_custom
+PASS  tests.test_property_crypto
+PASS  tests.test_chain_integrity
+PASS  tests.test_disclosure
+PASS  tests.test_frontend
+PASS  tests.test_observability
+PASS  tests.test_fuzz
+PASS  tests.test_concurrency
+PASS  tests.test_storage_parity
+PASS  tests.test_backup
+PASS  tests.test_startup
+PASS  tests.test_optional_deps
+PASS  tests.test_chain_cache
+PASS  tests.test_receipts_store
+PASS  tests.test_audit_actor
+PASS  tests.test_key_at_rest
+
+27/27 modules green

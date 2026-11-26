@@ -1,0 +1,87 @@
+QuantumGuard: A Post-Quantum Credential Verification Portal
+
+[Name 1] (1), [Name 2] (2), and [Name 3] (3)
+
+(1) [School / Institute, Hong Kong, China]
+
+(2) [School / Institute, Hong Kong, China]
+
+(3) [School / Institute, Hong Kong, China]
+
+*Contact: [email@example.com]
+
+Abstract— This project presents QuantumGuard, a browser-based portal that issues, revokes and verifies academic credentials over a private append-only hash chain, combining post-quantum digital signatures with a privacy-controlled GenAI assistant. The chain stores only credential hashes and signatures; plaintext data stays off-chain. A verifier uploads a credential JSON or a portal-issued diploma PDF, and the system runs six independent cryptographic checks and returns a plain-language verdict (VALID, REVOKED, NOT FOUND or INVALID) with a downloadable receipt. The system ships a three-role portal, registrar batch issuance, an employer pack (batch verification, public API keys, signed status list, receipt registry), a RAG assistant with cited sources and masked person profiles, anomaly detection, restart persistence and hardened inputs. The project maps directly to course topics in blockchain, public-key cryptography, hash functions, digital signatures and retrieval-augmented generation.
+
+I.  Introduction
+
+Academic credentials — degrees, transcripts and certificates — are verified for decades after issuance, yet most institutions still rely on centralized registrar databases and classical digital signatures. Verification is slow and costly: employers and registrars call or email the issuing office and wait days, while a central database can be edited, backed up inconsistently, or lost when an institution closes. There is also a long-term cryptographic risk: RSA and ECDSA rely on integer factorization and discrete logarithms, both breakable by a sufficiently large quantum computer using Shor's algorithm. Because credentials live for 30–50 years, a “harvest now, forge later” window is realistic. This project addresses that gap with a lightweight, explainable portal that lets a non-expert verifier confirm authenticity in seconds, leaving a tamper-evident record and a clear audit trail.
+
+II.  Proposed Solution
+
+We built a private hash-chain credential portal that issues, revokes and verifies academic credentials with post-quantum digital signatures, wrapped in a browser-friendly FastAPI portal for three personas: verifiers/employers, students, and registrars/administrators. The chain stores only credential hashes and signatures; plaintext credential data never touches the ledger. A verifier uploads a credential JSON or a portal-issued diploma PDF; the portal runs six independent cryptographic checks and returns a plain-language verdict — VALID, REVOKED, NOT FOUND or INVALID — with a downloadable verification receipt. Shipped capabilities include six-check verification with receipts and a receipt registry; verifiable diploma PDFs embedding the exact credential JSON with a QR code to the public verification URL; registrar batch issuance from CSV (preview, issue, per-row PDF/QR) and bulk revocation with reason and effective date; an employer pack (CSV-in/CSV-out batch verification, per-key public API keys with rate limits, a signed OCSP-like revocation status list); an AI assistant over the chain with cited sources, masked person profiles, follow-up memory and privacy-preserving web research; a public verifier mode that cannot issue or revoke; a self-service credential maker; a persistent anonymized public log; IsolationForest anomaly watch; restart persistence via snapshot backup/restore; and hardened inputs and rate limits.
+
+III.  System Architecture and Cryptography
+
+The portal is a Python 3 FastAPI application with a static single-page HTML/JS front end. Core modules handle chain service (issue, revoke, verify, signer registry, student lookup), cryptography (ML-DSA-65 post-quantum signatures, RSA-PSS-2048, ECDSA secp256r1), an append-only hash chain with full replayable integrity re-verification, the RAG chat service, person-in-context masking, privacy-preserving web research, diploma PDF rendering and extraction, and the employer pack. Credential part-hashes and block links use SHA3-512 over JCS-canonicalized JSON. The ledger is a single-node private chain; this focuses the project on cryptographic and verification principles rather than distributed consensus. The chain is append-only and fully replayable: integrity is re-verified from the genesis block on every verification. Plaintext credentials remain in an issuer-side index, off the chain.
+
+Course mapping: P3L3 blockchain (hash chaining, append-only immutability, replayable integrity); P2L3 public-key cryptography (signatures, key pairs, trust registry, classical versus post-quantum assumptions); P2L4 hash functions (SHA3-512, canonicalization, previous-hash linking); P2L5 digital signatures (generation and verification, rotation and revocation semantics); and GenAI/RAG (embeddings, vector retrieval, grounded generation with citations).
+
+IV.  AI and Generative-AI Components
+
+The AI layer is a privacy-controlled assistant over the credential chain. Questions first hit exact identifier lookup (hash, StudentID, name), pinned before vector search; MiniLM-L6-v2 embeddings are then searched with FAISS over chain blocks and raw credentials. The generator answers with cited sources; an offline deterministic fallback engine reads only chain state and cannot invent chain facts. A named person or StudentID resolves to a masked profile card (name, truncated StudentID, document type, degree, dates, honour, issuer, verdict, height and hash prefix); date of birth is never included, and session memory keeps the same person across follow-ups. Web research queries only the person's name and issuing organisation against Wikipedia and DuckDuckGo; results return as a clearly labelled public-web card and never change the on-chain verdict. An IsolationForest (contamination 0.15) flags unusual per-signer issuance volume and merges with a deterministic threshold rule, reporting the method per flag. PDF auto-fill extracts the embedded payload byte-exactly from portal-issued PDFs (confidence 1.0) and uses label-aware field extraction with per-field confidence for text-layer certificates; extraction is input assistance only — it never bypasses the six checks and never auto-submits.
+
+V.  Verification: The Six Checks
+
+All six must pass for VALID: (1) chain integrity — the whole chain re-verifies from genesis (hashes, links, heights); (2) signer trusted — every ISSUE-block signer is in the registry by SPKI fingerprint match; (3) on-chain record — an ISSUE block exists whose HashedDocument matches the presented document; (4) hash match — recomputed part-hashes equal the on-chain payload; (5) signature valid — each signer's DS signature verifies over the nonce-HMAC message; (6) not revoked — no REVOKE block references this document hash, with reason and effective date recorded on-chain when present. A hash-only lookup cannot run check 4 and returns VALID ON CHAIN, REVOKED, NOT FOUND, INVALID or CHAIN DATA CORRUPT. Every verdict produces a receipt ID; the receipt shows the six checks, hash, timestamp, verifier version, chain name and height, and the explicit disclaimer: VALID means the six checks passed against the chain at this timestamp; it is not a legal certification. No date of birth and no Student ID appear in the receipt.
+
+VI.  Testing and Deployment Status
+
+The suite contains 108 automated test cases across 12 modules covering the API, hardening, RAG, features, employer pack, public mode, restart persistence, batch issue, PDF extraction, person-in-context and self-service maker. Verified flows include issue-to-VALID verification, tampered document to INVALID, revoked credential to REVOKED, PDF upload auto-fill to verification, and restart persistence with snapshot export/restore. Hardening includes sliding-window rate limiting, body-size and nesting guards, structured verdicts for corrupted chains, and atomic chain-info writes. A public verifier mode exposes verification only; issuance and revocation stay private.
+
+VII.  Limitations and Boundaries
+
+The chain is single-node by design, with no P2P consensus or peer replication; the focus is cryptographic verification, not distributed-systems engineering. Demo signer private keys are kept under the demo data directory for demonstration only; production would use a KMS or HSM. PDF verification supports portal-issued PDFs carrying an embedded JSON; a printed or scanned external diploma cannot be OCR'd into the exact hashed fields and receives a clear guidance message instead of a guessed verdict. The plaintext index is issuer-side; production would back it with a database without touching the chain. Web research requires outbound internet; offline, the assistant reports it is unavailable rather than inventing sources. A VALID verdict is a cryptographic statement at a timestamp, not a legal certification of the underlying qualification.
+
+VIII.  Individual Contributions
+
+[Name 1] — [chain design, signatures and six-check verification; learning on blockchain principles and post-quantum cryptography].
+
+[Name 2] — [RAG assistant, embeddings and person context; learning on retrieval-augmented generation and privacy].
+
+[Name 3] — [portal UI, PDF/QR, deployment and testing; learning on UX for non-experts and production hardening].
+
+Project Resources
+
+Demonstration video (YouTube): [LINK PROVIDED BY TEAMMATE].
+
+Source code repository (GitHub): [LINK AFTER GITHUB PUSH].
+
+References
+
+[1] NIST, FIPS 204: Module-Lattice-Based Digital Signature Standard (ML-DSA), Aug. 2024.
+
+[2] NIST, FIPS 202: SHA-3 Standard: Permutation-Based Hash and Extendable-Output Functions, Aug. 2015.
+
+[3] RSA Laboratories / IETF, RFC 8017: PKCS #1: RSA Cryptography Specifications Version 2.2 (RSA-PSS), 2017.
+
+[4] Standards for Efficient Cryptography (SEC 1) / ANSI X9.62: Elliptic Curve Cryptography (ECDSA, secp256r1).
+
+[5] IETF, RFC 8785: JSON Canonicalization Scheme (JCS), 2020.
+
+[6] N. Reimers and I. Gurevych, “Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks,” EMNLP-IJCNLP, 2019.
+
+[7] J. Johnson, M. Douze, and H. Jégou, “Billion-Scale Similarity Search with GPUs (FAISS),” IEEE Trans. Big Data, 2017.
+
+[8] F. T. Liu, K. M. Ting, and Z.-H. Zhou, “Isolation Forest,” IEEE ICDM, 2008.
+
+[9] S. Ramírez, FastAPI documentation. [Online]. Available: https://fastapi.tiangolo.com
+
+[10] PyCA, cryptography: Python cryptographic library. [Online]. Available: https://cryptography.io
+
+[11] reportlab: PDF generation toolkit, https://www.reportlab.com; pypdf, https://pypdf.readthedocs.io
+
+[12] W3C, Verifiable Credentials Data Model v2.0 (conceptual reference).
+
+[13] Wikipedia REST API; DuckDuckGo Instant Answer API (public web lookup backends).
+
+[14] DeepSeek API documentation; Ollama: local LLM runtime (optional generator backends).

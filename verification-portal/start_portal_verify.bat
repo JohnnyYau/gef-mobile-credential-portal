@@ -18,6 +18,8 @@ set PY=python
 set PUBLIC_MODE=0
 set UI_VERIFY_ONLY=1
 
+REM  Optional local LLM: set to your Ollama host. Unreachable host = offline fallback.
+set OLLAMA_BASE_URL=http://127.0.0.1:11434
 if not exist ".venv\Scripts\python.exe" (
   echo [portal] First run detected - creating virtual environment...
   %PY% -m venv .venv || goto :err
@@ -31,7 +33,7 @@ if not exist ".venv\Scripts\python.exe" (
 echo [portal] VERIFY-ONLY mode - tabs: Verify / AI Chat / Log
 echo [portal] Starting on http://127.0.0.1:8000  (Press Ctrl+C to stop)
 start "" http://127.0.0.1:8000
-".venv\Scripts\python.exe" -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+".venv\Scripts\python.exe" -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --no-proxy-headers
 goto :eof
 
 :err

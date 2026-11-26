@@ -4,8 +4,7 @@ import json
 import logging
 import os
 
-from . import chain_service
-from . import person_context, web_research
+from . import chain_service, person_context, web_research
 from .config import CHAIN_DIR
 from .rag_generator import backend_status, generate
 from .rag_indexer import credential_entry, get_index
@@ -94,7 +93,8 @@ def answer(question, session_id=None, web=False):
     result = generate(question, records, str(CHAIN_DIR))
 
     cited = result.get("citations") or []
-    if not cited:  # safety: never show an answer with zero sources
+    sources_are_fallback = not cited
+    if sources_are_fallback:  # safety: never show an answer with zero sources
         cited = list(range(1, len(records) + 1))
     sources = []
     for i in cited:
@@ -104,6 +104,7 @@ def answer(question, session_id=None, web=False):
     if person and not any(s.get("kind") == "person_profile" for s in sources):
         sources.insert(0, _source_view(person_context.profile_record(person)))
 
+    validation = result.get("validation") or {}
     response = {
         "question": question,
         "answer": result["answer"],
@@ -115,6 +116,16 @@ def answer(question, session_id=None, web=False):
             "hits": len(records),
             "top_score": records[0].get("score") if records else None,
             "embedder": index.stats()["embedder"],
+        },
+        # U5.2: make the generation contract observable instead of implied.
+        # ``sources_are_fallback`` is true when the answer cited nothing and we
+        # showed every retrieved record; the UI can label those as "context",
+        # not as sources the answer actually used.
+        "generation": {
+            "degraded": result.get("degraded") or [],
+            "validation_ok": validation.get("ok"),
+            "problems": validation.get("problems") or [],
+            "sources_are_fallback": sources_are_fallback,
         },
     }
 

@@ -7,15 +7,15 @@ order-independent within a shared unittest process.
 
 import importlib
 import os
-import tempfile
 import unittest
 
 from fastapi.testclient import TestClient
 
+from tests._bootstrap import isolated_chain_dir
+
 
 def setUpModule():
-    os.environ["CHAIN_DIR"] = os.path.join(
-        tempfile.mkdtemp(prefix="gef26-batch-"), "chain")
+    isolated_chain_dir(prefix="gef26-batch-")
     os.environ.pop("PUBLIC_MODE", None)
     import app.config as cfg_mod
     importlib.reload(cfg_mod)

@@ -7,19 +7,21 @@ rate-limit constants around its own tests and restores them afterwards.
 import json
 import os
 import shutil
-import tempfile
 import unittest
 
-_TMP = tempfile.mkdtemp(prefix="portal-harden-test-")
-os.environ["CHAIN_DIR"] = os.path.join(_TMP, "test-chain")
+from tests._bootstrap import isolated_chain_dir
 
-from fastapi.testclient import TestClient  # noqa: E402
+_TMP = isolated_chain_dir(prefix="portal-harden-test-")
 
 import app.main as main  # noqa: E402
 from app.chain_service import SAMPLE_DIPLOMA  # noqa: E402
 from app.config import CHAIN_DIR  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
 
-RATE_KEY = {"X-Forwarded-For": "9.9.9.9"}  # isolated limiter bucket
+# U24: buckets are keyed by the TCP peer now (X-Forwarded-For is not believed
+# unless the peer is a trusted proxy), so isolation comes from a distinct
+# client address, not from a forged header.
+RATE_PEER = ("9.9.9.9", 5000)
 
 
 class HardeningTestCase(unittest.TestCase):
@@ -28,6 +30,8 @@ class HardeningTestCase(unittest.TestCase):
         from app import chain_service  # local import keeps env order explicit
         chain_service.ensure_chain()  # TestClient lifespan may not run — seed now
         cls.client = TestClient(main.app)
+        # a separate peer = a separate limiter bucket, without touching XFF
+        cls.rate_client = TestClient(main.app, client=RATE_PEER)
         # snapshot + relax limits for the non-rate-limit tests
         cls._saved_public = main.RATE_LIMIT_PUBLIC_MAX
         cls._saved_admin = main.RATE_LIMIT_ADMIN_MAX
@@ -44,9 +48,9 @@ class HardeningTestCase(unittest.TestCase):
         main.RATE_LIMIT_PUBLIC_MAX = 3
         try:
             for _ in range(3):
-                res = self.client.get("/api/chat/suggestions", headers=RATE_KEY)
+                res = self.rate_client.get("/api/chat/suggestions")
                 self.assertEqual(res.status_code, 200)
-            res = self.client.get("/api/chat/suggestions", headers=RATE_KEY)
+            res = self.rate_client.get("/api/chat/suggestions")
             self.assertEqual(res.status_code, 429)
         finally:
             main.RATE_LIMIT_PUBLIC_MAX = 100000
@@ -118,6 +122,50 @@ class HardeningTestCase(unittest.TestCase):
         finally:
             with open(block_path, "wb") as fh:  # restore the good block
                 fh.write(original)
+
+
+class SameOriginBehindAProxy(unittest.TestCase):
+    """U26: a page served from a public host must be able to POST to it.
+
+    The cross-origin guard compared the Origin against "127.0.0.1 /
+    localhost" and nothing else, so behind a tunnel every issuing request was
+    answered 403 even with a valid token — found on a real deployment, not in
+    a unit test.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        from app import chain_service
+        chain_service.ensure_chain()
+        cls.client = TestClient(main.app)
+
+    def test_same_host_origin_is_allowed(self):
+        self.assertTrue(main._origin_allowed("https://demo.example.org",
+                                            "demo.example.org"))
+        self.assertTrue(main._origin_allowed("https://demo.example.org",
+                                            "demo.example.org:443"))
+
+    def test_foreign_origin_is_still_rejected(self):
+        self.assertFalse(main._origin_allowed("https://evil.example.com",
+                                              "demo.example.org"))
+        self.assertFalse(main._origin_allowed("https://demo.example.org"))
+
+    def test_public_page_can_post_to_itself(self):
+        # /api/chat is state-changing (POST) and needs no credentials, so a 422
+        # proves the request reached the endpoint instead of dying at origin.
+        res = self.client.post(
+            "/api/chat", json={},
+            headers={"Origin": "https://demo.example.org",
+                     "Host": "demo.example.org"})
+        self.assertNotEqual(res.status_code, 403, res.text)
+        self.assertIn(res.status_code, (400, 422), res.text)
+
+    def test_foreign_page_posting_here_is_rejected(self):
+        res = self.client.post(
+            "/api/chat", json={},
+            headers={"Origin": "https://evil.example.com",
+                     "Host": "demo.example.org"})
+        self.assertEqual(res.status_code, 403, res.text)
 
 
 if __name__ == "__main__":

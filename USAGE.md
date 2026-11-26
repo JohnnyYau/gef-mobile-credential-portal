@@ -81,8 +81,15 @@ cd verification-portal
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1        # bash: source .venv/bin/activate
 pip install -r requirements.txt
-uvicorn app.main:app --reload       # http://127.0.0.1:8000
+uvicorn app.main:app --reload --no-proxy-headers   # http://127.0.0.1:8000
 ```
+
+`--no-proxy-headers` is not optional. Uvicorn trusts `X-Forwarded-For` by
+default (from 127.0.0.1), rewriting the caller address before the app sees it —
+which defeats the app's own `TRUSTED_PROXIES` check, so a forged header picks
+a fresh rate-limit bucket and the login lockout never engages. If the portal
+really sits behind a proxy, start it with that proxy's address in
+`--forwarded-allow-ips` *and* the same address in `TRUSTED_PROXIES`.
 
 Open **http://127.0.0.1:8000**. The portal boots in **private mode** by
 default (all tabs visible, including Issue/Revoke). The landing page offers
@@ -94,11 +101,46 @@ To run the **public verifier mode** (the deployed shape — admin endpoints
 
 ```powershell
 $env:PUBLIC_MODE="1"
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --no-proxy-headers
 ```
 
 > The portal **auto-seeds a demo chain** on first boot (sample diploma +
 > transcript + a revoked sample), so the UI is usable immediately.
+
+### After a restart: the ten-second check
+
+```powershell
+python scripts/smoke_portal.py --base http://127.0.0.1:8000 --admin-token <staff-token>
+```
+
+22 read-only assertions across the public and staff surfaces (health, version,
+verify, both PDF forms, the QR actually being embedded, holder link, renewal
+refusal, `GET /api/diagnostics` with and without a credential, the integrity
+verdict's age, which address the limiter counts, and whether a forged
+`X-Forwarded-For` changes the peer). It prints `PASS`/`FAIL` per line and exits
+non-zero on any failure. Drop `--admin-token` to skip the staff half on a
+public instance.
+
+`GET /healthz` also reports `checks.chain.integrity`. If that is `false` the
+top-level status becomes `degraded`, every verdict reads INVALID, and the fault
+is the chain (a block whose signer is no longer trusted), not the credential.
+Since U19 a PDF generated while the chain is broken says so on the page
+(`CHAIN INTEGRITY FAILED: block #N.`), because a printed report cannot be fixed
+later.
+
+The integrity check is cached for 30 seconds, so since U23 the block also
+carries `checked_at` (epoch seconds) and `age_s`: a `true` that is 25 seconds
+old is not the same claim as a `true` computed now. A cache hit keeps the
+original `checked_at` — if it were refreshed on read, the field would always
+read `0.0` and mean nothing. If a scan takes longer than the TTL, the verdict is
+not cached at all (an entry that expires while it is being written could never
+be read).
+
+`GET /healthz` only gives you the *count* of config problems
+(`config: {fatal: 0, warnings: 1}`). The text lives behind a staff-only
+`GET /api/diagnostics` (U19), which returns the messages in full plus chain
+integrity, signer retirement heights and `uptime_s`. Use `X-Admin-Token` or a
+staff session cookie.
 
 ### Private (admin) mode, explicitly
 
@@ -118,7 +160,7 @@ admin token:
 ```powershell
 $env:PUBLIC_MODE="0"
 $env:ADMIN_TOKEN="your-secret-token"     # optional; admin header is X-Admin-Token
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --no-proxy-headers
 ```
 
 In private mode the **Issue / Revoke / Signers / API keys** tabs appear.
@@ -155,11 +197,43 @@ Every verification runs these checks:
 
 ## 5. Using the web UI
 
-The UI is bilingual (中文优先 + English secondary) and starts on a role-based
-landing page: **我要验证学历** (verifier), **我是学生** (holder), **我是学校
-管理员** (registrar, admin tabs).
+The UI is bilingual (中文优先 + English secondary). Since U25 there are two
+single-purpose screens in front, and the old multi-tab console moved to
+`/portal` — no route was removed, so every earlier instruction still works
+there.
 
-### Verify tab
+### 5.1 Verify — the landing page, `/`
+
+One question, one input, one sentence:
+
+1. Paste the verification code (the `HashedDocument` string) — or pick the
+   certificate PDF/JSON. Both paths hit the same six checks; a PDF is hashed
+   from its embedded document, a pasted hash is checked against the log.
+2. Press **验证**. The card answers in plain language — **真的 / 已注销 /
+   查不到 / 无法确认** — with one line explaining what that means.
+3. **为什么？看六项检查** unfolds the six booleans in plain words (链条没被改过,
+   签发方可信, 链上有这张证书, 文件跟编号对得上, 数字签名有效, 没有被注销).
+4. **下载验证报告** appears only for a valid credential; the receipt ID is
+   printed under the hash.
+
+Deep links work: `/verify?hash=<hash>` prefills and verifies on load — that is
+exactly what the QR code on the PDF points to.
+
+Missing a certificate? The three chips at the bottom run the seeded VALID,
+the revoked sample, and a fabricated hash, so the page can be demonstrated
+without any files.
+
+### 5.2 Issue — `/issue`
+
+1. Fill three fields: **姓名**, **学号**, **学位 / 课程**. **补充信息** is
+   optional (honour, issuer, issue date).
+2. Press **签发并上链**. If this browser has no staff session, a **机构口令**
+   box appears; the token is kept in `sessionStorage` for this browser only.
+3. The result gives the block height, the verification code, **下载凭证 PDF**
+   (the full copy with the embedded JSON), and **打开验证页看看**, which jumps
+   to `/verify?hash=…` and shows VALID — the whole loop in one click.
+
+### Verify tab (inside `/portal`)
 
 1. **Drag & drop** a credential file onto the drop zone (or click to pick a
    file):
@@ -198,13 +272,21 @@ landing page: **我要验证学历** (verifier), **我是学生** (holder), **�
 
 ### Student tab
 
-A holder looks up **their own** credentials with `StudentID + DOB`
-(e.g. `22000000` + `19880808`; DOB is the privacy gate). Rows carry Verify /
-QR shortcuts and a one-click **分享链接** that copies the public
-`/verify?hash=…` URL.
+A holder opens the link the school gave them (`/me/<token>`). `StudentID + DOB`
+is no longer accepted (U12 R3: that pair was an enumerable privacy gate). The
+page shows the issue point (block + time), a verification QR, **下载凭证 PDF**,
+and the revocation reason if the credential was revoked. When the link has
+under seven days left it grows **续期这个链接** (U14): that re-signs the same
+credential for another 30 days, so a holder whose employer still holds the
+old link does not have to ask the office for a new one. Old links keep working
+until their own expiry, so renewing never breaks a link already shared.
 
 ### Registrar tab (admin)
 
+Signing in at `/staff/login` gives a 30-minute console session. Each role
+keeps at most three live sessions (the fourth sign-in evicts the oldest),
+**退出所有设备** clears every session of your role server-side, and five wrong
+tokens from one address inside ten minutes lock the form (U14).
 - **批量签发毕业证 (Batch-issue wizard)** — the fastest way to issue a cohort:
   1. **下载 CSV 模板** for the exact column format (Chinese/English header
      aliases are accepted, e.g. `surname/姓`, `student_id/学号`, `degree/学位`,
@@ -215,7 +297,9 @@ QR shortcuts and a one-click **分享链接** that copies the public
      with reasons, and the button becomes **签发 N 份 Issue**.
   4. One click issues everything via `POST /api/issue/batch` — each row is
      independent, so a bad row never rolls back the good ones. The results
-     table gives per-row 凭证编号 + PDF / QR download links.
+     table gives per-row 凭证编号 + PDF / QR download links, a **持证人链接**
+     button (copies the `/me/<token>` URL) and **导出全部持证人链接 CSV**
+     (U13 F5).
 - **单个签发 (Issue one)** — paste a credential JSON, optionally a student
   email → hash, height, verifiable PDF, QR, notification (dry-run by default).
 - **公开 API 密钥** — create per-integration keys for the batch/API flow
@@ -250,6 +334,14 @@ This is an issue-side action, so it is hidden in public verifier mode
 
 Manage trusted signer keys: list, add (algorithm: `ML_DSA_65`,
 `RSA_PSS_2048`, `ec.secp256r1`), activate one, see fingerprints.
+
+Old keys can be **retired** instead of deleted. Retirement records a height
+boundary (`retired_at_height`), so blocks the key signed before that height still
+verify while anything after it does not — the key stays in the registry, and the
+badge reads *退役于块 #N*. The active signer cannot be retired (switch first, or
+its next block would be signed by an untrusted key and the whole chain would read
+`INVALID`); a retired key cannot be made active again. Re-registering the same
+public key clears the boundary.
 
 ### AI Chat tab
 
@@ -287,7 +379,11 @@ context. Controlled by:
 
 - **Portal-issued PDFs (Path A)** are fully supported: the credential JSON is
   embedded in the PDF; uploading it to **Verify** extracts the JSON and runs
-  the exact six checks. `GET /api/pdf/{hash}` downloads one.
+  the exact six checks. Since U13 the full file has two staff/holder-only
+  routes — `GET /api/admin/pdf/{hash}` (staff) and `GET /api/me/{cap}/pdf`
+  (the holder's signed link) — while `GET /api/pdf/{hash}` now returns a
+  **verification report** with the identity fields withheld and no embedded
+  JSON, so a public hash is not a bearer credential.
 - **Foreign / scanned PDFs (OCR soft-check, Path B)** — the round-4 OCR
   soft-check module (`app/pdf_softcheck.py` + `/api/verify/soft`) is **not
   included in this local copy** (it was never part of the packaged zip).
@@ -304,29 +400,34 @@ Base URL: `http://127.0.0.1:8000` (or your deployed URL).
 |---|---|---|
 | `GET /healthz` | liveness | — |
 | `GET /api/version` | app version, public mode, chain height, status-list digest | — |
+| `GET /api/diagnostics` | the text behind `/healthz`'s counts: config messages, chain integrity, signers + `retired_at_height`, uptime (U19) | admin |
 | `POST /api/issue` `{"document": {...}, "student_email": "..."}` | issue a credential | admin |
 | `POST /api/issue/batch` `{"credentials": [{"document", "student_email"?}]}` | batch issue (≤ `BATCH_ISSUE_MAX`, default 200) — per-row results, bad rows never block good rows | admin |
-| `POST /api/revoke` `{"hashed_document": "...", "reason": "...", "effective_at": 1700000000}` | revoke | admin |
+| `POST /api/revoke` `{"hashed_document": "...", "reason": "...", "effective_at": 1700000000}` | revoke; `effective_at` is recorded metadata and a future value is rejected `422` (revocation is immediate, so don't pretend otherwise) | admin |
 | `GET /api/verify/{hash}` | six checks by hash | — / API key |
 | `POST /api/verify/document` (JSON or multipart file) | six checks with hash_match | — / API key |
 | `POST /api/extract/pdf` (multipart PDF) | PDF auto-fill: `{mode, confidence, document, field_confidence, warnings}` — JSON draft for the form, never a verdict | — / API key |
 | `POST /api/verify/batch` `{"hashes": ["..."]}` | batch verify ≤ 500 hashes | — / API key |
 | `GET /api/status/{hash}` | raw on-chain lifecycle (503 if chain corrupt) | — |
-| `GET /api/statuslist` | signed revocation status list (ETag-cached) | — |
+| `GET /api/statuslist` | signed revocation status list (ETag-cached); v2 signature includes the nonce and the signing key's fingerprint | — |
+| `GET /api/signers/keys` | public keys (PEM) + fingerprints + retirement boundaries — offline trust anchor | — |
 | `GET /api/receipt/{receipt_id}` | look up a stored receipt | — |
 | `GET /api/qr/{hash}` | PNG QR → verify page | — |
 | `GET /api/log` | anonymized verification log + chain tail | — |
 | `GET /api/anomalies` | hourly issue counts + anomaly flags | — |
-| `GET /api/notifications` | recent notifier events | admin |
-| `GET /api/student/{id}?dob=YYYYMMDD` | holder self-service | — |
+| `GET /api/notifications` | recent notifier events | admin (U13 F2) |
+| `GET /api/me/{cap}` | the one credential behind a holder link (404 for forged/expired) | — (signature in the link) |
 | `POST /api/chat` `{"question": "...", "session_id": "...", "web": true}` | RAG assistant | — |
 | `GET /api/rag/status` | embedder / index state | — |
-| `POST /api/signers`, `POST /api/signers/active`, `GET /api/signers` | signer registry | admin |
+| `POST /api/signers`, `POST /api/signers/active`, `POST /api/signers/retire`, `GET /api/signers` | signer registry / active switch / retire a key's trust from a height on | admin |
 | `GET/POST /api/admin/apikeys`, `DELETE /api/admin/apikeys/{kid}` | API-key lifecycle | admin |
 | `POST /api/custom/build` `{surname, given_names, student_id, degree, ..., issue: true}` | self-service credential maker: build → **issue on chain** → render verifiable PDF + JSON, saved to the main project `自制凭证-outputs/`; `issue:false` = draft (not on chain) | admin |
-| `GET /api/custom/list` | generated self-service files, newest first | — |
-| `GET /api/custom/file/{file_id}/{kind}` | download a generated PDF (`kind=pdf`) or JSON (`kind=json`) | — |
+| `GET /api/custom/list` | generated self-service files, newest first | admin |
+| `GET /api/custom/file/{file_id}/{kind}` | download a generated PDF (`kind=pdf`) or JSON (`kind=json`) | admin |
 | `GET /api/demo/credentials` | sample credentials (diploma / transcript / revoked_sample) | — |
+| `GET /api/pdf/{hash}` · `GET /api/admin/pdf/{hash}` · `GET /api/me/{cap}/pdf` | three PDF forms: public **verification report** (identity withheld, no attachment) · staff **full credential** · holder full credential through a signed link. A revoked hash gets a red **REVOKED ON CHAIN** band (U14); a broken chain gets a red **CHAIN INTEGRITY FAILED** line and a footer pushed down (U19). Each page carries a QR, and prints `Verify online: <url>` if the QR cannot be drawn. Fields too long for the card are truncated with a note (the embedded JSON always has them in full) so the QR and red bands stay on the page (U21). Single-line text is fitted by measured width with `...` — a long institution name or a 44-character CJK name no longer runs off the right edge (U22) | admin (last two) |
+| `POST /api/me/{cap}/renew` | holder self-renewal: allowed only in the last 7 days of the link, returns a fresh 30-day link (U14) | — (signature in the link) |
+| `POST /staff/logout/all` | drop every live console session of the caller's role (U14) | staff session |
 
 **Examples**
 
@@ -373,6 +474,49 @@ The output CSV passes through your original columns and adds:
 `verdict`, the six checks, `receipt_id`, `reason`, `effective_at`, and a
 `SUMMARY` row (total / valid / revoked / not found / invalid / error).
 Exit code 0 = the API is reachable and the run completed.
+
+### Offline revocation checking
+
+Save the two responses once, then check them with no network:
+
+```powershell
+curl.exe -o statuslist.json http://127.0.0.1:8000/api/statuslist
+curl.exe -o anchors.json   http://127.0.0.1:8000/api/signers/keys
+python scripts\verify_statuslist.py statuslist.json anchors.json
+python scripts\verify_statuslist.py statuslist.json anchors.json --hash <credential-hash>
+# anchor it: require the key you already know, and lock the set on first use
+python scripts\verify_statuslist.py statuslist.json anchors.json `
+  --expect f2:6d:75:a5:22:38:e9:b4:5f:a6:4f:b4:1b:13:da:d9 --pin trust-anchor.pin.json
+```
+
+Exit code 0 = the signature verifies against a published key. A tampered row, a
+missing anchor entry, a key whose PEM does not match its fingerprint, a list
+signed by a key *after* its `retired_at_height`, an anchor that does not match
+the pin, or an unreadable pin file all exit 1 with a reason. Only a verified
+list is allowed to answer "not revoked" — an unverified list proves nothing about
+absence.
+
+A signature alone only shows the list and the anchor agree with each other; if
+both came from the same hijacked source, a fake list signed with attacker keys
+would pass. `--expect` is the hard guarantee (state the fingerprint you obtained
+out of band, e.g. from the university's published page); `--pin` is the
+convenient trust-on-first-use variant. A **broken** pin fails closed and is
+never treated as first use; a **deleted** pin does look like first use, so keep
+it somewhere you control (a read-only file, a CI variable, a printed record).
+
+After a legitimate key rotation, do not delete the pin. Record the rotation:
+
+```powershell
+python scripts\verify_statuslist.py statuslist.json anchors.json `
+  --pin trust-anchor.pin.json --pin-update `
+  --expect f2:6d:75:...          # the new fingerprint, confirmed out of band
+```
+
+`--pin-update` rewrites the pin only if the list itself verifies, then appends
+the old set, the new set and a UTC timestamp to the pin's `history` (schema
+`gef26.trust-anchor.pin.v2`; a v1 pin is still readable and upgrades on its next
+update). Without `--expect` the output carries a warning: the new key would be
+vouched for only by the same channel that delivered it.
 
 ---
 
@@ -511,3 +655,36 @@ start_portal.bat / start_portal.sh   # one-click launchers
   production exposure.
 - The RAG web research depends on network availability; mock mode is for
   offline demos.
+
+## 16. Showcase day (现场演示)
+
+Two days' worth of preparation collapses into one double-click:
+
+```powershell
+.\start_showcase.bat
+```
+
+It frees port 8013, opens a Cloudflare quick tunnel (retrying when the quick
+tunnel quota answers `429`), starts the portal with `PUBLIC_BASE_URL` set to
+that public address and `TRUSTED_PROXIES=127.0.0.1`, waits for `/healthz`,
+prints the URL, writes it to `showcase-url.txt`, and opens the stage screen.
+
+What the audience sees:
+
+1. `/showtime` — press **开始**: issue a credential (block N), verify it
+   (✅ 真的), revoke it (block M), verify again (↩ 已注销). Every step is a
+   real API call; the whole run is about 12 seconds.
+2. The QR on that screen points at `PUBLIC_BASE_URL/verify?hash=…`, so anyone
+   can scan it on their own phone and land on the same verdict. Visitors can
+   verify; they cannot issue (that needs the staff token, by design).
+
+Things to know before the doors open:
+
+- **The tunnel URL changes on every restart.** Print it on a slide or a
+  sticky note, never on the poster.
+- **Keep the laptop awake.** Closing the lid kills the tunnel and the portal.
+- **Have a fallback.** If the network dies, drive the same four steps from
+  `http://127.0.0.1:8013/showtime` on the projector; the stage works fully
+  offline, only the QR stops being scannable.
+- Team token card (if you want judges to issue too): `demo-staff-token`
+  entered in the `/issue` page, or `?token=…` on `/showtime` once.

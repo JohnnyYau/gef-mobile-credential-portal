@@ -6,19 +6,17 @@ restores it afterwards.
 """
 
 import json
-import os
 import shutil
-import tempfile
 import unittest
 
-_TMP = tempfile.mkdtemp(prefix="portal-feature-test-")
-os.environ["CHAIN_DIR"] = os.path.join(_TMP, "test-chain")
+from tests._bootstrap import isolated_chain_dir
 
-from fastapi.testclient import TestClient  # noqa: E402
+_TMP = isolated_chain_dir(prefix="portal-feature-test-")
 
 import app.main as main  # noqa: E402
 from app import chain_service  # noqa: E402
 from app.chain_service import SAMPLE_DIPLOMA  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
 
 
 class FeatureTestCase(unittest.TestCase):

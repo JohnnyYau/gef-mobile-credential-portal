@@ -1,0 +1,18 @@
+# Build context exclusions (U8.3). Without this file `COPY . .`-style builds
+# drag a 100+ MB venv and the demo chain data into the image.
+.venv/
+**/__pycache__/
+*.pyc
+.git/
+.gitignore
+data/
+**/rag-cache/
+docs/
+tests/
+scripts/
+*.tar.gz
+*.sqlite3
+static/index.legacy.html
+.env
+.mypy_cache/
+.ruff_cache/

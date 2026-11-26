@@ -8,7 +8,7 @@ healthcheckPath = "/healthz"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
-startCommand = "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+startCommand = "uvicorn app.main:app --host 0.0.0.0 --port $PORT --no-proxy-headers"
 
 # Deploy-time variables (set in the Railway dashboard):
 #   PUBLIC_MODE=1            — public verifier: no admin endpoints, no admin UI
