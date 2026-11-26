@@ -39,6 +39,7 @@ EXTRAS = [
     "P14_Learning_Summary.docx",
     "P14-A0-Poster.pptx",
     "P14-A0-Poster.pdf",
+    "P14-Showcase-Deck.pptx",
     "P14-A0-Poster-preview.png",
     "USAGE.md",
     "CODE_WALKTHROUGH.md",

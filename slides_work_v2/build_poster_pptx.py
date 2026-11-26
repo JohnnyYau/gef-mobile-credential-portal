@@ -1,4 +1,4 @@
-"""Assemble the A0 poster deck from the rendered page.
+r"""Assemble the A0 poster deck from the rendered page.
 
 The poster is laid out in HTML (slides_work_v2/poster.html) and rendered twice:
 3507 px wide for screen review, 4967 px wide (150 dpi at A0) for print. This

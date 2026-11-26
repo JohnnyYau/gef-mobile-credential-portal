@@ -32,6 +32,8 @@ cd verification-portal
 - `verification-portal/` — the working product (FastAPI backend, static frontend,
   tests, docs). Start here: [`verification-portal/README.md`](verification-portal/README.md)
 - `demo-media/` — demo video and posters used in the submission
+- `P14-Showcase-Deck.pptx` — seven 16:9 slides against the current build, as a
+  fallback if the live demo cannot run
 - `P14-A0-Poster.pptx` — the A0 poster (841 x 1189 mm, one page, two QR codes);
   `P14-A0-Poster.pdf` is the same page at 150 dpi for the print shop, and
   `P14-A0-Poster-preview.png` is it at a third of the size
