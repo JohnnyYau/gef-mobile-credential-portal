@@ -51,6 +51,7 @@ EXTRAS = [
 DEMO_MEDIA_KEEP = {
     "GEF-mobile-demo.mp4",
     "GEF-mobile-stage-run.mp4",
+    "GEF-mobile-walkthrough.mp4",
     "poster-海报.png",
     "poster-海报-v2.png",
 }

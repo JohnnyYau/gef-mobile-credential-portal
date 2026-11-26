@@ -128,6 +128,15 @@ What's in the box, per the 3-week plan:
   identifier or byte of code moved; the script is idempotent and has a
   `--check` mode. Tests that pinned the old copy (2 in `test_frontend`, 2 in
   the JS harness) moved with it. Docs: `docs/U28_traditional_copy.md`.
+- **U29 (the booth fallback)** — `demo-media/GEF-mobile-stage-run.mp4` is one real
+  four-step run (21.9 s, silent), filmed headless through DevTools so nothing on
+  the presenter's desktop can leak into frame. `demo-media/GEF-mobile-walkthrough.mp4`
+  is the captioned cut (67.8 s): home → valid → revoked → issuance → stage, all in
+  one tab, so the heights rise 47 → 48 → 50 as they really did. Captions are
+  burned in rather than narrated — a visitor reads them, and text cannot drift out
+  of sync. The poster's fourth figure became `0 / 上鏈的姓名與成績 PII ON CHAIN`,
+  a property of the design instead of a block count that every rehearsal moved.
+  Docs: `docs/U29_recording.md`.
 - **Extras round 3** — *person in context*: the AI resolves who you're asking
   about into a masked profile card, keeps that person across follow-ups
   ("what degree does he hold?"), and can search the web for public info about
