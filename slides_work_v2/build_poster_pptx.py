@@ -8,6 +8,17 @@ brief asks for (A0, one page, PPT, two QR codes).
 Why not native shapes in python-pptx? The layout depends on real screenshots
 and CJK line breaking; a browser does both better than hand-placed boxes, and
 the deck stays a faithful single page.
+
+Re-rendering the input (run from slides_work_v2/):
+
+    chrome --headless=new --hide-scrollbars --window-size=3507,4961 \
+           --force-device-scale-factor=2 --virtual-time-budget=8000 \
+           --screenshot=<abs>\poster-2x.png file:///<abs>/poster.html
+
+Then downscale to 4967 x 7022 (exactly 150 dpi at A0) with LANCZOS and save it
+as poster_assets/poster-a0-print.png. Do not just raise --window-size to A0
+pixels: the page keeps its 3507 x 4961 CSS canvas and the extra room stays
+blank, which is what produced an empty third of the first PDF attempt.
 """
 
 from pathlib import Path

@@ -33,7 +33,8 @@ cd verification-portal
   tests, docs). Start here: [`verification-portal/README.md`](verification-portal/README.md)
 - `demo-media/` — demo video and posters used in the submission
 - `P14-A0-Poster.pptx` — the A0 poster (841 x 1189 mm, one page, two QR codes);
-  `P14-A0-Poster-preview.png` is the same page at a third of the size
+  `P14-A0-Poster.pdf` is the same page at 150 dpi for the print shop, and
+  `P14-A0-Poster-preview.png` is it at a third of the size
 - `slides_work_v2/` — deck/summary build scripts (`poster.html` is the poster
   source; `poster_qr.py` and `build_poster_pptx.py` regenerate the codes and
   the deck)
