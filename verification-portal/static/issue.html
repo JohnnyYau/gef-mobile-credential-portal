@@ -9,7 +9,14 @@
 </head>
 <body>
 <main class="card">
-  <a class="brand" href="/">Credential Verification Portal</a>
+  <header class="top">
+    <a class="brand" href="/">Credential Verification Portal</a>
+    <nav class="topnav">
+      <a href="/">验证</a>
+      <a class="on" href="/issue">签发</a>
+      <a href="/showtime">现场演示</a>
+    </nav>
+  </header>
   <h1>开一张证书</h1>
   <p class="lede">填三格，签一下就上链。签完立刻能在验证页查到。</p>
 
@@ -59,8 +66,8 @@
   <section class="result" id="result" hidden></section>
 
   <footer>
-    你有证书要验？<a href="/">去验证页</a> · 完整控制台 <a href="/staff">/staff</a>
-    <div class="hint">签发会写入一条新区块；链上记录只追加，不能删。</div>
+    你有证书要验？<a href="/">去验证页</a> · 想看完整控制台（批量签发、签名方、公开日志）：<a href="/portal">详细版</a>
+    <div class="hint">每签一张，链上就多一条记录；记录只追加，不能删。</div>
   </footer>
 </main>
 <script src="/static/js/simple_issue.js"></script>

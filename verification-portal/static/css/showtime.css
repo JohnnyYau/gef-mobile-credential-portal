@@ -92,6 +92,18 @@ html, body {
   line-height: 1.3;
 }
 
+.step .meta {
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.35;
+  min-height: 18px;
+  color: var(--dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.step.done .meta { color: var(--go); }
+.step.on .meta { color: var(--chalk); }
+
 .step.on { opacity: 1; border-color: #4b5048; background: #1b1e1a; }
 .step.done { opacity: 1; border-color: #2f4a3c; }
 .step.done .n { color: var(--go); }
@@ -159,15 +171,23 @@ html, body {
   max-width: 1000px;
 }
 
-.qrwrap { margin-top: 18px; align-self: flex-start; }
+.qrwrap { margin-top: 20px; align-self: flex-start; }
 
 .qrwrap img {
   display: block;
-  width: 200px;
-  height: 200px;
+  width: 260px;
+  height: 260px;
   background: #fff;
-  padding: 8px;
+  padding: 10px;
   border-radius: 12px;
+}
+
+.qrcap {
+  margin: 12px 0 0;
+  font-size: 16px;
+  color: var(--dim);
+  max-width: 300px;
+  line-height: 1.45;
 }
 
 .foot {

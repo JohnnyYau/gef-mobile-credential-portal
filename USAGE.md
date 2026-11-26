@@ -671,12 +671,18 @@ prints the URL, writes it to `showcase-url.txt`, and opens the stage screen.
 
 What the audience sees:
 
-1. `/showtime` — press **开始**: issue a credential (block N), verify it
-   (✅ 真的), revoke it (block M), verify again (↩ 已注销). Every step is a
-   real API call; the whole run is about 12 seconds.
+1. `/showtime` — press **开始** (bottom-left): issue a credential (block N),
+   verify it (✅ 真的), revoke it (block M), verify again (↩ 已注销). Every step
+   is a real API call; the whole run is about 12 seconds. Each of the four
+   cards keeps a receipt when it finishes (`第 18 块 · 127 ms`), so the number
+   under the headline is the call's own duration, not the pacing sleep.
 2. The QR on that screen points at `PUBLIC_BASE_URL/verify?hash=…`, so anyone
    can scan it on their own phone and land on the same verdict. Visitors can
    verify; they cannot issue (that needs the staff token, by design).
+3. If a judge asks "how do you know?", the verify page answers for itself:
+   under the verdict, 「这次查验做了什么」 lists the issue block, the signature
+   check, the hash compare and the revocation lookup, then the chain height and
+   the request's real duration.
 
 Things to know before the doors open:
 

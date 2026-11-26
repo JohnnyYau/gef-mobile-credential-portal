@@ -47,6 +47,14 @@ body {
   padding: 30px 26px 26px;
 }
 
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
 .brand {
   display: inline-block;
   font-size: 12px;
@@ -55,6 +63,22 @@ body {
   color: var(--muted);
   text-decoration: none;
 }
+
+.topnav { display: flex; gap: 6px; }
+
+.topnav a {
+  font-size: 13px;
+  line-height: 1;
+  padding: 8px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.topnav a:hover { border-color: var(--ink); color: var(--ink); }
+.topnav a.on { background: var(--ink); border-color: var(--ink); color: #fff; }
 
 h1 {
   margin: 10px 0 8px;
@@ -238,6 +262,43 @@ button:active { transform: translateY(1px); }
   color: var(--muted);
 }
 
+/* ---------- "what just happened" strip ---------- */
+
+.trace {
+  margin: 14px 0 0;
+  padding: 16px 18px 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.trace-title { font-size: 13px; letter-spacing: .08em; color: var(--muted); }
+
+.trace-list {
+  list-style: none;
+  counter-reset: t;
+  margin: 10px 0 0;
+  padding: 0;
+}
+
+.trace-list li {
+  counter-increment: t;
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  padding: 7px 0;
+  border-top: 1px solid var(--line);
+}
+
+.trace-what { flex: none; width: 122px; font-size: 14px; }
+.trace-what::before {
+  content: "0" counter(t) " ";
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.trace-val { flex: 1; min-width: 0; font-size: 14px; color: var(--muted); overflow-wrap: anywhere; }
+.trace-foot { margin: 10px 0 0; font-size: 12px; color: var(--muted); }
+
 /* ---------- samples / footer ---------- */
 
 .samples {
@@ -277,9 +338,32 @@ footer a { color: var(--muted); }
 
 .hint { font-size: 13px; color: var(--muted); margin: 6px 0 0; }
 
+@media (min-width: 900px) {
+  body { padding: 44px 24px 76px; }
+  .card { max-width: 900px; padding: 40px 56px 44px; border-radius: 26px; }
+  .top { margin-bottom: 4px; }
+  h1 { font-size: 42px; margin: 18px 0 10px; }
+  .lede { font-size: 18px; margin-bottom: 28px; }
+  textarea { min-height: 80px; font-size: 17px; }
+  .primary { padding: 18px; font-size: 19px; }
+  .verdict { padding: 26px 26px 22px; }
+  .mark { font-size: 17px; }
+  .headline { font-size: 30px; }
+  .detail { font-size: 16px; }
+  .checks li { font-size: 16px; }
+  .trace-what, .trace-val { font-size: 15px; }
+  .trace-what { width: 132px; }
+  footer { font-size: 13px; }
+}
+
 @media (max-width: 480px) {
   body { padding: 12px 12px 40px; }
-  .card { padding: 24px 18px 20px; border-radius: 18px; }
+  .card { padding: 24px 18px 20px; border-radius: 18px; max-width: 100%; }
   h1 { font-size: 26px; }
   .headline { font-size: 21px; }
+  .topnav a { padding: 7px 11px; font-size: 12px; }
+  .trace { padding: 14px 14px 12px; }
+  .trace-list li { flex-wrap: wrap; gap: 3px; }
+  .trace-what { width: auto; font-size: 13px; }
+  .trace-val { flex-basis: 100%; font-size: 13px; }
 }

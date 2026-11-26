@@ -106,6 +106,18 @@ What's in the box, per the 3-week plan:
   page was 403 even with a valid token — `_origin_allowed()` now compares
   against the request's own `Host`. `test_hardening` is **11** tests. Docs:
   `docs/U26_showcase.md`.
+- **U27 (the screen a judge actually sees)** — an audit at 1440×900 found the
+  page rendering as a 560 px phone card, the verdict below the fold, and three
+  places where the UI said something false: `/showtime` told the presenter to
+  press the button 右下角 when it sits bottom-left; a revoked credential printed
+  `原因：DEMO SAMPLE: issued by mistake。`; the step row claimed `VALID · 2.4s`
+  for a call that took 10 ms (the number included a pacing sleep). The verify
+  page is now desktop-first (900 px card at ≥900 px, form folds away after a
+  verdict), and carries a 「这次查验做了什么」 strip built from the response
+  itself — block numbers, issue time, signature check, hash compare, revocation
+  lookup, chain height from `/healthz`, and a real `fetch` duration. The stage
+  page gives each of its four steps a receipt (`第 18 块 · 127 ms`) and writes
+  a Chinese revocation reason. Docs: `docs/U27_ui_pass.md`.
 - **Extras round 3** — *person in context*: the AI resolves who you're asking
   about into a masked profile card, keeps that person across follow-ups
   ("what degree does he hold?"), and can search the web for public info about
