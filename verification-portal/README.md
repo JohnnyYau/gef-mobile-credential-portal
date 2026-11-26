@@ -140,7 +140,8 @@ What's in the box, per the 3-week plan:
 - **Pre-flight** — `python scripts/preflight.py` checks the eleven things that fail
   silently ten minutes before a booth opens: the app answers, the demo credential
   is still VALID, the revoked sample is still REVOKED, the public tunnel reaches
-  *this* instance, the code the stage page draws still scans to that public address, the
+  *this* instance, the code the stage page draws still scans to that public address
+  and still reads after being photographed at 260 px, the
   seven deliverables are on disk, both videos have no audio
   and a sane length, the poster's QR codes still decode to the YouTube and GitHub
   URLs, the served copy is Traditional with nothing pending, the A0 PDF is really A0 at 150 dpi with margins and readable QR codes,
@@ -153,7 +154,8 @@ What's in the box, per the 3-week plan:
   same result), while the identical payload with mask 3 decodes first time. `/api/qr/{hash}`
   now builds the code explicitly — `ERROR_CORRECT_M`, `box_size=10`, `border=4` — and walks
   the eight masks until a detector reads the URL back, falling back to mask 3 where OpenCV
-  is not installed. Verified end to end: the served PNG decodes to
+  is not installed. The check then photographs it: down to the 260 px the stage CSS paints, a
+  little blur, a JPEG round trip, and the URL still has to come back. Verified end to end — the served PNG decodes to
   `…/verify?hash=…`, and pre-flight is 11/11.
 - **Extras round 3** — *person in context*: the AI resolves who you're asking
   about into a masked profile card, keeps that person across follow-ups

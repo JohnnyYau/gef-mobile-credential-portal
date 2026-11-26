@@ -124,7 +124,21 @@ def c_stage_qr():
     host = tunnel_url().split("//", 1)[-1].rstrip("/")
     if host not in text:
         return False, f"QR points at {text[:60] or 'nothing'}, expected host {host}"
-    return True, f"encodes {host}/verify?hash=…"
+
+    # A clean 610 px read proves the payload, not the optics. A judge photographs the
+    # projection from a metre or two, so the same code has to survive a hand-held shot:
+    # down to 260 px (what the stage CSS paints), a little motion blur, a JPEG round trip.
+    small = cv2.resize(img, (260, 260), interpolation=cv2.INTER_AREA)
+    small = cv2.GaussianBlur(small, (0, 0), 1.0)
+    ok_j, jpeg = cv2.imencode(".jpg", small, [int(cv2.IMWRITE_JPEG_QUALITY), 70])
+    if not ok_j:
+        return False, "could not encode the photo simulation"
+    shot, _pts2, _s2 = cv2.QRCodeDetector().detectAndDecode(
+        cv2.imdecode(jpeg, cv2.IMREAD_GRAYSCALE))
+    if host not in (shot or ""):
+        return False, ("readable as a file but not as a 260 px photo — the code is too "
+                       "dense to scan off the projector")
+    return True, f"encodes {host}/verify?hash=…, still reads as a 260 px photo"
 
 
 def probe(path: Path):
