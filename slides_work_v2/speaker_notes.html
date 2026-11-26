@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-HK">
+<head>
+<meta charset="utf-8">
+<title>GEF mobile · P14 — 講稿（七頁）</title>
+<style>
+  @page { size: A4; margin: 14mm 15mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Microsoft JhengHei", sans-serif; font-size: 9.4pt; line-height: 1.62;
+         color: #1a1813; }
+  header { border-bottom: 1.2px solid #1a1813; padding-bottom: 3mm; margin-bottom: 5mm; }
+  .kicker { font-size: 7.6pt; letter-spacing: .18em; color: #6b6353; }
+  h1 { font-size: 17pt; font-weight: 600; margin-top: 1.5mm; }
+  .sub { font-size: 8.4pt; color: #6b6353; margin-top: 1mm; }
+  .slide { display: flex; gap: 5mm; padding: 3mm 0 3.4mm; border-bottom: .5px dotted #cdc5b1;
+           break-inside: avoid; }
+  .thumb { width: 52mm; flex: none; }
+  .thumb img { width: 100%; border: .5px solid #cdc5b1; display: block; }
+  .n { font-size: 7.4pt; color: #6b6353; margin-top: 1mm; letter-spacing: .08em; }
+  .say { flex: 1; }
+  .say p { margin-bottom: 1.6mm; }
+  .say p:last-child { margin-bottom: 0; }
+  .q { color: #6b6353; }
+  footer { margin-top: 4mm; font-size: 7.4pt; color: #6b6353; border-top: .5px solid #cdc5b1;
+           padding-top: 2mm; display: flex; justify-content: space-between; }
+</style>
+</head>
+<body>
+<header>
+  <div class="kicker">GEF mobile · P14 · speaker notes</div>
+  <h1>七頁，七段話</h1>
+  <div class="sub">每一段就是講稿；「若被問」是預備答案，不是要念出來的。整份約 4 分鐘。</div>
+</header>
+
+<div class="slide">
+  <div class="thumb"><img src="DECKPNG/Slide1.PNG" alt="slide 1"><div class="n">1 · 封面 · 30 秒</div></div>
+  <div class="say">
+    <p>開場就講一句：紙本和 PDF 截圖誰都能改，學校網站又只給你看一張圖。</p>
+    <p>所以我們做的不是另一個文憑驗證網站，而是把「這一刻，這張憑證有沒有被動過」變成一個任何人按一次就有的答案。</p>
+    <p class="q">若被問技術棧：FastAPI；簽名用 ML-DSA-65（後量子）與 RSA-PSS 並存；鏈用 SHA3-512。</p>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="thumb"><img src="DECKPNG/Slide2.PNG" alt="slide 2"><div class="n">2 · 三個問題 · 45 秒</div></div>
+  <div class="say">
+    <p>三件事，每件都指一下對應那一格。</p>
+    <p>第三點最少人講：一張 2019 年發的文憑，2023 年被撤銷了，你手上那份 PDF 完全看不出來——因為「撤銷」這件事沒有寫在任何你看得到的地方。</p>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="thumb"><img src="DECKPNG/Slide3.PNG" alt="slide 3"><div class="n">3 · 四個環節 · 50 秒</div></div>
+  <div class="say">
+    <p>簽發、驗證、註銷、再驗。指每張卡右下那行小字：那是真的 API 呼叫量到的毫秒，不是動畫。</p>
+    <p>第 1 塊簽發、第 3 塊撤銷：同一個人在同一條鏈上留下兩筆，第二筆說第一筆不算了。</p>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="thumb"><img src="DECKPNG/Slide4.PNG" alt="slide 4"><div class="n">4 · 驗證頁 · 50 秒</div></div>
+  <div class="say">
+    <p>這是一個真的僱主會看到的畫面。上面一句結論，下面四行說明它憑什麼這樣說：取回鏈上第 N 塊、用機構公鑰驗簽、比對內容雜湊、查撤銷名單。</p>
+    <p>四行裡任何一行不通過，上面就不會是綠色——這是我們刻意不讓它「只給一句話」。</p>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="thumb"><img src="DECKPNG/Slide5.PNG" alt="slide 5"><div class="n">5 · 舞台頁 · 45 秒</div></div>
+  <div class="say">
+    <p>這是我們在台上用的同一頁。四步跑完，四張收據都寫著塊號與毫秒。</p>
+    <p>為什麼要在台上跑真的？因為假的一被問「第幾塊」就露了；而我們每一格都答得出來。</p>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="thumb"><img src="DECKPNG/Slide6.PNG" alt="slide 6"><div class="n">6 · 三原則四個數 · 50 秒</div></div>
+  <div class="say">
+    <p>三條原則：只用後量子簽名（ML-DSA-65 與 RSA-PSS 並存、簽名方可輪替）；鏈上只有雜湊與簽名；結論只說「這一刻、這六項檢查通過」。</p>
+    <p>右上那個 0 是我們最在意的數字：鏈上沒有一筆姓名或成績。</p>
+    <p class="q">若被問法律效力：我們不宣稱它是學歷認證，只宣稱這一刻的密碼學結論——這句話就印在每張收據上。</p>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="thumb"><img src="DECKPNG/Slide7.PNG" alt="slide 7"><div class="n">7 · 兩枚碼 · 30 秒</div></div>
+  <div class="say">
+    <p>兩枚碼：左邊是完整的四步錄屏，右邊是原始碼。</p>
+    <p>網址是臨時的，碼不是——所以我們印的是碼，不是那一串 trycloudflare。</p>
+    <p>收尾一句：你現在可以掃，也可以回去自己起一份。</p>
+  </div>
+</div>
+
+<footer>
+  <span>P14-Showcase-Deck.pptx · 備注頁同步存了同一份講稿（簡報者檢視可見）</span>
+  <span>約 4 分鐘 · 90 秒版見 P14-Run-Sheet.pdf</span>
+</footer>
+</body>
+</html>
