@@ -1426,15 +1426,45 @@ def qr(hashed_document: str):
     url = f"{PUBLIC_BASE_URL}/verify?hash={hashed_document}"
     try:
         import qrcode
+        from qrcode.constants import ERROR_CORRECT_M
     except ImportError as exc:
         raise HTTPException(
             status_code=503,
             detail="QR support not installed (pip install qrcode).",
         ) from exc
-    img = qrcode.make(url)
-    buf = BytesIO()
-    img.save(buf, format="PNG")
-    return Response(content=buf.getvalue(), media_type="image/png",
+
+    def render(mask) -> bytes:
+        code = qrcode.QRCode(error_correction=ERROR_CORRECT_M, box_size=10,
+                             border=4, mask_pattern=mask)
+        code.add_data(url)
+        code.make(fit=True)
+        buf = BytesIO()
+        code.make_image().save(buf, format="PNG")
+        return buf.getvalue()
+
+    # The library picks its mask by its own penalty rules, and for some payloads
+    # that mask is one a detector refuses outright: a 161-character URL here
+    # produced a code that OpenCV could not read at any size, while the same
+    # payload with mask 3 read first time. Rather than trust the auto choice,
+    # render a few and keep the first one that actually decodes. Without OpenCV
+    # there is nothing to check against, so fall back to mask 3.
+    try:
+        import cv2
+        import numpy as np
+    except ImportError:
+        return Response(content=render(3), media_type="image/png",
+                        headers={"Cache-Control": "public, max-age=3600"})
+
+    for mask in (None, 0, 1, 2, 3, 4, 5, 6, 7):
+        data = render(mask)
+        arr = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR)
+        if arr is None:
+            continue
+        text, _pts, _straight = cv2.QRCodeDetector().detectAndDecode(arr)
+        if text == url:
+            return Response(content=data, media_type="image/png",
+                            headers={"Cache-Control": "public, max-age=3600"})
+    return Response(content=render(3), media_type="image/png",
                     headers={"Cache-Control": "public, max-age=3600"})
 
 
