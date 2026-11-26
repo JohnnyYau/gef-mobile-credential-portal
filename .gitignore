@@ -28,3 +28,7 @@ Thumbs.db
 # Build output and transient runtime files
 P14-Mobile-Credential-Verification-Portal.zip
 verification-portal/showcase-url.txt
+
+# Runtime droppings
+verification-portal/portal_live.pid
+verification-portal/*.log

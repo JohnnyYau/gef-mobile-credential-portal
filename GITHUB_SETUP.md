@@ -1,59 +1,33 @@
-# GitHub Push Guide — GEF Mobile
+# GitHub — pushed
 
-Local git is already initialized and committed. Only the remote creation and
-push need your GitHub account.
+Status: **done**. The repository is public and in sync with this folder.
 
-## What is already done locally
+- Remote: `https://github.com/JohnnyYau/gef-mobile-credential-portal`
+- Branch: `main`, tracking `origin/main`
+- Latest commit when this was written: `ad8643f` (U25/U26 — one-screen
+  verification, issue page, showtime stage, tunnel + same-origin fix)
 
-- Repo root: this folder (`GEF-mobile-project/`), branch `main`.
-- Initial commit: `8356e80` — 85 files, source code, tests, docs, demo video
-  and poster.
-- Ignored (never committed): `.venv/`, `verification-portal/data/` (chain state
-  and demo private keys), `__pycache__/`, video intermediates
-  (`narration.wav`, `clip*.mp4`, `concat.*`, `shots/`).
+## What is not published
 
-## Steps
+Ignored by `.gitignore`, never committed:
 
-1. On GitHub, click **New repository**:
-   - Name: e.g. `gef-mobile-credential-portal`
-   - Visibility: **Public** (the summary needs a shareable source-code link;
-     choose Private only if the course allows it).
-   - **Do NOT** tick "Add a README", `.gitignore` or license — the repo must be
-     empty, otherwise the first push conflicts.
-   - Create repository.
+- `.venv/` (104 MB, rebuilt from `requirements.txt`)
+- `verification-portal/data/` — chain state, demo private keys, raw index
+- `verification-portal/showcase-url.txt`, build zips (`*.zip`), `rag-cache/`
+- demo video intermediates (`narration.wav`, `clip*.mp4`, `concat.*`, `shots/`)
 
-2. In this folder, point the local repo at the new GitHub repo and push
-   (replace `<your-username>` and `<repo-name>`):
+The chain re-seeds itself with demo keys on first start, so a fresh clone runs
+without any of those files.
 
-   ```bash
-   git remote add origin https://github.com/<your-username>/<repo-name>.git
-   git branch -M main
-   git push -u origin main
-   ```
+## If you ever need to re-point the remote
 
-   The first push opens a GitHub sign-in / credential prompt; sign in with your
-   account (browser or personal access token).
+```bash
+git remote set-url origin https://github.com/<user>/<repo>.git
+git push -u origin main
+```
 
-3. Copy the repository URL, e.g.
-   `https://github.com/<your-username>/<repo-name>`, and paste it into
-   `Learning_Summary_draft.md` under **Source code (GitHub)**.
+## Remaining manual step
 
-## After pushing, verify
-
-- The remote file list must **not** contain `.venv/`, `data/`, `keys/`,
-  `narration.wav` or `shots/`.
-- Repo size should be a few MB (two demo MP4s are the only large binaries).
-
-## Notes
-
-- The local commit author is a placeholder (`GEF Mobile Team`, noreply email).
-  To use your own identity before pushing:
-
-  ```bash
-  git config user.name "Your Name"
-  git config user.email "you@example.com"
-  git commit --amend --no-edit --author="Your Name <you@example.com>"
-  ```
-
-- If you made changes after the commit, stage and commit them again:
-  `git add -A && git commit -m "..."` before pushing.
+`P14_Learning_Summary.docx` still embeds the GitHub link as plain text — the
+docx was written before the repo existed. Re-generate it from
+`Learning_Summary_draft.md` (which now carries the real URL) before uploading.

@@ -8,7 +8,7 @@
 - **Project ID:** [PROJECT ID, e.g. P01]
 - **Team members:** [Name 1], [Name 2], [Name 3]
 - **Demo video (YouTube):** [LINK PROVIDED BY TEAMMATE]
-- **Source code (GitHub):** [LINK AFTER GITHUB PUSH]
+- **Source code (GitHub):** https://github.com/JohnnyYau/gef-mobile-credential-portal
 
 ---
 

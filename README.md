@@ -1,17 +1,58 @@
-# GEF Mobile — full project download (v4, extras round 3)
+# GEF Mobile — Post-Quantum Credential Verification Portal (P14)
 
-Layout:
-- verification-portal/  the working product (Weeks 1-3 + extras rounds 1-3)
-    features: six-check verification, RAG chat, hardening, QR codes, public
-    (persisted) log, IsolationForest anomaly watch, verifiable diploma PDFs,
-    student self-service lookup, multi-signer admin, email notifier,
-    responsive UI, + person-in-context AI (masked profile cards, session
-    memory) and web research (Wikipedia/DuckDuckGo; demo-fixture mode).
-    run: cd verification-portal && .venv/bin/python -m uvicorn app.main:app --port 8000 --no-proxy-headers
-    (fresh install: python3 -m venv --system-site-packages .venv, then
-     .venv/bin/pip install torch --index-url https://download.pytorch.org/whl/cpu
-     and .venv/bin/pip install -r requirements.txt)
-    tests: python -m unittest tests.test_api tests.test_hardening tests.test_rag
-           tests.test_features tests.test_extra2 tests.test_person   (72 tests)
-    demo video: demo.mp4 (rebuild: python3 scripts/build_demo_video.py)
-- original-repo/        the Gef26 hash-chain repo as uploaded (source of truth)
+A small university registrar system that issues, verifies and revokes academic
+credentials, with every issuance written into a hash chain. Signatures use
+ML-DSA-65 (post-quantum) plus RSA-PSS/ECDSA for the registrar office, and the
+checking side is usable by someone with no account and no browser extension:
+paste a code, drop a signed PDF, and get one plain sentence back.
+
+## Live demo (evaluators)
+
+`https://header-ceiling-statements-kingdom.trycloudflare.com`
+
+- `/` — one-screen verification (paste a code, or choose a PDF)
+- `/issue` — three-field issuance page (name / student ID / degree)
+- `/showtime` — the four-step stage used at the project showcase
+- `/portal` — the full original portal (registrar, student, AI assistant, log)
+
+The demo runs on a laptop behind a temporary Cloudflare tunnel, so the URL only
+lives while that machine is awake. If it is down, the local path is:
+
+```bash
+cd verification-portal
+.venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8013 --no-proxy-headers
+```
+
+## Layout
+
+- `verification-portal/` — the working product (FastAPI backend, static frontend,
+  tests, docs). Start here: [`verification-portal/README.md`](verification-portal/README.md)
+- `demo-media/` — demo video and posters used in the submission
+- `original-repo/` — the Gef26 hash-chain repo this was built on
+- `slides_work_v2/` — deck/summary build scripts
+- `USAGE.md`, `CODE_WALKTHROUGH.md`, `SUBMISSION_PLAN.md` — usage guide,
+  per-code-block walkthrough and submission plan
+
+## What it does
+
+1. **Issue** — staff signs a credential (ML-DSA-65 + a second signer), writes it
+   to the hash chain, and hands back a PDF and a short verification code.
+2. **Verify** — the code or the PDF's embedded payload is checked on six axes:
+   signature, chain position, hash match, revocation status, issuer trust, age.
+   The result is one line: valid / revoked / not found / unverifiable.
+3. **Revoke** — a revocation entry is appended; the PDF still verifies
+   cryptographically but now reports as revoked, which is the point of a
+   status list rather than a re-signed document.
+4. **Offline / bulk** — signed status list and batch verification for employers,
+   plus an offline verifier that only needs the PDF and the public key.
+
+## Notes
+
+- No private keys, chain state or virtualenv are committed; `data/` is ignored
+  and is re-seeded on first start with demo keys.
+- Everything here runs offline: no paid APIs, no cloud dependencies, no
+  telemetry.
+- This is a course project, not a production registrar system. The honest
+  limits (single-process chain writes, demo keys, temporary tunnel) are written
+  down in `verification-portal/docs/U26_showcase.md` and
+  `verification-portal/docs/U25_one_screen.md`.
