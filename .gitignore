@@ -32,3 +32,4 @@ verification-portal/showcase-url.txt
 # Runtime droppings
 verification-portal/portal_live.pid
 verification-portal/*.log
+*.docx.bak
