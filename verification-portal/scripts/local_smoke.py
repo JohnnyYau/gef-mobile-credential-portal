@@ -79,7 +79,7 @@ if PHASE == "public":
     # 9. statuslist signed + etag
     r = client.get("/api/statuslist")
     sl = r.json()
-    check("statuslist schema", sl.get("schema") == "gef26.statuslist.v1")
+    check("statuslist schema", sl.get("schema") == "gef26.statuslist.v2")
     check("statuslist signature", bool(sl.get("signature", {}).get("value")))
     etag = r.headers.get("etag")
     check("statuslist etag", bool(etag))
@@ -100,8 +100,12 @@ if PHASE == "public":
     check("chat answers", r.status_code == 200 and bool(r.json().get("answer")))
     check("rag status", client.get("/api/rag/status").status_code == 200)
     check("student requires dob 404", client.get("/api/student/22000000").status_code == 404)
+    # U12 R3 retired StudentID+DOB: an unauthenticated endpoint that answers
+    # "right DOB / wrong DOB / no such student" is an oracle for exactly the data
+    # it is supposed to protect. Holder access moved to capability links, so the
+    # property to assert now is that the old lookup is gone, not that it works.
     r = client.get("/api/student/22000000?dob=19880808")
-    check("student lookup", r.status_code == 200 and len(r.json()["credentials"]) >= 1)
+    check("legacy student lookup retired", r.status_code in (401, 403, 404))
 
 else:  # private
     valid_h = chain_service.demo_credentials()["diploma"]["hashed_document"]

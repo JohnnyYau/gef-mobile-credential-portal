@@ -15,6 +15,9 @@ ARC_ROOT = "P14-Mobile-Credential-Verification-Portal"
 EXCLUDE_DIRS = {
     ".venv", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache",
     ".hypothesis", ".git", "rag-cache",
+    # scratch dirs a build script leaves behind: 15 ffmpeg segments once rode
+    # along in the submission because nothing named ".video-tmp".
+    ".video-tmp",
     # U12 R5: plaintext credential documents (names, DOB, e-mail) must never
     # travel inside a submission bundle, and neither must the demo private
     # keys. Both live under data/. Dropping data/ whole means the bundle boots
