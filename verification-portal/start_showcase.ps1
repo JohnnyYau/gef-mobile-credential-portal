@@ -90,7 +90,10 @@ try {
     Write-Host "public check failed: $($_.Exception.Message)" -ForegroundColor Yellow
 }
 
-$url | Set-Content (Join-Path $here "showcase-url.txt") -Encoding UTF8
+# WriteAllText, not Set-Content -Encoding UTF8: under Windows PowerShell 5.1
+# that switch prepends a BOM, and every later reader of this file then carries a
+# zero-width character in front of the URL.
+[IO.File]::WriteAllText((Join-Path $here "showcase-url.txt"), $url)
 
 Write-Host ""
 Write-Host "  PUBLIC  $url" -ForegroundColor Cyan
@@ -100,4 +103,14 @@ Write-Host "  Keep this window's processes alive: closing the laptop lid kills t
 
 if (-not $NoBrowser) {
     Start-Process "http://127.0.0.1:$Port/showtime?token=$AdminToken"
+}
+
+# ---- 6. say whether the show is actually ready ------------------------------
+# Nine things that break silently (dead tunnel, drifted demo hashes, a QR that
+# points at the wrong video, a preview file where the print file should be).
+# Green here means the booth is safe; red names the one thing to fix.
+Write-Host ""
+& $py (Join-Path $here "scripts\preflight.py")
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "  preflight failed - fix the lines above before opening the booth." -ForegroundColor Yellow
 }

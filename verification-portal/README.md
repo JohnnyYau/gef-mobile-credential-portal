@@ -137,6 +137,14 @@ What's in the box, per the 3-week plan:
   of sync. The poster's fourth figure became `0 / 上鏈的姓名與成績 PII ON CHAIN`,
   a property of the design instead of a block count that every rehearsal moved.
   Docs: `docs/U29_recording.md`.
+- **Pre-flight** — `python scripts/preflight.py` checks the nine things that fail
+  silently ten minutes before a booth opens: the app answers, the demo credential
+  is still VALID, the revoked sample is still REVOKED, the public tunnel reaches
+  *this* instance, the seven deliverables are on disk, both videos have no audio
+  and a sane length, the poster's QR codes still decode to the YouTube and GitHub
+  URLs, the served copy is Traditional with nothing pending, and the submission zip
+  is current. `--tests` adds the full suite. `start_showcase.ps1` now runs it as its
+  last step, so a green launcher means a ready booth.
 - **Extras round 3** — *person in context*: the AI resolves who you're asking
   about into a masked profile card, keeps that person across follow-ups
   ("what degree does he hold?"), and can search the web for public info about
