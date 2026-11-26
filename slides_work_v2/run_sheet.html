@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-HK">
+<head>
+<meta charset="utf-8">
+<title>GEF mobile · P14 — 開攤與台上流程</title>
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 210mm; height: 297mm; background: #f7f4ec; color: #1a1813;
+    font-family: "Microsoft JhengHei", sans-serif; font-size: 9.6pt; line-height: 1.55;
+    padding: 13mm 14mm 12mm;
+  }
+  header { border-bottom: 1.2px solid #1a1813; padding-bottom: 5mm; margin-bottom: 5mm; }
+  .kicker { font-size: 8pt; letter-spacing: .18em; color: #6b6353; text-transform: uppercase; }
+  h1 { font-size: 21pt; font-weight: 600; letter-spacing: .02em; margin-top: 2mm; }
+  .sub { font-size: 9pt; color: #6b6353; margin-top: 1.5mm; }
+  .cols { display: flex; gap: 8mm; }
+  .col { flex: 1; }
+  h2 { font-size: 10.5pt; font-weight: 600; margin: 0 0 2mm; padding-bottom: 1.2mm;
+       border-bottom: .6px solid #c9c1ad; }
+  section { margin-bottom: 4.5mm; }
+  ol, ul { margin-left: 4.2mm; }
+  li { margin-bottom: 1.3mm; }
+  code { font-family: Consolas, monospace; font-size: 8.4pt; background: #ece7d8;
+         padding: 0 .8mm; border-radius: 1px; }
+  .rule { height: 1px; background: #c9c1ad; margin: 3.5mm 0; }
+  table { width: 100%; border-collapse: collapse; }
+  td { vertical-align: top; padding: 1.2mm 0; border-bottom: .4px dotted #d8d1bd; }
+  td.t { width: 26mm; font-variant-numeric: tabular-nums; color: #6b6353; font-size: 8.8pt; }
+  .stamp { margin-top: 4mm; border: 1px solid #1a1813; padding: 3mm 3.5mm; font-size: 9pt; }
+  .stamp b { font-weight: 600; }
+  ul.urls code { font-size: 8pt; letter-spacing: -.01em; }
+  footer { position: absolute; left: 14mm; right: 14mm; bottom: 9mm; display: flex;
+           justify-content: space-between; font-size: 7.8pt; color: #6b6353;
+           border-top: .6px solid #c9c1ad; padding-top: 2mm; }
+</style>
+</head>
+<body>
+<header>
+  <div class="kicker">GEF mobile · P14 · Project Showcase</div>
+  <h1>開攤，與台上那四分鐘</h1>
+  <div class="sub">Mobile Credential Verification Portal — 一張證書，四個環節 · 2026 年 11 月</div>
+</header>
+
+<div class="cols">
+  <div class="col">
+
+    <section>
+      <h2>開場前十分鐘</h2>
+      <ol>
+        <li>跑 <code>scripts\preflight.py</code>，要看到 <b>10/10</b>。紅色那一行就是唯一要做的事。</li>
+        <li>隧道若已經死：<code>start_showcase.ps1 -NoBrowser</code>。它會換一個新網址，preflight 會自己重驗。</li>
+        <li>用手機掃舞台上那枚 QR，要落在 <code>/verify?hash=…</code>，並看到「真實有效」。</li>
+        <li>投影機接上後，把瀏覽器縮放調到 100%，全螢幕 <code>F11</code>。</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>台上 90 秒版</h2>
+      <table>
+        <tr><td class="t">0:00</td><td>海報那句話：一張證書，四個環節。問題是「驗一張文憑要打幾通電話」。</td></tr>
+        <tr><td class="t">0:10</td><td>開舞台頁（下面那條網址），讓它自己跑：簽發 → 驗證 → 註銷 → 再驗。</td></tr>
+        <tr><td class="t">0:45</td><td>指著四張收據：<b>這些毫秒是真的量出來的</b>，不是動畫。</td></tr>
+        <tr><td class="t">1:10</td><td>收在一句話：鏈上只有雜湊與簽名，<b>0 筆姓名與成績</b>。</td></tr>
+      </table>
+    </section>
+
+    <section>
+      <h2>台上 4 分鐘版</h2>
+      <ol>
+        <li><code>/</code> 貼上 demo 憑證 → 一句結論 + 四行過程（第 1 塊，11 月 20 日簽發）。</li>
+        <li>再貼<b>已註銷</b>那條 → 「已註銷」，原因寫在鏈上（當初簽發有誤）。</li>
+        <li><code>/issue</code> 填三格 → 簽發 → 它會告訴你現在是第幾塊。</li>
+        <li><code>/showtime</code> 走完四環節，讓收據自己填滿。</li>
+        <li>簡報第 6 頁：三條原則 + 四個數字，收尾。</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>這兩個網址，先存進書籤</h2>
+      <ul class="urls">
+        <li>舞台頁：<code>127.0.0.1:8013/showtime</code></li>
+        <li>要它自己跑完，後面接：<code>?auto=1&amp;token=demo-staff-token</code></li>
+        <li>驗證：<code>127.0.0.1:8013/</code>　簽發：<code>127.0.0.1:8013/issue</code></li>
+      </ul>
+    </section>
+
+  </div>
+
+  <div class="col">
+
+    <section>
+      <h2>壞了怎麼辦</h2>
+      <table>
+        <tr><td class="t">隧道掛了</td><td>改用 <code>http://127.0.0.1:8013</code> 直接展示；QR 改口頭說「結束後掃海報」。</td></tr>
+        <tr><td class="t">整台機器掛了</td><td>播 <code>demo-media\GEF-mobile-walkthrough.mp4</code>（68 秒，有字幕，不需要聲音）。</td></tr>
+        <tr><td class="t">只有 22 秒</td><td>播 <code>GEF-mobile-stage-run.mp4</code>，旁白由你自己講。</td></tr>
+        <tr><td class="t">投影很暗</td><td>用 <code>/showtime</code>：深底白字，就是為投影做的。</td></tr>
+        <tr><td class="t">評審要親手驗</td><td>遞手機打 <code>/verify</code>，或掃海報的 GitHub 碼自己起一份。</td></tr>
+      </table>
+    </section>
+
+    <section>
+      <h2>四件不要做</h2>
+      <ul>
+        <li><b>不要清 <code>verification-portal\data\</code></b>：四個樣本、文件裡的指紋、海報與影片裡的塊號全部作廢。</li>
+        <li><b>不要在台上跑 <code>start_showcase</code></b>：它會殺掉 8013 與隧道，當場換一個沒人知道的網址。</li>
+        <li><b>不要簽發真實學生資料</b>：上鏈不可刪，名字與學號會留在示範鏈上。</li>
+        <li><b>不要說「區塊鏈保證是真的」</b>：我們只保證「這一刻、這六項檢查通過」。這是我們自己寫在收據裡的話。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>三個數字，張口就來</h2>
+      <table>
+        <tr><td class="t">六項</td><td>鏈完整、簽名方受信、鏈上有紀錄、雜湊相符、簽名有效、未被撤銷。</td></tr>
+        <tr><td class="t">兩種後量子</td><td>ML-DSA-65 與 RSA-PSS-2048 並存，簽名方可以輪替。</td></tr>
+        <tr><td class="t">0</td><td>上鏈的姓名與成績。只有雜湊與簽名。</td></tr>
+      </table>
+    </section>
+
+    <div class="stamp">
+      <b>一句話版本：</b>「一張文憑，四個環節都寫在鏈上——你可以看著它跑完，也可以自己掃碼再跑一次。」
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <span>preflight.py · start_showcase.ps1 · demo-media\ · P14-A0-Poster.pdf</span>
+  <span>細節：docs\U27_ui_pass.md · U28_traditional_copy.md · U29_recording.md</span>
+</footer>
+</body>
+</html>

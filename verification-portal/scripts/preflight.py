@@ -103,6 +103,30 @@ def c_files():
         f", missing {missing}" if missing else "")
 
 
+def c_stage_qr():
+    """The QR the stage paints on the big screen must be scannable off-device.
+
+    It is built from PUBLIC_BASE_URL at request time. If the server was started
+    without it (or with 127.0.0.1), every judge who lifts a phone gets nothing —
+    while the screen itself looks perfectly fine.
+    """
+    try:
+        import cv2
+        import numpy as np
+    except ImportError:
+        return False, "opencv/numpy not installed"
+    _, body = get(f"{BASE}/api/qr/{VALID}")
+    img = cv2.imdecode(np.frombuffer(body, dtype=np.uint8), cv2.IMREAD_COLOR)
+    if img is None:
+        return False, "QR image did not decode"
+    ok, decoded, _pts, _ = cv2.QRCodeDetector().detectAndDecodeMulti(img)
+    text = " ".join(d for d in decoded if d) if ok else ""
+    host = tunnel_url().split("//", 1)[-1].rstrip("/")
+    if host not in text:
+        return False, f"QR points at {text[:60] or 'nothing'}, expected host {host}"
+    return True, f"encodes {host}/verify?hash=…"
+
+
 def probe(path: Path):
     out = subprocess.run(["ffprobe", "-v", "error", "-show_entries",
                           "format=duration:stream=codec_type", "-of", "json", str(path)],
@@ -177,6 +201,7 @@ def main() -> int:
     check("demo credential still VALID", c_valid)
     check("revoked sample still REVOKED", c_revoked)
     check("public tunnel reaches this instance", c_tunnel)
+    check("stage QR scans to the public address", c_stage_qr)
     check("deliverables on disk", c_files)
     check("videos: no audio, sane length", c_videos)
     check("poster QR codes decode to the right URLs", c_qr)
