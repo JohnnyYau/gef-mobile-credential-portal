@@ -8,7 +8,11 @@ paste a code, drop a signed PDF, and get one plain sentence back.
 
 ## Live demo (evaluators)
 
-`https://header-ceiling-statements-kingdom.trycloudflare.com`
+Current address: `https://rankings-pty-jenny-remained.trycloudflare.com`
+
+The address changes every time the launcher restarts (a quick tunnel has no
+fixed hostname), so on the day read `verification-portal/showcase-url.txt` —
+`start_showcase.bat` writes it there and prints it.
 
 - `/` — one-screen verification (paste a code, or choose a PDF)
 - `/issue` — three-field issuance page (name / student ID / degree)
