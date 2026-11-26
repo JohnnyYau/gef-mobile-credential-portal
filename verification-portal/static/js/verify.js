@@ -18,8 +18,8 @@ async function loadCredSamples() {
         const entry = sampleEntry(creds, kind);
         b.disabled = kind !== "invalid" && !entry;
         if (!entry && kind === "revoked") {
-          b.title = "注销样例仅在公开验证模式可用（需链上已注销记录）";
-          b.textContent = "↩ 已注销（公开模式）";
+          b.title = "註銷樣例僅在公開驗證模式可用（需鏈上已註銷記錄）";
+          b.textContent = "↩ 已註銷（公開模式）";
         } else if (entry) {
           b.title = entry.hashed_document.slice(0, 16) + "…";
         }
@@ -36,7 +36,7 @@ async function verifySample(kind) {
       h = "Z".repeat(44);
     } else {
       const entry = sampleEntry(creds, kind);
-      if (!entry) { showErr($("err"), "此模式下该样例不可用。" + (kind === "revoked" ? "请切换公开验证模式。" : "")); return; }
+      if (!entry) { showErr($("err"), "此模式下該樣例不可用。" + (kind === "revoked" ? "請切換公開驗證模式。" : "")); return; }
       h = entry.hashed_document;
     }
     $("hashinput").value = h;
@@ -48,10 +48,10 @@ async function verifySample(kind) {
 async function verifyBatch() {
   hideErr($("err"));
   const text = $("batchHashes").value.trim();
-  if (!text) { showErr($("err"), "请先粘贴一个或多个凭证编号（每行一个，或逗号分隔）。"); return; }
+  if (!text) { showErr($("err"), "請先粘貼一個或多個憑證編號（每行一個，或逗號分隔）。"); return; }
   const hashes = text.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean);
-  if (!hashes.length) { showErr($("err"), "批量框中没有找到凭证编号。"); return; }
-  const btn = $("batchBtn"); btn.disabled = true; btn.textContent = "验证中…";
+  if (!hashes.length) { showErr($("err"), "批量框中沒有找到憑證編號。"); return; }
+  const btn = $("batchBtn"); btn.disabled = true; btn.textContent = "驗證中…";
   try {
     const data = await api("/api/verify/batch", {
       method: "POST",
@@ -60,7 +60,7 @@ async function verifyBatch() {
     });
     renderBatch(data);
   } catch (e) { showErr($("err"), friendlyErr(e.message)); }
-  finally { btn.disabled = false; btn.textContent = "批量验证"; }
+  finally { btn.disabled = false; btn.textContent = "批量驗證"; }
 }
 function renderBatch(data) {
   _lastBatch = data;
@@ -69,10 +69,10 @@ function renderBatch(data) {
     "<tr><td>" + esc(r.row) + "</td><td class='mono' style='font-size:11px'>" + esc((r.hashed_document || "").slice(0, 16)) + "…</td>" +
     "<td>" + chipFor(r.verdict) + "</td><td>" + esc(r.receipt_id) + "</td><td>" + esc(r.error || r.reason) + "</td></tr>").join("");
   $("batchOut").innerHTML =
-    "<p class='hint'><b>汇总 Summary:</b> 共 " + s.total + " · 有效 " + (s.valid || 0) + " · 已注销 " +
-    (s.revoked || 0) + " · 查无此证 " + (s.not_found || 0) + " · 无效 " +
-    (s.invalid || 0) + " · 出错 " + (s.error || 0) + "</p>" +
-    "<div class='tbl-scroll' style='max-height:280px'><table class='tbl'><thead><tr><th>#</th><th>凭证编号</th><th>结果</th><th>收据</th><th>说明</th></tr></thead><tbody>" +
+    "<p class='hint'><b>彙總 Summary:</b> 共 " + s.total + " · 有效 " + (s.valid || 0) + " · 已註銷 " +
+    (s.revoked || 0) + " · 查無此證 " + (s.not_found || 0) + " · 無效 " +
+    (s.invalid || 0) + " · 出錯 " + (s.error || 0) + "</p>" +
+    "<div class='tbl-scroll' style='max-height:280px'><table class='tbl'><thead><tr><th>#</th><th>憑證編號</th><th>結果</th><th>收據</th><th>説明</th></tr></thead><tbody>" +
     rows + "</tbody></table></div>";
   $("batchCsvBtn").style.display = "inline-block";
 }
@@ -95,7 +95,7 @@ function downloadBatchCsv() {
 async function verifyDocument() {
   hideErr($("err"));
   const btn = $("verifyDocBtn");
-  btn.disabled = true; btn.textContent = "验证中…";
+  btn.disabled = true; btn.textContent = "驗證中…";
   try {
     let result;
     if (selectedFile) {
@@ -104,9 +104,9 @@ async function verifyDocument() {
       result = await api("/api/verify/document", { method: "POST", body: fd });
     } else {
       const text = $("docjson").value.trim();
-      if (!text) { showErr($("err"), "请先选择文件或粘贴凭证 JSON。"); return; }
+      if (!text) { showErr($("err"), "請先選擇文件或粘貼憑證 JSON。"); return; }
       let document;
-      try { document = JSON.parse(text); } catch (e) { showErr($("err"), "JSON 格式错误：" + e.message); return; }
+      try { document = JSON.parse(text); } catch (e) { showErr($("err"), "JSON 格式錯誤：" + e.message); return; }
       result = await api("/api/verify/document", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -115,31 +115,31 @@ async function verifyDocument() {
     }
     showVerdict(result, "doc", selectedFile ? null : JSON.parse($("docjson").value.trim() || "{}"));
   } catch (e) { showErr($("err"), friendlyErr(e.message)); }
-  finally { btn.disabled = false; btn.textContent = "验证 JSON 文档"; }
+  finally { btn.disabled = false; btn.textContent = "驗證 JSON 文檔"; }
 }
 
 // ---- verify hash ----
 async function verifyHash() {
   hideErr($("err"));
   const h = $("hashinput").value.trim();
-  if (!h) { showErr($("err"), "请先粘贴凭证编号。"); return; }
-  const btn = $("verifyHashBtn"); btn.disabled = true; btn.textContent = "验证中…";
+  if (!h) { showErr($("err"), "請先粘貼憑證編號。"); return; }
+  const btn = $("verifyHashBtn"); btn.disabled = true; btn.textContent = "驗證中…";
   try {
     const result = await api("/api/verify/" + encodeURIComponent(h));
     showVerdict(result, "hash", null);
   } catch (e) { showErr($("err"), friendlyErr(e.message)); }
-  finally { btn.disabled = false; btn.textContent = "验证"; }
+  finally { btn.disabled = false; btn.textContent = "驗證"; }
 }
 
 // ---- fetch issued PDF by hash ----
 async function fetchPdf() {
   const h = $("hashinput").value.trim() || (lastResult && lastResult.hashed_document);
-  if (!h) { showErr($("err"), "请先输入凭证编号。"); return; }
+  if (!h) { showErr($("err"), "請先輸入憑證編號。"); return; }
   try {
     const res = await fetch("/api/pdf/" + encodeURIComponent(h));
     if (!res.ok) {
       const d = await res.json().catch(() => ({}));
-      showErr($("err"), d.detail || "链上无此凭证的 PDF 文件。");
+      showErr($("err"), d.detail || "鏈上無此憑證的 PDF 文件。");
       return;
     }
     const blob = await res.blob();
@@ -169,20 +169,20 @@ function handleFile(f) {
   hideErr($("err"));
   if (f.name.toLowerCase().match(/\.pdf$/)) {
     selectedFile = null;
-    $("dropFileName").textContent = "已选择: " + f.name + " (" + (f.size / 1024).toFixed(1) + " KB) —— 正在自动填充…";
+    $("dropFileName").textContent = "已選擇: " + f.name + " (" + (f.size / 1024).toFixed(1) + " KB) —— 正在自動填充…";
     dz.classList.add("hasfile");
     extractPdfInto(f, "docjson", "extractNote").then(() => {
-      $("dropFileName").textContent = "已选择: " + f.name + " —— 已自动填充，请核对后验证";
+      $("dropFileName").textContent = "已選擇: " + f.name + " —— 已自動填充，請核對後驗證";
     }).catch(() => {
-      $("dropFileName").textContent = "已选择: " + f.name + " —— 自动填充失败";
+      $("dropFileName").textContent = "已選擇: " + f.name + " —— 自動填充失敗";
     });
     return;
   }
   selectedFile = f;
   dz.classList.add("hasfile");
-  $("dropFileName").textContent = "已选择: " + f.name + " (" + (f.size / 1024).toFixed(1) + " KB) —— 验证中…";
+  $("dropFileName").textContent = "已選擇: " + f.name + " (" + (f.size / 1024).toFixed(1) + " KB) —— 驗證中…";
   if (!f.name.toLowerCase().match(/\.(json|txt)$/)) {
-    $("dropFileName").textContent = "已选择: " + f.name + " —— 已开始验证（系统将自动判断文件类型）";
+    $("dropFileName").textContent = "已選擇: " + f.name + " —— 已開始驗證（系統將自動判斷文件類型）";
   }
   verifySelectedFile(f);
 }
@@ -191,14 +191,14 @@ async function verifySelectedFile(f) {
     const fd = new FormData();
     fd.append("file", f);
     const result = await api("/api/verify/document", { method: "POST", body: fd });
-    $("dropFileName").textContent = "已选择: " + f.name + " —— 验证完成";
+    $("dropFileName").textContent = "已選擇: " + f.name + " —— 驗證完成";
     let doc = null;
     if (f.name.toLowerCase().endsWith(".json") || f.name.toLowerCase().endsWith(".txt")) {
       try { doc = JSON.parse(await f.text()); } catch (e) { /* keep null */ }
     }
     showVerdict(result, "doc", doc);
   } catch (e) {
-    $("dropFileName").textContent = "已选择: " + f.name + " —— 验证失败";
+    $("dropFileName").textContent = "已選擇: " + f.name + " —— 驗證失敗";
     showErr($("err"), friendlyErr(e.message));
   }
 }
@@ -219,19 +219,19 @@ async function extractPdfInto(f, targetId, noteId) {
     note.className = "extract-note on " + (exact ? "ok" : "warn");
     let html = "";
     if (exact) {
-      html += '<span class="en-badge">精确提取</span>已从凭证 PDF 内嵌数据提取完整 JSON，置信度 100%。' +
-        '<div class="en-acts"><button class="btn sm" onclick="verifyDocFromExtract()">验证凭证 Verify</button></div>';
+      html += '<span class="en-badge">精確提取</span>已從憑證 PDF 內嵌數據提取完整 JSON，置信度 100%。' +
+        '<div class="en-acts"><button class="btn sm" onclick="verifyDocFromExtract()">驗證憑證 Verify</button></div>';
     } else {
       const pct = Math.round((conf || 0) * 100);
-      html += '<span class="en-badge">自动识别</span>已按文本层提取字段，整体置信度 <b>' + pct + '%</b>。' +
-        '以下字段仅供参考，请核对后提交：';
+      html += '<span class="en-badge">自動識別</span>已按文本層提取字段，整體置信度 <b>' + pct + '%</b>。' +
+        '以下字段僅供參考，請核對後提交：';
       const low = Object.entries(fieldConf || {}).filter(([, c]) => c < 0.95)
         .map(([k, c]) => '<span class="en-field">' + esc(k.split(".").pop()) + " " + Math.round(c * 100) + "%</span>").join("");
       if (low) html += '<div style="margin-top:6px">低置信度：' + low + "</div>";
       // warnings come from the PDF's text layer — attacker-controlled input,
       // so each one is escaped individually before joining.
       if (warnings && warnings.length) html += "<div>" + warnings.slice(0, 4).map(esc).join("；") + "</div>";
-      html += '<div class="en-acts"><button class="btn sm" onclick="verifyDocFromExtract()">核对后验证 Verify</button></div>';
+      html += '<div class="en-acts"><button class="btn sm" onclick="verifyDocFromExtract()">核對後驗證 Verify</button></div>';
     }
     note.innerHTML = html;
   };
@@ -242,8 +242,8 @@ async function extractPdfInto(f, targetId, noteId) {
     fill(res.mode, res.document, res.confidence, res.warnings, res.field_confidence);
   } catch (e) {
     note.className = "extract-note on warn";
-    note.innerHTML = "<span class=\"en-badge\">无法自动填充</span>" +
-      esc(friendlyErr(e.message)) + " 可改拖 JSON 文件直接验证，或粘贴凭证编号。";
+    note.innerHTML = "<span class=\"en-badge\">無法自動填充</span>" +
+      esc(friendlyErr(e.message)) + " 可改拖 JSON 文件直接驗證，或粘貼憑證編號。";
     throw e;
   }
 }

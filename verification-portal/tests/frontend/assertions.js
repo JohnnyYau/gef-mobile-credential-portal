@@ -15,8 +15,8 @@ assert(escapeHtml(0) === "0", "escapeHtml should keep falsy-but-real values");
 assert(esc("<b>") === escapeHtml("<b>"), "esc must delegate to escapeHtml");
 
 // 2. verdict shaping (format.js)
-assert(verdictZh("VALID") === "真实有效", "verdictZh should translate VALID");
-assert(verdictZh("VALID ON CHAIN") === "真实有效", "verdictZh should translate VALID ON CHAIN");
+assert(verdictZh("VALID") === "真實有效", "verdictZh should translate VALID");
+assert(verdictZh("VALID ON CHAIN") === "真實有效", "verdictZh should translate VALID ON CHAIN");
 assert(verdictEn("VALID ON CHAIN") === "VALID", "verdictEn should fold VALID ON CHAIN");
 assert(verdictZh(null) === "—", "verdictZh should fall back to a dash");
 assert(chipFor("<b>x</b>").indexOf("<b>x</b>") === -1, "chipFor should not pass raw markup through");

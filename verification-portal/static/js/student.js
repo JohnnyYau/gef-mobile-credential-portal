@@ -21,7 +21,7 @@ function openHolder() {
   const input = $("holderlink");
   const token = holderTokenFrom(input ? input.value : "");
   if (!token) {
-    if (err) showErr(err, "这不像一条持证人链接。请粘贴以 /me/ 开头的地址，或直接粘贴 token。");
+    if (err) showErr(err, "這不像一條持證人連結。請粘貼以 /me/ 開頭的地址，或直接粘貼 token。");
     return;
   }
   location.href = "/me/" + encodeURIComponent(token);
@@ -35,7 +35,7 @@ async function mintHolderLink() {
   const sid = ($("linkSid") || {}).value ? $("linkSid").value.trim() : "";
   const hash = ($("linkHash") || {}).value ? $("linkHash").value.trim() : "";
   if (!sid || !hash) {
-    if (err) showErr(err, "填学号与凭证哈希（签发结果里那串 HashedDocument）。");
+    if (err) showErr(err, "填學號與憑證哈希（簽發結果裡那串 HashedDocument）。");
     return;
   }
   const btn = $("mintLinkBtn");
@@ -45,13 +45,13 @@ async function mintHolderLink() {
                         "&hashed_document=" + encodeURIComponent(hash));
     const url = location.origin + r.path;
     if (ok) {
-      ok.innerHTML = "链接已生成，复制发给学生：<br><span class=\"mono\">" + esc(url) + "</span>";
+      ok.innerHTML = "連結已生成，複製發給學生：<br><span class=\"mono\">" + esc(url) + "</span>";
       ok.style.display = "block";
     }
     if (hash && $("holderlink")) $("holderlink").value = url;
   } catch (e) {
     if (err) showErr(err, friendlyErr(e.message));
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = "生成链接"; }
+    if (btn) { btn.disabled = false; btn.textContent = "生成連結"; }
   }
 }

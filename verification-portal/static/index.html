@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-Hant-HK">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>凭证验证 · Credential Verification Portal</title>
+<title>憑證驗證 · Credential Verification Portal</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Cpath d='M9 22V10h9a4 4 0 0 1 0 8h-4v4zm4-7h4a1.5 1.5 0 0 0 0-3h-4z' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="/static/css/simple.css">
 </head>
@@ -12,40 +12,40 @@
   <header class="top">
     <a class="brand" href="/">Credential Verification Portal</a>
     <nav class="topnav">
-      <a class="on" href="/">验证</a>
-      <a href="/issue">签发</a>
-      <a href="/showtime">现场演示</a>
+      <a class="on" href="/">驗證</a>
+      <a href="/issue">簽發</a>
+      <a href="/showtime">現場演示</a>
     </nav>
   </header>
 
-  <h1>这张证书是真的吗？</h1>
-  <p class="lede">粘贴验证码，或者上传证书 PDF。几秒钟出结果，不用注册，也不会保存你的文件。</p>
+  <h1>這張證書是真的嗎？</h1>
+  <p class="lede">粘貼驗證碼，或者上傳證書 PDF。幾秒鐘出結果，不用註冊，也不會保存你的文件。</p>
 
   <form id="verifyForm" autocomplete="off">
     <label class="field" for="hashInput">
-      <span>验证码</span>
-      <textarea id="hashInput" rows="2" placeholder="例如 GFiY4d67…（一整串，约 80 个字符）"></textarea>
+      <span>驗證碼</span>
+      <textarea id="hashInput" rows="2" placeholder="例如 GFiY4d67…（一整串，約 80 個字符）"></textarea>
     </label>
     <div class="or">或者</div>
     <label class="file" id="fileBox">
       <input type="file" id="fileInput" accept="application/pdf,application/json,image/*">
-      <span id="fileLabel">选择证书文件（PDF / JSON）</span>
+      <span id="fileLabel">選擇證書文件（PDF / JSON）</span>
     </label>
-    <button type="submit" class="primary" id="verifyBtn">验证</button>
+    <button type="submit" class="primary" id="verifyBtn">驗證</button>
     <p class="note" id="error" hidden></p>
   </form>
 
   <section class="result" id="result" hidden></section>
 
   <section class="samples" id="samples" hidden>
-    <p>手上没有证书？点一个样例试试：</p>
+    <p>手上沒有證書？點一個樣例試試：</p>
     <div class="chips" id="chips"></div>
   </section>
 
   <footer>
-    你是签发方？<a href="/issue">去开一张证书</a><br>
-    想看完整控制台、批量验证和公开日志：<a href="/portal">详细版</a> · 想一次看完整个流程：<a href="/showtime">现场演示</a>
-    <div class="hint">这一页只做验证；上传的文件只在内存里过一遍。</div>
+    你是簽發方？<a href="/issue">去開一張證書</a><br>
+    想看完整控制枱、批量驗證和公開日誌：<a href="/portal">詳細版</a> · 想一次看完整個流程：<a href="/showtime">現場演示</a>
+    <div class="hint">這一頁只做驗證；上傳的文件只在內存裡過一遍。</div>
   </footer>
 </main>
 <script src="/static/js/simple_verify.js"></script>

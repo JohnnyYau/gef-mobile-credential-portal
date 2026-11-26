@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-Hant-HK">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>签发证书 · Credential Verification Portal</title>
+<title>簽發證書 · Credential Verification Portal</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23a16207'/%3E%3Cpath d='M9 22V10h9a4 4 0 0 1 0 8h-4v4zm4-7h4a1.5 1.5 0 0 0 0-3h-4z' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="/static/css/simple.css">
 </head>
@@ -12,13 +12,13 @@
   <header class="top">
     <a class="brand" href="/">Credential Verification Portal</a>
     <nav class="topnav">
-      <a href="/">验证</a>
-      <a class="on" href="/issue">签发</a>
-      <a href="/showtime">现场演示</a>
+      <a href="/">驗證</a>
+      <a class="on" href="/issue">簽發</a>
+      <a href="/showtime">現場演示</a>
     </nav>
   </header>
-  <h1>开一张证书</h1>
-  <p class="lede">填三格，签一下就上链。签完立刻能在验证页查到。</p>
+  <h1>開一張證書</h1>
+  <p class="lede">填三格，籤一下就上鍊。簽完立刻能在驗證頁查到。</p>
 
   <form id="issueForm" autocomplete="off">
     <label class="field" for="nameInput">
@@ -26,48 +26,48 @@
       <input type="text" id="nameInput" placeholder="例如 CHAN TAI MAN" required>
     </label>
     <label class="field" for="sidInput">
-      <span>学号</span>
+      <span>學號</span>
       <input type="text" id="sidInput" placeholder="例如 22000001" required>
     </label>
     <label class="field" for="degreeInput">
-      <span>学位 / 课程</span>
+      <span>學位 / 課程</span>
       <input type="text" id="degreeInput" placeholder="例如 Bachelor of Engineering" required>
     </label>
 
     <details class="why">
-      <summary>补充信息（可选）</summary>
+      <summary>補充信息（可選）</summary>
       <label class="field" for="honourInput">
-        <span>荣誉</span>
+        <span>榮譽</span>
         <input type="text" id="honourInput" placeholder="例如 1ST HON">
       </label>
       <label class="field" for="issuerInput">
-        <span>签发机构</span>
-        <input type="text" id="issuerInput" placeholder="默认 UNIVERSITY OF UTOPIA">
+        <span>簽發機構</span>
+        <input type="text" id="issuerInput" placeholder="預設 UNIVERSITY OF UTOPIA">
       </label>
       <label class="field" for="dateInput">
-        <span>签发日期</span>
+        <span>簽發日期</span>
         <input type="text" id="dateInput" placeholder="例如 20261121">
       </label>
     </details>
 
     <details class="why" id="tokenBlock" hidden>
-      <summary>机构口令</summary>
+      <summary>機構口令</summary>
       <label class="field" for="tokenInput">
-        <span>口令（只存在这台浏览器里）</span>
-        <input type="password" id="tokenInput" placeholder="向管理员索取">
+        <span>口令（只存在這台瀏覽器裡）</span>
+        <input type="password" id="tokenInput" placeholder="向管理員索取">
       </label>
-      <p class="hint" id="tokenHint">签发需要机构权限。已登录控制台的话这一项会自动隐藏。</p>
+      <p class="hint" id="tokenHint">簽發需要機構權限。已登錄控制枱的話這一項會自動隱藏。</p>
     </details>
 
-    <button type="submit" class="primary" id="issueBtn">签发并上链</button>
+    <button type="submit" class="primary" id="issueBtn">簽發並上鏈</button>
     <p class="note" id="error" hidden></p>
   </form>
 
   <section class="result" id="result" hidden></section>
 
   <footer>
-    你有证书要验？<a href="/">去验证页</a> · 想看完整控制台（批量签发、签名方、公开日志）：<a href="/portal">详细版</a>
-    <div class="hint">每签一张，链上就多一条记录；记录只追加，不能删。</div>
+    你有證書要驗？<a href="/">去驗證頁</a> · 想看完整控制枱（批量簽發、簽名方、公開日誌）：<a href="/portal">詳細版</a>
+    <div class="hint">每籤一張，鏈上就多一條記錄；記錄只追加，不能刪。</div>
   </footer>
 </main>
 <script src="/static/js/simple_issue.js"></script>

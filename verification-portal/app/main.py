@@ -298,7 +298,7 @@ def _require_pdf_magic(raw: bytes) -> None:
     if b"%PDF" not in raw[:1024]:
         raise HTTPException(
             status_code=422,
-            detail="仅支持 PDF 文件。请上传证书 PDF（.pdf）。")
+            detail="僅支援 PDF 檔案。請上傳證書 PDF（.pdf）。")
 
 
 def _ttl_days(value) -> int | None:
@@ -1111,8 +1111,8 @@ async def extract_pdf_endpoint(request: Request):
         _require_pdf_magic(raw)
         result = pdf_extractor.extract_from_pdf(raw)
         result["extracted_at"] = int(time.time())
-        result["note"] = ("自动填充仅供输入辅助：结果需人工核对，并通过六项"
-                          "密码学检查获得正式判定。")
+        result["note"] = ("自動填入僅供輸入輔助：結果需人手核對，並通過六項"
+                          "密碼學檢查才獲得正式判定。")
         return result
     except HTTPException:
         raise

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-HK">
+<html lang="zh-Hant-HK">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>我的凭证 · My credential</title>
+<title>我的憑證 · My credential</title>
 <link rel="stylesheet" href="/static/css/portal.css">
 <style>
   .holder-wrap{max-width:720px;margin:0 auto;padding:0}
@@ -25,15 +25,15 @@
   <div class="hero">
     <div class="hero-inner">
       <div>
-        <h1>我的凭证 <span style="font-weight:400;font-size:15px;color:#bfd8d8">My credential</span></h1>
-        <div class="sub">此页面只能通过签发方发给你的专属链接打开。</div>
+        <h1>我的憑證 <span style="font-weight:400;font-size:15px;color:#bfd8d8">My credential</span></h1>
+        <div class="sub">此頁面只能通過簽發方發給你的專屬連結打開。</div>
       </div>
     </div>
   </div>
 
   <div class="card" id="holderCard">
-    <h2>凭证资料 Credential</h2>
-    <p class="hint" id="holderHint">正在读取…</p>
+    <h2>憑證資料 Credential</h2>
+    <p class="hint" id="holderHint">正在讀取…</p>
     <div class="err" id="holderErr" style="display:none"></div>
     <div class="tbl-scroll" id="holderWrap" style="display:none">
       <table class="tbl" id="holderTable"></table>
@@ -44,14 +44,14 @@
     </div>
     <p class="meta" id="holderMeta"></p>
     <div class="renew-row" id="holderRenew" style="display:none">
-      <button class="btn sm ghost" id="renewBtn">续期这个链接 Renew link</button>
+      <button class="btn sm ghost" id="renewBtn">續期這個連結 Renew link</button>
       <span class="note" id="renewNote"></span>
     </div>
   </div>
 
   <div class="card">
-    <h2>这份链接能做什么 What this link does</h2>
-    <p class="hint">只显示这一份凭证。它不能查询其他学号，也不能签发、注销或查看别人的资料。凭证一旦被签发方注销，这里下一次打开就会显示 REVOKED。</p>
+    <h2>這份連結能做什麼 What this link does</h2>
+    <p class="hint">只顯示這一份憑證。它不能查詢其他學號，也不能簽發、註銷或查看別人的資料。憑證一旦被簽發方註銷，這裡下一次打開就會顯示 REVOKED。</p>
   </div>
 </div>
 
@@ -73,11 +73,11 @@
 
   renewBtn.addEventListener("click", function () {
     renewBtn.disabled = true;
-    renewNote.textContent = "正在续期…";
+    renewNote.textContent = "正在續期…";
     fetch("/api/me/" + encodeURIComponent(cap) + "/renew", { method: "POST" })
       .then(function (res) {
         return res.json().catch(function () { return {}; }).then(function (b) {
-          if (!res.ok) throw new Error((b && b.detail) || "续期失败。");
+          if (!res.ok) throw new Error((b && b.detail) || "續期失敗。");
           return b;
         });
       })
@@ -87,7 +87,7 @@
         window.location.replace(data.path);
       })
       .catch(function (e) {
-        renewNote.textContent = e.message || "续期失败。";
+        renewNote.textContent = e.message || "續期失敗。";
         renewBtn.disabled = false;
       });
   });
@@ -116,7 +116,7 @@
     .then(function (res) {
       if (!res.ok) {
         return res.json().catch(function () { return {}; }).then(function (b) {
-          throw new Error(b && b.detail ? b.detail : "链接无效或已过期。");
+          throw new Error(b && b.detail ? b.detail : "連結無效或已過期。");
         });
       }
       return res.json();
@@ -126,51 +126,51 @@
         var why = "";
         if (c.revoked) {
           var line = c.revoked_reason
-            ? "撤销原因：" + esc(c.revoked_reason)
-            : "签发方没有留下撤销原因。";
-          if (c.revoked_height) line += "（区块 #" + esc(c.revoked_height) + "）";
+            ? "撤銷原因：" + esc(c.revoked_reason)
+            : "簽發方沒有留下撤銷原因。";
+          if (c.revoked_height) line += "（區塊 #" + esc(c.revoked_height) + "）";
           why = "<span class=\"why\">" + line + "</span>";
         }
         return "<tr><td>" + esc(c.doc_type) + "</td><td>" + esc(c.degree) +
           "</td><td>" + pill(c.verdict) + why + "</td><td class=\"mono\">" +
           esc(String(c.hashed_document || "").slice(0, 24)) + "…</td>" +
           "<td><a class=\"btn ghost sm\" style=\"text-decoration:none\" href=\"/api/me/" +
-          encodeURIComponent(cap) + "/pdf\" download>下载凭证 PDF</a> " +
+          encodeURIComponent(cap) + "/pdf\" download>下載憑證 PDF</a> " +
           "<a class=\"btn ghost sm\" style=\"text-decoration:none\" href=\"/verify?hash=" +
-          encodeURIComponent(c.hashed_document) + "\">公开验证</a></td></tr>";
+          encodeURIComponent(c.hashed_document) + "\">公開驗證</a></td></tr>";
       }).join("");
-      table.innerHTML = "<tr><th>类型</th><th>学位 / 内容</th><th>状态</th>" +
-        "<th>凭证编号</th><th></th></tr>" + rows;
-      hint.textContent = "学号 " + data.student_id + " · 共 " +
+      table.innerHTML = "<tr><th>類型</th><th>學位 / 內容</th><th>狀態</th>" +
+        "<th>憑證編號</th><th></th></tr>" + rows;
+      hint.textContent = "學號 " + data.student_id + " · 共 " +
         data.credentials.length + " 份。";
       wrap.style.display = "block";
       var first = data.credentials[0] || {};
       if (first.hashed_document) {
         qrImg.src = "/api/qr/" + encodeURIComponent(first.hashed_document);
-        qrImg.alt = "公开验证二维码";
+        qrImg.alt = "公開驗證二維碼";
         qrBox.style.display = "flex";
       }
       var issued = first.issued_at
         ? new Date(first.issued_at * 1000).toLocaleString() : "";
-      var block = first.issued_height ? "（区块 #" + esc(first.issued_height) + "）" : "";
-      qrNote.innerHTML = "扫码打开公开验证页，只显示凭证是否在链上、是否被撤销，" +
-        "不含姓名与生日。" +
-        (issued ? "<br>签发时间：" + esc(issued) + block : "");
+      var block = first.issued_height ? "（區塊 #" + esc(first.issued_height) + "）" : "";
+      qrNote.innerHTML = "掃碼打開公開驗證頁，只顯示憑證是否在鏈上、是否被撤銷，" +
+        "不含姓名與生日。" +
+        (issued ? "<br>簽發時間：" + esc(issued) + block : "");
       if (data.expires_at) {
         var left = data.expires_at - Math.floor(Date.now() / 1000);
-        meta.textContent = "此链接到期时间：" +
+        meta.textContent = "此連結到期時間：" +
           new Date(data.expires_at * 1000).toLocaleString();
         // U14: self-service renewal opens in the last 7 days. Earlier it would
         // only extend how long a leaked link keeps working.
         if (left > 0 && left <= 7 * 86400) {
           renewBox.style.display = "flex";
           renewNote.textContent = left <= 86400
-            ? "链接将在 24 小时内到期。"
-            : "链接将在 " + Math.floor(left / 86400) + " 天内到期。";
+            ? "連結將在 24 小時內到期。"
+            : "連結將在 " + Math.floor(left / 86400) + " 天內到期。";
         }
       }
     })
-    .catch(function (e) { fail(e.message || "链接无效或已过期。"); });
+    .catch(function (e) { fail(e.message || "連結無效或已過期。"); });
 })();
 </script>
 </body>

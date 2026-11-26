@@ -24,7 +24,7 @@ function sourceList(sources) {
       + (s.score !== undefined ? " · score " + s.score : "");
     return "<li><span class=\"tag\">" + esc(tag) + "</span><br>" + esc(s.text) + "</li>";
   }).join("");
-  return "<div class=\"srcs\"><details><summary>来源 Sources (" + sources.length + ")</summary><ul>" + items + "</ul></details></div>";
+  return "<div class=\"srcs\"><details><summary>來源 Sources (" + sources.length + ")</summary><ul>" + items + "</ul></details></div>";
 }
 function chatSid() {
   let sid = localStorage.getItem("chat.sid");
@@ -39,31 +39,31 @@ function personCard(p) {
   const c = p.credential || {};
   const cls = p.verdict === "VALID ON CHAIN" ? "ok" : (p.verdict === "REVOKED" ? "bad" : "warn");
   const rows = [
-    ["姓名 Name", p.name], ["学号 Student ID", p.student_id_masked],
-    ["凭证类型 Document", c.doc_type], ["学位 Degree", c.degree],
-    ["起止 Dates", c.start + " – " + c.end], ["荣誉 Honour", c.honour],
-    ["签发方 Issued by", c.issuing_org + (c.issuing_ou ? " / " + c.issuing_ou : "")],
-    ["签发日期 Issued on", c.issued_on],
-    ["状态 Status", p.verdict + (p.issued_height ? " · height " + p.issued_height : "")],
-    ["凭证编号 Hash", p.hash_prefix + "…"],
+    ["姓名 Name", p.name], ["學號 Student ID", p.student_id_masked],
+    ["憑證類型 Document", c.doc_type], ["學位 Degree", c.degree],
+    ["起止 Dates", c.start + " – " + c.end], ["榮譽 Honour", c.honour],
+    ["簽發方 Issued by", c.issuing_org + (c.issuing_ou ? " / " + c.issuing_ou : "")],
+    ["簽發日期 Issued on", c.issued_on],
+    ["狀態 Status", p.verdict + (p.issued_height ? " · height " + p.issued_height : "")],
+    ["憑證編號 Hash", p.hash_prefix + "…"],
   ].filter(r => r[1] !== undefined && r[1] !== null && String(r[1]).trim() !== "");
   const rowsHtml = rows.map(r => "<tr><td>" + esc(r[0]) + "</td><td>" + esc(r[1]) + "</td></tr>").join("");
-  return "<div class=\"pcard\"><div class=\"pcard-h\"><span>当前人物 Person in context</span>"
+  return "<div class=\"pcard\"><div class=\"pcard-h\"><span>當前人物 Person in context</span>"
     + "<span class=\"vchip " + cls + "\">" + esc(p.verdict) + "</span></div>"
     + "<table>" + rowsHtml + "</table>"
-    + "<button class=\"btn mini\" data-web=\"" + esc(p.name) + "\">搜索此人公开信息 Search the web</button></div>";
+    + "<button class=\"btn mini\" data-web=\"" + esc(p.name) + "\">搜索此人公開信息 Search the web</button></div>";
 }
 function webCard(w) {
   if (!w) return "";
   if (w.status !== "ok") {
-    return "<div class=\"webcard off\"><b>网络检索 Web research</b> — " + esc(w.reason || "unavailable") + "</div>";
+    return "<div class=\"webcard off\"><b>網絡檢索 Web research</b> — " + esc(w.reason || "unavailable") + "</div>";
   }
   const demo = w.demo ? " <span class=\"demobadge\">DEMO DATA</span>" : "";
   const items = (w.sources || []).map(s =>
     "<li><a href=\"" + esc(s.url) + "\" target=\"_blank\" rel=\"noopener noreferrer\">" + esc(s.title) + "</a>"
     + (s.sample ? " <span class=\"demobadge\">sample</span>" : "")
     + "<br><span class=\"muted\">" + esc(s.snippet) + "</span></li>").join("");
-  return "<div class=\"webcard\"><div class=\"pcard-h\"><span>公开来源 Public sources</span>" + demo + "</div>"
+  return "<div class=\"webcard\"><div class=\"pcard-h\"><span>公開來源 Public sources</span>" + demo + "</div>"
     + "<ul>" + items + "</ul>"
     + (w.note ? "<div class=\"muted\">" + esc(w.note) + "</div>" : "") + "</div>";
 }
@@ -82,12 +82,12 @@ async function sendChat(q, opts) {
     thinking.remove();
     const meta = "由 " + esc(res.generator)
       + (res.model ? " (" + esc(res.model) + ")" : "")
-      + (res.retrieval ? " · " + res.retrieval.hits + " 条检索 · 最高分 " + res.retrieval.top_score : "");
+      + (res.retrieval ? " · " + res.retrieval.hits + " 條檢索 · 最高分 " + res.retrieval.top_score : "");
     addChatMsg(personCard(res.person) + esc(res.answer) + webCard(res.web)
       + sourceList(res.sources) + "<div class=\"meta\">" + meta + "</div>", "ai");
   } catch (e) {
     thinking.remove();
-    addChatMsg("错误: " + esc(e.message), "ai");
+    addChatMsg("錯誤: " + esc(e.message), "ai");
   }
 }
 async function loadSuggestions() {
@@ -107,7 +107,7 @@ async function loadSuggestions() {
 async function loadGenHint() {
   try {
     const st = await api("/api/rag/status");
-    $("genHint").textContent = st.generator + " · 嵌入: " + st.embedder + " · " + st.index_entries + " 条记录";
+    $("genHint").textContent = st.generator + " · 嵌入: " + st.embedder + " · " + st.index_entries + " 條記錄";
   } catch (e) { $("genHint").textContent = "unavailable"; }
 }
 $("chatSend").addEventListener("click", () => sendChat());

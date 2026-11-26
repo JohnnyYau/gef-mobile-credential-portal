@@ -26,7 +26,7 @@
   function setBusy(busy) {
     var btn = $("issueBtn");
     btn.disabled = busy;
-    btn.textContent = busy ? "签发中…（首次生成密钥可能要几秒）" : "签发并上链";
+    btn.textContent = busy ? "簽發中…（首次生成密鑰可能要幾秒）" : "簽發並上鏈";
   }
 
   function token() { return ($("tokenInput").value || "").trim(); }
@@ -68,28 +68,28 @@
     out.textContent = "";
 
     var box = el("div", "verdict valid");
-    box.appendChild(el("div", "mark", "✅ 已上链"));
-    box.appendChild(el("div", "headline", height ? "这张证书现在是第 " + height + " 块" : "这张证书已签发"));
-    box.appendChild(el("p", "detail", "任何人拿这个验证码都能查到它；改一个字符就查不到。"));
+    box.appendChild(el("div", "mark", "✅ 已上鍊"));
+    box.appendChild(el("div", "headline", height ? "這張證書現在是第 " + height + " 塊" : "這張證書已簽發"));
+    box.appendChild(el("p", "detail", "任何人拿這個驗證碼都能查到它；改一個字符就查不到。"));
 
     var actions = el("div", "actions");
-    var open = el("a", "ghost", "打开验证页看看");
+    var open = el("a", "ghost", "打開驗證頁看看");
     open.href = "/verify?hash=" + encodeURIComponent(hash);
     actions.appendChild(open);
 
-    var pdf = el("a", "ghost", "下载凭证 PDF");
+    var pdf = el("a", "ghost", "下載憑證 PDF");
     pdf.href = "/api/admin/pdf/" + encodeURIComponent(hash);
     pdf.target = "_blank";
     pdf.rel = "noopener";
     actions.appendChild(pdf);
 
-    var copy = el("button", "ghost", "复制验证码");
+    var copy = el("button", "ghost", "複製驗證碼");
     copy.type = "button";
     copy.addEventListener("click", function () {
       if (navigator.clipboard) {
         navigator.clipboard.writeText(hash).then(function () {
-          copy.textContent = "已复制";
-          setTimeout(function () { copy.textContent = "复制验证码"; }, 1600);
+          copy.textContent = "已複製";
+          setTimeout(function () { copy.textContent = "複製驗證碼"; }, 1600);
         });
       }
     });
@@ -98,8 +98,8 @@
     out.appendChild(box);
     out.appendChild(actions);
     out.appendChild(el("div", "hashbox", hash));
-    out.appendChild(el("p", "hint", "把 PDF 或这串验证码给对方，就可以验了。"));
-    $("tokenHint").textContent = "口令已记住，这台浏览器下次不用再填。";
+    out.appendChild(el("p", "hint", "把 PDF 或這串驗證碼給對方，就可以驗了。"));
+    $("tokenHint").textContent = "口令已記住，這台瀏覽器下次不用再填。";
     out.hidden = false;
     out.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
@@ -109,7 +109,7 @@
     setError("");
     var body = payload();
     if (!body.name || !body.student_id || !body.degree) {
-      setError("姓名、学号、学位三格都要填。");
+      setError("姓名、學號、學位三格都要填。");
       return;
     }
 
@@ -125,12 +125,12 @@
       var data = await res.json().catch(function () { return null; });
       if (res.status === 401 || res.status === 403) {
         $("tokenBlock").hidden = false;
-        $("tokenHint").textContent = "口令不对，或这台浏览器还没有机构会话。";
-        setError("需要机构口令才能签发。");
+        $("tokenHint").textContent = "口令不對，或這台瀏覽器還沒有機構會話。";
+        setError("需要機構口令才能簽發。");
         return;
       }
       if (!res.ok) {
-        var message = "签发失败（" + res.status + "）";
+        var message = "簽發失敗（" + res.status + "）";
         if (data && typeof data.detail === "string") { message = data.detail; }
         setError(message);
         return;
@@ -138,7 +138,7 @@
       if (t) { sessionStorage.setItem(TOKEN_KEY, t); }
       showResult(data);
     } catch (err) {
-      setError("连不上签发服务：" + err.message);
+      setError("連不上籤發服務：" + err.message);
     } finally {
       setBusy(false);
     }

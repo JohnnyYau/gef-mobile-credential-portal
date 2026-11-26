@@ -187,7 +187,7 @@ text(s, MARGIN, Inches(1.3), Inches(10), Inches(0.8),
 
 steps = [
     ("01", "簽發", "ISSUING",
-     "機構以 ML-DSA-65 加 RSA-PSS 雙簽，寫入一個新的塊。", "新的一個塊 · 16 ms"),
+     "機構以 ML-DSA-65 加 RSA-PSS 雙簽，寫入一個新的塊。", "新的一個塊 · 14 ms"),
     ("02", "驗證", "VERIFYING",
      "任何人拿驗證碼或 PDF，免註冊，六項檢查一次做完。", "VALID · 10 ms"),
     ("03", "註銷", "REVOKING",
@@ -251,9 +251,9 @@ text(s, tx, Inches(1.85), tw, Inches(4.2), [
      {"size": 12, "color": MUTED, "space_after": 10}),
     ("每一步完成，卡片上就寫下塊號與毫秒數 —— ",
      {"size": 13, "bold": True}),
-    ("第 22 塊 · 18 ms", {"size": 13, "color": GOLD, "space_after": 2}),
+    ("第 26 塊 · 14 ms", {"size": 13, "color": GOLD, "space_after": 2}),
     ("VALID · 10 ms", {"size": 13, "color": GOLD, "space_after": 2}),
-    ("第 23 塊 · 10 ms", {"size": 13, "color": GOLD, "space_after": 2}),
+    ("第 27 塊 · 10 ms", {"size": 13, "color": GOLD, "space_after": 2}),
     ("REVOKED · 10 ms", {"size": 13, "color": GOLD, "space_after": 10}),
     ("跑完只留「重來」，右下角的二維碼當場可以掃，看它現在是什麼狀態。",
      {"size": 12, "color": MUTED}),
@@ -277,7 +277,7 @@ text(s, MARGIN, Inches(2.05), Inches(10.4), Inches(2.5), [
 ])
 
 figs = [("6", "檢查項 CHECKS"), ("2", "簽名方 SIGNERS"),
-        ("SHA3-512", "鏈上哈希 ALGO"), ("23", "鏈上塊數 BLOCKS")]
+        ("SHA3-512", "鏈上哈希 ALGO"), ("27", "鏈上塊數 BLOCKS")]
 rule(s, MARGIN, Inches(4.45), CONTENT_W)
 fw = CONTENT_W / 4
 fx = MARGIN

@@ -118,6 +118,16 @@ What's in the box, per the 3-week plan:
   lookup, chain height from `/healthz`, and a real `fetch` duration. The stage
   page gives each of its four steps a receipt (`第 18 块 · 127 ms`) and writes
   a Chinese revocation reason. Docs: `docs/U27_ui_pass.md`.
+- **U28 (one voice: Traditional)** — the product spoke Simplified
+  (`这张证书是真的吗`) while the poster, the deck and the audience were
+  Traditional; a Hong Kong judge read two different products. All served pages
+  moved to Hong Kong Traditional — 2,664 characters across 16 files — via
+  `scripts/to_traditional.py` (opencc `s2hk`, plus 連結 / 裡 / 預設), the `<html
+  lang>` went from `zh-CN` to `zh-Hant-HK`, and two server strings a user can
+  actually see were converted with it. Only CJK runs are rewritten, so no tag,
+  identifier or byte of code moved; the script is idempotent and has a
+  `--check` mode. Tests that pinned the old copy (2 in `test_frontend`, 2 in
+  the JS harness) moved with it. Docs: `docs/U28_traditional_copy.md`.
 - **Extras round 3** — *person in context*: the AI resolves who you're asking
   about into a masked profile card, keeps that person across follow-ups
   ("what degree does he hold?"), and can search the web for public info about

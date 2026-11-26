@@ -10,13 +10,13 @@ async function loadLog() {
       "<td class=\"mono\">" + esc(v.hash_prefix) + "…</td>" +
       "<td>" + verdictPill(v.verdict) + "</td></tr>"
     ).join("");
-    $("logTable").innerHTML = "<tr><th>时间</th><th>哈希前缀</th><th>结果</th></tr>" +
-      (vrows || "<tr><td colspan=3>暂无验证记录 —— 去“验证”页试试。</td></tr>");
+    $("logTable").innerHTML = "<tr><th>時間</th><th>哈希前綴</th><th>結果</th></tr>" +
+      (vrows || "<tr><td colspan=3>暫無驗證記錄 —— 去“驗證”頁試試。</td></tr>");
     const crows = (d.chain_events || []).map((b) =>
       "<tr><td>" + esc(b.height) + "</td><td>" + esc(b.action || "") + "</td>" +
       "<td class=\"mono\">" + esc(b.hash_prefix || "—") + "</td></tr>"
     ).join("");
-    $("chainTable").innerHTML = "<tr><th>高度</th><th>操作</th><th>哈希前缀</th></tr>" + crows;
+    $("chainTable").innerHTML = "<tr><th>高度</th><th>操作</th><th>哈希前綴</th></tr>" + crows;
     $("statVerifs").textContent = d.total_verifications || 0;
   } catch (e) {
     $("logTable").innerHTML = "<tr><td colspan=3>" + esc(e.message) + "</td></tr>";
@@ -28,12 +28,12 @@ async function loadAnomalies() {
     const box = $("anomalyBox");
     const methodTag = '<span class="tag-pill ' + (d.method === "isolation_forest" ? "ok" : "neu") + '">' + esc(d.method) + "</span>";
     if (!d.anomalies.length) {
-      box.innerHTML = "<div class=\"note\">无异常 —— 检测方法 " + methodTag + "。所有签发方均低于每小时 " + esc(d.threshold) + " 份的阈值。</div>";
+      box.innerHTML = "<div class=\"note\">無異常 —— 檢測方法 " + methodTag + "。所有簽發方均低於每小時 " + esc(d.threshold) + " 份的閾值。</div>";
     } else {
-      box.innerHTML = "<div class=\"note\">检测方法 " + methodTag + "</div>" + d.anomalies.map((a) =>
+      box.innerHTML = "<div class=\"note\">檢測方法 " + methodTag + "</div>" + d.anomalies.map((a) =>
         "<div class=\"err\" style=\"display:block;margin-top:6px\"><b>" + esc(a.severity) +
-        "</b> — " + esc(a.signer) + " 一小时内签发 " + esc(a.credential_count) +
-        " 份（阈值 " + esc(a.threshold) + "，原因: " + esc(a.reasons.join("+")) + "，最后区块 " + esc(a.last_height) + "）。</div>"
+        "</b> — " + esc(a.signer) + " 一小時內簽發 " + esc(a.credential_count) +
+        " 份（閾值 " + esc(a.threshold) + "，原因: " + esc(a.reasons.join("+")) + "，最後區塊 " + esc(a.last_height) + "）。</div>"
       ).join("");
     }
     renderHourlyChart(d.hourly_issues || []);
@@ -51,8 +51,8 @@ async function loadNotifications() {
       "<td>" + esc(n.status) + "</td>" +
       "<td class=\"mono\">" + esc(n.detail || "") + "</td></tr>"
     ).join("");
-    $("notifTable").innerHTML = "<tr><th>时间</th><th>收件人</th><th>状态</th><th>说明</th></tr>" +
-      (rows || "<tr><td colspan=4>暂无通知 —— 带邮箱签发一份试试。</td></tr>");
+    $("notifTable").innerHTML = "<tr><th>時間</th><th>收件人</th><th>狀態</th><th>説明</th></tr>" +
+      (rows || "<tr><td colspan=4>暫無通知 —— 帶郵箱簽發一份試試。</td></tr>");
   } catch (e) {
     $("notifTable").innerHTML = "<tr><td colspan=4>" + esc(e.message) + "</td></tr>";
   }

@@ -63,7 +63,7 @@ function initVersion() {
       const hero = document.querySelector(".hero");
       const banner = document.createElement("div");
       banner.className = "badge";
-      banner.textContent = "公开验证模式 Public verifier mode —— 本实例仅可验证，签发/注销已禁用";
+      banner.textContent = "公開驗證模式 Public verifier mode —— 本實例僅可驗證，簽發/註銷已禁用";
       banner.style.cssText = "display:block;margin:0 0 18px;padding:10px 14px;border-radius:10px;background:#fff7e0;border:1px solid #f0c36d;font-size:13px;font-weight:600;color:#7a5b12";
       (hero || document.body).prepend(banner);
     }
@@ -73,7 +73,7 @@ function initVersion() {
     if (v.demo_open && !v.public_mode) {
       const note = document.getElementById("publicNote");
       if (note) {
-        note.textContent = "演示模式（DEMO_OPEN=1）：本实例没有配置 staff token，签发、注销与签发方接口对本机任何访问者开放，仅适合本机演示。设置 ADMIN_TOKEN（窄权限再加 ISSUER_TOKEN）并把 DEMO_OPEN 设为 0 即可关闭。";
+        note.textContent = "演示模式（DEMO_OPEN=1）：本實例沒有配置 staff token，簽發、註銷與簽發方接口對本機任何訪問者開放，僅適合本機演示。設置 ADMIN_TOKEN（窄權限再加 ISSUER_TOKEN）並把 DEMO_OPEN 設為 0 即可關閉。";
         note.style.display = "block";
       }
     }
@@ -86,14 +86,14 @@ function initVersion() {
       const banner = document.createElement("div");
       banner.className = "badge";
       const note = document.createElement("span");
-      note.textContent = "⚠ 本实例的链完整性校验失败" +
-        (bad ? "（区块 " + bad + "）" : "") +
-        "：所有判定都会显示 INVALID，问题在服务端而不是这张凭证。运行 scripts/smoke_portal.py 复现。";
+      note.textContent = "⚠ 本實例的鏈完整性校驗失敗" +
+        (bad ? "（區塊 " + bad + "）" : "") +
+        "：所有判定都會顯示 INVALID，問題在服務端而不是這張憑證。運行 scripts/smoke_portal.py 復現。";
       const link = document.createElement("a");
       link.href = "/healthz";
       link.target = "_blank";
       link.rel = "noopener";
-      link.textContent = "查看原始检查 →";
+      link.textContent = "查看原始檢查 →";
       link.style.cssText = "margin-left:8px;color:#8b1a1a;text-decoration:underline";
       banner.append(note, link);
       banner.style.cssText = "display:block;margin:0 0 18px;padding:10px 14px;border-radius:10px;background:#fee2e2;border:1px solid #f0a6a6;font-size:13px;font-weight:600;color:#8b1a1a";
@@ -108,12 +108,12 @@ async function refreshHealth() {
   try {
     const h = await api("/healthz");
     const signer = (h.signers && h.signers[0] && h.signers[0].name) || "—";
-    $("health").textContent = h.chain_name + " · " + h.content_hash_algo + " · 高度 " + h.height + " · 签发方: " + signer;
+    $("health").textContent = h.chain_name + " · " + h.content_hash_algo + " · 高度 " + h.height + " · 簽發方: " + signer;
     $("statHeight").textContent = h.height;
     $("statSigners").textContent = (h.signers || []).length;
     $("statAlgo").textContent = h.content_hash_algo;
     loadLog();
-  } catch (e) { $("health").textContent = "无法连接 API —— 服务器是否已启动？"; }
+  } catch (e) { $("health").textContent = "無法連接 API —— 服務器是否已啓動？"; }
 }
 async function loadSamples() {
   try {
@@ -135,14 +135,14 @@ on("goVerify", "click", () => goTab("verify"));
 on("goStudent", "click", () => goTab("student"));
 on("goRegistrar", "click", () => {
   if (window.__version && window.__version.public_mode) {
-    showErr($("err"), "此公开实例不支持签发。请运行方使用管理员模式（PUBLIC_MODE=0）。");
+    showErr($("err"), "此公開實例不支持簽發。請運行方使用管理員模式（PUBLIC_MODE=0）。");
     return;
   }
   goTab("issue");
 });
 on("goCustom", "click", () => {
   if (window.__version && window.__version.public_mode) {
-    showErr($("err"), "此公开实例不支持签发。请运行方使用管理员模式（PUBLIC_MODE=0）。");
+    showErr($("err"), "此公開實例不支持簽發。請運行方使用管理員模式（PUBLIC_MODE=0）。");
     return;
   }
   goTab("custom");
@@ -172,9 +172,9 @@ on("issuePdfInput", "change", (e) => {
   if (!f) return;
   const note = $("issueExtractNote");
   note.className = "extract-note on warn";
-  note.innerHTML = "<span class=\"en-badge\">提取中</span>正在读取 " + esc(f.name) + " …";
+  note.innerHTML = "<span class=\"en-badge\">提取中</span>正在讀取 " + esc(f.name) + " …";
   extractPdfInto(f, "issuejson", "issueExtractNote")
-    .then(() => { note.innerHTML = note.innerHTML.replace("<span class=\"en-badge\">提取中</span>正在读取", "<span class=\"en-badge\">已填充</span>"); })
+    .then(() => { note.innerHTML = note.innerHTML.replace("<span class=\"en-badge\">提取中</span>正在讀取", "<span class=\"en-badge\">已填充</span>"); })
     .catch(() => { /* error note already rendered */ });
 });
 on("revokeBtn", "click", "revokeDoc");
@@ -198,7 +198,7 @@ const apikeyTableEl = document.getElementById("apikeyTable");
 if (apikeyTableEl) apikeyTableEl.addEventListener("click", (e) => {
   const b = e.target.closest("[data-revoke]");
   if (!b) return;
-  if (!confirm("撤销 API 密钥 " + b.getAttribute("data-revoke") + "？")) return;
+  if (!confirm("撤銷 API 密鑰 " + b.getAttribute("data-revoke") + "？")) return;
   api("/api/admin/apikeys/" + b.getAttribute("data-revoke"), { method: "DELETE" })
     .then(() => loadApikeys())
     .catch((err) => showErr($("apikeyErr"), err.message));
@@ -210,8 +210,8 @@ if (studentWrap) studentWrap.addEventListener("click", (e) => {
   const url = (window.__version && window.__version.public_base_url) || location.origin;
   const share = url + "/verify?hash=" + b.getAttribute("data-share");
   navigator.clipboard && navigator.clipboard.writeText(share);
-  b.textContent = "已复制!";
-  setTimeout(() => { b.textContent = "分享链接"; }, 1500);
+  b.textContent = "已複製!";
+  setTimeout(() => { b.textContent = "分享連結"; }, 1500);
 });
 
 // ---- U13 F4: role-aware console ----
@@ -230,11 +230,11 @@ function applyRole(info) {
   function paint() {
     if (!badge) return;
     var name = demo ? "DEMO · 未配置 token"
-      : (role ? "角色 " + String(role).toUpperCase() : "未登录");
+      : (role ? "角色 " + String(role).toUpperCase() : "未登錄");
     if (typeof left === "number" && left > 0) {
-      name += " · 会话剩 " + Math.ceil(left / 60) + " 分钟";
+      name += " · 會話剩 " + Math.ceil(left / 60) + " 分鐘";
     } else if (left === 0) {
-      name += " · 会话已过期，请重新登录";
+      name += " · 會話已過期，請重新登錄";
     }
     badge.textContent = name;
   }
@@ -277,7 +277,7 @@ function initRole() {
     // Say why instead of leaving a blank badge: a silently empty role chip
     // looks like a styling bug and hides a real auth problem.
     badge.style.display = "inline-block";
-    badge.textContent = "角色未知（whoami 失败：" + (e && e.message ? e.message : "?") + "）";
+    badge.textContent = "角色未知（whoami 失敗：" + (e && e.message ? e.message : "?") + "）";
   });
 }
 

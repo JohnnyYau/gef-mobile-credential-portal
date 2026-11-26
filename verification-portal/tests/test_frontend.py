@@ -255,7 +255,7 @@ class SimplePages(unittest.TestCase):
     def test_issue_page_is_served(self):
         res = client.get("/issue")
         self.assertEqual(res.status_code, 200)
-        self.assertIn("开一张证书", res.text)
+        self.assertIn("開一張證書", res.text)
 
     def test_landing_page_still_names_the_portal(self):
         res = client.get("/")
@@ -267,7 +267,7 @@ class SimplePages(unittest.TestCase):
         """U26: the stage screen is a page, not a slide."""
         res = client.get("/showtime")
         self.assertEqual(res.status_code, 200)
-        self.assertIn("四个步骤", res.text)
+        self.assertIn("四個環節", res.text)
         self.assertIn("/static/js/showtime.js", res.text)
         self.assertNotIn("innerHTML", res.text)
 

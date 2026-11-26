@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-Hant-HK">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>现场演示 · Credential Verification Portal</title>
+<title>現場演示 · Credential Verification Portal</title>
 <link rel="stylesheet" href="/static/css/showtime.css">
 </head>
 <body>
@@ -11,30 +11,30 @@
   <header class="head">
     <div>
       <div class="kicker">GEF26 · Live demo</div>
-      <h1 class="title">一张证书，四个步骤</h1>
+      <h1 class="title">一張證書，四個環節</h1>
     </div>
-    <div class="meter" id="meter">链上 <b id="height">—</b> 块 · 签发方 <b id="signers">—</b></div>
+    <div class="meter" id="meter">鏈上 <b id="height">—</b> 塊 · 簽發方 <b id="signers">—</b></div>
   </header>
 
   <section class="steps" id="steps">
-    <div class="step" data-step="1"><div class="n">01</div><div class="what">机构签发一张证书</div><div class="meta"></div></div>
-    <div class="step" data-step="2"><div class="n">02</div><div class="what">任何人拿验证码去验</div><div class="meta"></div></div>
-    <div class="step" data-step="3"><div class="n">03</div><div class="what">机构把它注销</div><div class="meta"></div></div>
-    <div class="step" data-step="4"><div class="n">04</div><div class="what">再验同一张</div><div class="meta"></div></div>
+    <div class="step" data-step="1"><div class="n">01</div><div class="what">機構簽發一張證書</div><div class="meta"></div></div>
+    <div class="step" data-step="2"><div class="n">02</div><div class="what">任何人拿驗證碼去驗</div><div class="meta"></div></div>
+    <div class="step" data-step="3"><div class="n">03</div><div class="what">機構把它註銷</div><div class="meta"></div></div>
+    <div class="step" data-step="4"><div class="n">04</div><div class="what">再驗同一張</div><div class="meta"></div></div>
   </section>
 
   <section class="board" id="board">
-    <p class="wait" id="headline">按左下角「开始」，四步走完大约 12 秒。</p>
-    <p class="sub" id="subline">每一步都是真实的 API 调用：真的签发、真的上链、真的注销。不是动画。</p>
+    <p class="wait" id="headline">按左下角「開始」，四步走完大約 12 秒。</p>
+    <p class="sub" id="subline">每一步都是真實的 API 調用：真的簽發、真的上鍊、真的註銷。不是動畫。</p>
     <div class="hash" id="hashline" hidden></div>
     <div class="qrwrap" id="qrwrap" hidden></div>
   </section>
 
   <footer class="foot">
-    <button class="go" id="startBtn" type="button">开始</button>
-    <button class="quiet" id="resetBtn" type="button" hidden>重来</button>
-    <input class="token" id="tokenInput" type="password" placeholder="机构口令（仅在无会话时需要）" hidden>
-    <p class="hint" id="hint" hidden>扫屏幕上的二维码，用你自己的手机验这张证书。</p>
+    <button class="go" id="startBtn" type="button">開始</button>
+    <button class="quiet" id="resetBtn" type="button" hidden>重來</button>
+    <input class="token" id="tokenInput" type="password" placeholder="機構口令（僅在無會話時需要）" hidden>
+    <p class="hint" id="hint" hidden>掃屏幕上的二維碼，用你自己的手機驗這張證書。</p>
     <p class="note" id="note" hidden></p>
   </footer>
 </main>
