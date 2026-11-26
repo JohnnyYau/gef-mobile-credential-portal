@@ -115,6 +115,7 @@
   }
 
   .shot p { font-size: 34px; line-height: 1.5; color: var(--muted); }
+  .shot p em { font-style: normal; color: var(--gold); white-space: nowrap; }
 
   /* ---------- stats ---------- */
   .stats {
@@ -240,13 +241,15 @@
       <img src="./poster_assets/shot-verify.png" alt="驗證頁">
       <h3>驗證頁：一句結論，四行過程</h3>
       <p>結論下面直接寫出取回第幾塊、簽發時間、驗簽結果、哈希比對、撤銷名單，
-         最後一行是整條鏈的完整性與這次查驗的真實耗時。</p>
+         最後一行是整條鏈的完整性與這次查驗的真實耗時。
+         <em>截圖取自 11 月 27 日的一次真實查驗。</em></p>
     </div>
     <div class="shot">
       <img src="./poster_assets/shot-stage.png" alt="舞台頁">
       <h3>舞台頁：四步各自留下收據</h3>
       <p>每一步跑完就在卡片上寫下塊號與毫秒數；跑完停在「↩ 已註銷」，
-         二維碼指向同一張證書，觀眾可以立刻用手機驗。</p>
+         二維碼指向同一張證書，觀眾可以立刻用手機驗。
+         <em>截圖取自 11 月 27 日的一次真實運行。</em></p>
     </div>
   </section>
 
@@ -254,7 +257,7 @@
     <div class="stat"><div class="v">6</div><div class="k">檢查項 CHECKS</div></div>
     <div class="stat"><div class="v">2</div><div class="k">簽名方 SIGNERS</div></div>
     <div class="stat"><div class="v">SHA3-512</div><div class="k">鏈上哈希 ALGO</div></div>
-    <div class="stat"><div class="v">27</div><div class="k">鏈上塊數 BLOCKS</div></div>
+    <div class="stat"><div class="v">0</div><div class="k">上鏈的姓名與成績 PII ON CHAIN</div></div>
   </section>
 
   <section class="bottom">

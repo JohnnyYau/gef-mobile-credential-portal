@@ -277,7 +277,7 @@ text(s, MARGIN, Inches(2.05), Inches(10.4), Inches(2.5), [
 ])
 
 figs = [("6", "檢查項 CHECKS"), ("2", "簽名方 SIGNERS"),
-        ("SHA3-512", "鏈上哈希 ALGO"), ("27", "鏈上塊數 BLOCKS")]
+        ("SHA3-512", "鏈上哈希 ALGO"), ("0", "上鏈的姓名與成績 PII ON CHAIN")]
 rule(s, MARGIN, Inches(4.45), CONTENT_W)
 fw = CONTENT_W / 4
 fx = MARGIN
@@ -288,7 +288,7 @@ for big, small in figs:
          [(small, {"size": 9, "color": MUTED, "spacing": 40})])
     fx += fw
 
-footer(s, "數字取自當天 /healthz 與 /api/verify 的實際回傳")
+footer(s, "數字取自 /healthz 與 /api/verify 的實際回傳；收據是 11 月 27 日一次真實運行的實測")
 
 # ---------------------------------------------------------------- 7 codes
 s = new_slide(prs)
