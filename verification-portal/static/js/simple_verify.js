@@ -37,7 +37,24 @@
       tone: "bad", mark: "✗ 查不到",
       headline: "鏈上找不到這張憑證",
       detail: "可能是假證書，也可能編號抄錯了。"
+    },
+    /* A document was uploaded and its number is not the one on record, or the
+     * record exists but a signature/hash check failed. This is not "the machine
+     * is unsure" — it is a definite rejection, so say so. */
+    "INVALID": {
+      tone: "bad", mark: "✗ 不通過",
+      headline: "這張憑證跟鏈上對不上",
+      detail: "文件內容算出來的編號，不是機構簽發的那一個——它被改過，或者是偽造的。"
     }
+  };
+
+  /* The hash endpoint says "VALID ON CHAIN"; the document upload endpoint says
+   * just "VALID". Same verdict, two spellings — fold them together so an
+   * authentic file is not shown as "unconfirmed". */
+  var VERDICT_ALIAS = {
+    "VALID": "VALID ON CHAIN",
+    "VALID ON CHAIN": "VALID ON CHAIN",
+    "INVALID": "INVALID"
   };
 
   /* Chain reasons are typed by staff in free text; the two demo fixtures were
@@ -106,6 +123,10 @@
     if (issueHeights.length) {
       rows.push(["取回鏈上記錄", "第 " + issueHeights[0] + " 塊" +
         (st.issued_at ? "，簽發於 " + when(st.issued_at) : "")]);
+    } else if (data.on_chain_record === true) {
+      /* document upload: the record exists, this endpoint just does not return
+       * the block list, so do not claim there is no block */
+      rows.push(["取回鏈上記錄", "鏈上有這張憑證（本次以文件比對）"]);
     } else {
       rows.push(["取回鏈上記錄", "這條編號沒有對應的塊"]);
     }
@@ -113,7 +134,9 @@
     rows.push([
       "驗證數字簽名",
       data.signature_valid === true ? "用機構的公鑰驗過，簽名有效"
-        : data.signature_valid === false ? "驗籤沒通過" : "沒有可驗的簽名"
+        : data.signature_valid === false
+          ? (data.on_chain_record === false ? "這份內容沒有對應的簽發，沒有簽名可驗" : "驗籤沒通過")
+          : "沒有可驗的簽名"
     ]);
 
     rows.push([
@@ -156,7 +179,8 @@
 
   function buildResult(data, ms) {
     var hash = data.hashed_document || "";
-    var known = VERDICT[data.verdict];
+    var verdictKey = VERDICT_ALIAS[data.verdict] || data.verdict;
+    var known = VERDICT[verdictKey];
     var tone = known ? known.tone : "bad";
     var mark = known ? known.mark : "⚠ 無法確認";
     var headline = known ? known.headline : "這張憑證沒有通過檢查";
@@ -193,7 +217,7 @@
     box.appendChild(why);
 
     var actions = el("div", "actions");
-    if (hash && data.verdict === "VALID ON CHAIN") {
+    if (hash && verdictKey === "VALID ON CHAIN") {
       var report = el("a", "ghost", "下載驗證報告");
       report.href = "/api/pdf/" + hash;
       report.target = "_blank";
