@@ -51,7 +51,7 @@
       <ol>
         <li>跑 <code>scripts\preflight.py</code>，要看到 <b>11/11</b>。紅色那一行就是唯一要做的事。</li>
         <li>隧道若已經死：<code>start_showcase.ps1 -NoBrowser</code>。它會換一個新網址，preflight 會自己重驗。</li>
-        <li>用手機掃舞台上那枚 QR，要落在 <code>/verify?hash=…</code>，並看到「真實有效」。</li>
+        <li>用手機掃舞台上那枚 QR，要落在 <code>/verify?hash=…</code>，並看到「這張憑證有效」。</li>
         <li>投影機接上後，把瀏覽器縮放調到 100%，全螢幕 <code>F11</code>。</li>
         <li>電源設成<b>永不睡眠</b>、不要合蓋（合蓋隧道就死）；重啟過服務就先自己問 AI 一句，<b>首問可達 30 秒</b>。</li>
       </ol>
@@ -97,6 +97,7 @@
         <tr><td class="t">隧道掛了</td><td>改用 <code>http://127.0.0.1:8013</code> 直接展示；QR 改口頭說「結束後掃海報」。</td></tr>
         <tr><td class="t">整台機器掛了</td><td>播 <code>demo-media\GEF-mobile-walkthrough.mp4</code>（68 秒，有字幕，不需要聲音）。</td></tr>
         <tr><td class="t">只有 22 秒</td><td>播 <code>GEF-mobile-stage-run.mp4</code>，旁白由你自己講。</td></tr>
+        <tr><td class="t">播片之前</td><td>影片裡的塊號是錄影當日那條鏈的，跟今天這條（第 1 塊是文憑）不同，先說一句，別讓人對著比。</td></tr>
         <tr><td class="t">投影很暗</td><td>用 <code>/showtime</code>：深底白字，就是為投影做的。</td></tr>
         <tr><td class="t">評審要親手驗</td><td>遞手機打 <code>/verify</code>，或掃海報的 GitHub 碼自己起一份。</td></tr>
       </table>
@@ -105,7 +106,7 @@
     <section>
       <h2>四件不要做</h2>
       <ul>
-        <li><b>不要清 <code>verification-portal\data\</code></b>：四個樣本、文件裡的指紋、海報與影片裡的塊號全部作廢。</li>
+        <li><b>不要再清 <code>verification-portal\data\</code></b>：昨晚已重建成乾淨的鏈（第 1 塊是文憑，第 5 塊是撤銷），再清一次台上的塊號就會跟今天的截圖、講稿對不上。</li>
         <li><b>不要在台上跑 <code>start_showcase</code></b>：它會殺掉 8013 與隧道，當場換一個沒人知道的網址。</li>
         <li><b>不要簽發真實學生資料</b>：上鏈不可刪，名字與學號會留在示範鏈上。</li>
         <li><b>不要說「區塊鏈保證是真的」</b>：我們只保證「這一刻、這六項檢查通過」。這是我們自己寫在收據裡的話。</li>

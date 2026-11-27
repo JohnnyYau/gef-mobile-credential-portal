@@ -8,6 +8,17 @@
 This manual covers the **verification-portal/** application (the web product)
 and the **original-repo/** library it wraps (the blockchain core).
 
+> **Booth state, 2026-11-27.** The demo chain was cleared for the showcase and
+> rebuilt from genesis: `height 5` (genesis, diploma, transcript, one issue, one
+> revoke), 2 signers (`ML-DSA-65` active, `RSA-PSS-2048` registered). The 66-block
+> chain it replaced is kept at `verification-portal/data/archive-20261127/`.
+> `scripts/preflight.py` no longer compares against a hard-coded revoked hash — it
+> reads the newest `REVOKE` off the local chain, because a cleared chain makes any
+> constant stale. The recorded videos show the block numbers of the day they were
+> captured, so those numbers will not match a fresh booth chain. A two-page A4
+> booth sheet lives at `P14-Booth-Cheat-Sheet.pdf` (page 1: how to explain the
+> code, page 2: how to run the stand).
+
 ---
 
 ## 1. What you get
