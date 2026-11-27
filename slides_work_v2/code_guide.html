@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="zh-Hant-HK">
+<head>
+<meta charset="utf-8">
+<title>P14 全代碼導覽</title>
+<style>
+  @page { size: A4; margin: 11mm 12mm; }
+  * { box-sizing: border-box; }
+  body { margin: 0; color: #1d1a16; font-family: "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+         font-size: 8.35pt; line-height: 1.44; }
+  .page { page-break-after: always; }
+  .page:last-child { page-break-after: auto; }
+  header { display: flex; justify-content: space-between; align-items: baseline;
+           border-bottom: 1.4pt solid #1d1a16; padding-bottom: 2mm; margin-bottom: 3mm; }
+  .kick { font-size: 6.6pt; letter-spacing: .16em; color: #8a7a5c; text-transform: uppercase; }
+  h1 { font-size: 14.5pt; margin: 1mm 0 0; }
+  h1 small { font-size: 7.2pt; font-weight: 400; color: #6b6257; margin-left: 2.5mm; }
+  h2 { font-size: 9.6pt; margin: 4mm 0 1.6mm; padding-left: 2mm; border-left: 2.2pt solid #b08a3e; }
+  p { margin: 0 0 1.4mm; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 1mm; }
+  th, td { text-align: left; vertical-align: top; padding: 1.15mm 1.5mm; border-bottom: .4pt solid #ded4c1; }
+  th { font-size: 7.4pt; color: #7d7059; letter-spacing: .05em; }
+  code, .mono { font-family: Consolas, "Courier New", monospace; font-size: 8.1pt; color: #7a3c12; }
+  ol, ul { margin: 0 0 1.4mm; padding-left: 4mm; }
+  li { margin-bottom: .6mm; }
+  .lead { background: #faf6ec; border: .5pt solid #e3d9c2; padding: 2mm 2.6mm; border-radius: 1.2mm; margin-bottom: 2mm; }
+  .two { display: flex; gap: 4mm; }
+  .two > div { flex: 1; }
+  .warn { background: #fdf1ee; border: .5pt solid #e8c3ba; padding: 1.8mm 2.4mm; border-radius: 1.2mm; }
+  .qa { margin-bottom: 1.6mm; }
+  .qa b { color: #7a3c12; }
+  footer { margin-top: 2mm; padding-top: 1.2mm; border-top: .4pt solid #ded4c1;
+           font-size: 6.3pt; color: #8a8177; display: flex; justify-content: space-between; }
+</style>
+</head>
+<body>
+
+<!-- ============ 1 ============ -->
+<section class="page">
+<header>
+  <div>
+    <div class="kick">GEF26 · P14 · code reference</div>
+    <h1>全代碼導覽<small>38 個後端模組 · 約 9,900 行 · 五個 HTML 十個 JS</small></h1>
+  </div>
+  <div class="kick">INTERNAL</div>
+</header>
+
+<p class="lead">這份是給你「被要求打開代碼」時用的。不要按檔案順序講，按<b>資料流</b>講：一份憑證從 PDF 變成區塊，再從區塊變回一句結論。</p>
+
+<h2>五層，記住這一張表就夠</h2>
+<table>
+  <tr><th style="width:13%">層</th><th style="width:30%">檔案</th><th>它只做一件事</th></tr>
+  <tr><td>介面</td><td><code>static/*.html</code>、<code>static/js/*.js</code></td><td>五個一屏頁面（驗證／簽發／舞台／控制台／職員），沒有框架、沒有 build step。</td></tr>
+  <tr><td>HTTP</td><td><code>app/main.py</code>（1,808 行）</td><td>路由、驗證輸入、授權、限流、把自己組好的 JSON 交出去。業務判斷幾乎不在這裡。</td></tr>
+  <tr><td>服務</td><td><code>issuance_service</code>、<code>query_service</code>、<code>signer_service</code>、<code>disclosure</code>、<code>capability</code>、<code>statuslist</code>、<code>anomaly</code>、<code>notifier</code>、<code>chat_service</code>…</td><td>每一支服務對應一個能力（簽發／查詢／簽名方／披露／持有者連結／狀態列表／異常／通知／問答）。</td></tr>
+  <tr><td>核心</td><td><code>app/crypto_util.py</code>、<code>app/blockchain_util.py</code>、<code>app/chain_core.py</code></td><td>雜湊、簽名、區塊、驗證。這裡沒有 HTTP、沒有 UI，可以單獨拿去跑測試。</td></tr>
+  <tr><td>儲存</td><td><code>app/repository.py</code> + <code>data/</code></td><td>區塊是 JSON 檔，索引／收據／審計是 JSON 檔（可切 sqlite），金鑰是 PEM。</td></tr>
+</table>
+
+<h2>一次請求的生命：<span class="mono">GET /api/verify/{hash}</span></h2>
+<ol>
+  <li><code>main.py</code> 的路由收下 hash，<code>_validate_hash()</code> 只收 16–200 個 <code>[A-Za-z0-9_-]</code>，形狀不對就 422，不進核心。</li>
+  <li><code>query_service.verify_hash()</code>：先問 <code>blockchain_util.fetch_status()</code> 「這串編號有沒有 ISSUE / REVOKE」。</li>
+  <li><code>fetch_status()</code> 走 <code>_status_index()</code>：一次掃完所有區塊，建出「雜湊 → 簽發高度／撤銷高度」的索引，結果按目錄指紋快取。</li>
+  <li>要判完整性時呼叫 <code>verify_chain()</code>：從第 0 塊重算，每塊驗連結、高度、簽名。有快取，但新塊一寫入就失效。</li>
+  <li>要驗某一塊的簽名時，<code>_verify_payload_signatures()</code> 用 <code>crypto_util.fetch_pubkey()</code> 取公鑰、<code>verify_ds()</code> 驗簽。</li>
+  <li>結果回到 <code>query_service</code> 組成 <code>{verdict, status, checks, reason}</code>，<code>main.py</code> 原樣輸出。</li>
+  <li>前端 <code>simple_verify.js</code> 只做兩件事：把 verdict 畫成一張卡、把四行過程填上。</li>
+</ol>
+<p>整條路徑上沒有任何一層「相信」上一層：核心自己驗簽，服務層自己算，HTTP 層只轉發。</p>
+
+<h2>三個數字</h2>
+<p><b>9,900</b> 行後端（其中 <code>repository.py</code> 1,205、<code>main.py</code> 1,808、<code>blockchain_util.py</code> 826）；<b>39</b> 個測試模組；<b>11</b> 項開攤前自檢。</p>
+
+<footer><span>P14 · Mobile Credential Verification Portal</span><span>1 / 6</span></footer>
+</section>
+
+<!-- ============ 2 ============ -->
+<section class="page">
+<header>
+  <div><div class="kick">core</div><h1>核心三支<small>全部可以脫離網路單獨測試</small></h1></div>
+  <div class="kick">2 / 6</div>
+</header>
+
+<h2>crypto_util.py — 只管「同樣的 JSON 算出同樣的位元」</h2>
+<table>
+  <tr><th style="width:34%">函數</th><th>做什麼 · 為什麼這樣做</th></tr>
+  <tr><td><code>:72 json_rfc8785()</code> / <code>:77 hash_json()</code></td><td>先做 RFC 8785（JCS）正規化——鍵排序、數字格式固定——再算雜湊。沒有這一步，同一份憑證在兩台機器會算出兩個編號。</td></tr>
+  <tr><td><code>:102 merkle_root()</code></td><td>三段欄位雜湊兩兩合成一個根，當 <code>HashedDocument</code>。好處：改姓名只動個人段，能指出「哪一段被改」。留單節點時直接回傳該節點。</td></tr>
+  <tr><td><code>:120 signature_message()</code></td><td>真正被簽的不是 payload 雜湊，而是 <code>HMAC(key=nonce, msg=payloadHash)</code>。所以同一份文件每次簽名都不同，簽名本身不能用來關聯兩張憑證。</td></tr>
+  <tr><td><code>:307 sign_json()</code> / <code>:333 verify_ds()</code></td><td>按金鑰型別分派：ML-DSA（FIPS 204）、RSA-PSS、ECDSA。演算法字串只用來對照登記表，實際驗簽看的是金鑰型別。</td></tr>
+  <tr><td><code>:144 gen_dskey()</code> / <code>:208 getfgpt()</code></td><td>產生簽名金鑰；指紋是 SPKI 的 SHA-1／SHA-256，這就是簽名方在鏈上的身分。</td></tr>
+  <tr><td><code>:266 fetch_pubkey()</code></td><td>讀 PEM 並解析。U31 之後按檔案 <code>(mtime_ns, size)</code> 記憶——否則每次驗鏈都重讀同一把公鑰，63 塊要 3.6 秒。</td></tr>
+</table>
+
+<h2>blockchain_util.py — 區塊與驗證</h2>
+<table>
+  <tr><th style="width:34%">函數</th><th>做什麼</th></tr>
+  <tr><td><code>:204 init_block()</code>、<code>:255 register_signer()</code></td><td>寫 genesis、把簽名方登記進 <code>info.yaml</code>（含 <code>retired_at_height</code>）。</td></tr>
+  <tr><td><code>:337 issue_payload()</code>、<code>:360 revoke_payload()</code></td><td>組 payload：<code>action</code>（ISSUE／REVOKE）、<code>HashedDocument</code>、三段雜湊、時間戳。撤銷不改舊塊，只寫新塊說它作廢。</td></tr>
+  <tr><td><code>:413 append_block()</code></td><td>取 <code>last_height()+1</code>、記 <code>prevHashSum</code>、簽名、<b>先寫 temp 再 rename</b>——程序死在中途不會留半個塊。</td></tr>
+  <tr><td><code>:540 verify_block()</code></td><td>四件事：下一塊的 <code>prevHashSum</code> 對不對、自己的 <code>prevHashSum</code> 對不對、高度與檔名一致、payload 簽名有效且簽名方在該高度被信任。</td></tr>
+  <tr><td><code>:604 verify_chain()</code></td><td>從 0 掃到尾，<b>不提前結束</b>，把所有問題一次列出來；結果按目錄指紋 + TTL 快取。</td></tr>
+  <tr><td><code>:721 verify_document()</code></td><td>對外的六項：鏈完整、簽名方受信、鏈上有紀錄、內容雜湊相符、簽名有效、未被撤銷。</td></tr>
+  <tr><td><code>:653 _status_index()</code></td><td>一次掃描建出「雜湊 → 簽發／撤銷高度」，讓「查狀態」與「找 ISSUE 塊」不再各掃一遍。</td></tr>
+</table>
+
+<h2>一個區塊長什麼樣</h2>
+<p class="mono" style="background:#faf6ec;padding:1.6mm;border-radius:1mm;">
+{ "height": 5, "prevHashSum": "…", "contentHashAlgo": "sha3_512",
+  "payload": { "action": "REVOKE", "HashedDocument": "…", "reason": "…" },
+  "timestamp": 1795… ,
+  "DataSignatureInfo": [ { "DSAlgo": "ML_DSA_65", "DSsignature": "…",
+      "DSnonce": "…", "DSsha256fgpt": "2c:2e:…", "DSscheme": "…", "DSmessageDigest": "…" } ] }
+</p>
+<p>一個區塊 5.5 KB 左右——因為它<b>只放雜湊與簽名，不放 PDF、不放姓名</b>。</p>
+
+<footer><span>核心：crypto_util / blockchain_util / chain_core</span><span>2 / 6</span></footer>
+</section>
+
+<!-- ============ 3 ============ -->
+<section class="page">
+<header>
+  <div><div class="kick">services</div><h1>服務層<small>每一支＝一個能力，被 main.py 叫</small></h1></div>
+  <div class="kick">3 / 6</div>
+</header>
+
+<table>
+  <tr><th style="width:20%">模組</th><th style="width:8%">行數</th><th>它做的事 · 關鍵函數</th></tr>
+  <tr><td><code>chain_core.py</code></td><td>358</td><td>啟動時確保鏈存在：建 genesis、產生／載入簽名金鑰、播種 demo 憑證、必要時從快照還原。<code>ensure_chain():338</code>、<code>_ensure_signer():167</code>、<code>ensure_revoked_sample():280</code></td></tr>
+  <tr><td><code>chain_service.py</code></td><td>90</td><td>薄薄的門面，把上面幾支重新匯出，讓 <code>main.py</code> 只 import 一個名字。</td></tr>
+  <tr><td><code>issuance_service.py</code></td><td>119</td><td>簽發與撤銷：算文件雜湊、叫 <code>append_block()</code>、更新撤銷索引。<code>issue():27</code>、<code>revoke():41</code>、<code>rebuild_revocation_index():106</code></td></tr>
+  <tr><td><code>query_service.py</code></td><td>263</td><td>讀側：驗 hash、驗文件、鏈尾、demo 憑證、學生自查。<code>verify_hash():61</code>、<code>chain_tail():160</code>、<code>student_credentials():217</code></td></tr>
+  <tr><td><code>signer_service.py</code></td><td>199</td><td>多簽名方：新增、切換主簽、退役（不刪金鑰，只劃時間界線）。<code>sign_payload_envelope():36</code>、<code>add_signer():109</code>、<code>retire_signer():144</code></td></tr>
+  <tr><td><code>disclosure.py</code></td><td>205</td><td>只披露部分欄位：三段各自雜湊，隱藏整段或對欄位做加鹽承諾；驗的時候看「披露的部分對不對得上根」。<code>make_disclosure():78</code>、<code>check_against_record():154</code></td></tr>
+  <tr><td><code>capability.py</code></td><td>124</td><td>持有者連結：<code>{sid,h,exp,v}</code> 用 HMAC-SHA256 簽，過期即失效；失敗一律回同一個 404，不讓人探測。<code>mint():69</code>、<code>parse():92</code></td></tr>
+  <tr><td><code>statuslist.py</code></td><td>60</td><td>OCSP 式撤銷清單：鏈一變就重算，帶 height 與 last_block_hash，整份用機構金鑰簽名。<code>build():32</code></td></tr>
+  <tr><td><code>receipt_registry.py</code></td><td>27</td><td>每次查驗發一個回執編號（RCP-…），存起來可事後核對。</td></tr>
+  <tr><td><code>apikeys.py</code> + <code>repository.py</code> 的 key store</td><td>41 / 1205</td><td>給僱主的驗證 API key：建立、列出、輪替、撤銷；只存雜湊與前綴。</td></tr>
+  <tr><td><code>rate_limit.py</code></td><td>56</td><td>滑動視窗限流，<b>記憶體版</b>（demo 級，重啟即清）。</td></tr>
+  <tr><td><code>anomaly.py</code></td><td>144</td><td>簽發異常：規則（每小時超過閾值）＋ IsolationForest（每簽名方一小時一桶）。<code>detect():102</code></td></tr>
+  <tr><td><code>notifier.py</code></td><td>215</td><td>簽發後通知：預設只寫 log（dry-run），設定 SMTP 才真的寄；有背景 worker 與排程窗。<code>notify_issue():203</code></td></tr>
+  <tr><td><code>privacy.py</code></td><td>107</td><td>唯一決定「一個人的檔案可以包含什麼」的地方（<code>PrivacyPolicy</code>），其他模組不准自己拼個人資料。</td></tr>
+  <tr><td><code>person_context.py</code></td><td>164</td><td>從一句問題裡認出「在說誰」，再決定要不要查網路。<code>resolve_person():92</code>、<code>wants_web():142</code></td></tr>
+  <tr><td><code>web_research.py</code></td><td>146</td><td>Wikipedia + DuckDuckGo，沒有網路時走 mock；只回摘要與連結。</td></tr>
+  <tr><td><code>chat_service.py</code></td><td>177</td><td>問答編排：先找精確紀錄，再檢索，再生成，最後附出處。<code>answer():51</code></td></tr>
+  <tr><td><code>rag_indexer / rag_embedder / rag_generator</code></td><td>400 / 73 / 477</td><td>建語料 → 向量（sentence-transformers，可缺）→ 生成（DeepSeek 或 Ollama，可缺）。沒有模型時退回<b>模板式回答</b>，仍然附鏈上出處。</td></tr>
+  <tr><td><code>pdf_diploma.py</code></td><td>477</td><td>產生可驗證 PDF：固定版面、把整份憑證 JSON 以附件嵌進去、QR 指向驗證頁。<code>render_diploma_pdf():193</code>、<code>extract_credential():450</code></td></tr>
+  <tr><td><code>pdf_extractor.py</code></td><td>265</td><td>反方向：從任何 PDF 抽欄位（先找嵌入的 JSON，再退回文字規則）。</td></tr>
+  <tr><td><code>custom_service.py</code></td><td>193</td><td>使用者自製憑證：組文件 → 簽發 → 產出 PDF+JSON 到 <code>自制凭证-outputs/</code>。</td></tr>
+  <tr><td><code>backup.py</code>、<code>startup.py</code>、<code>observability.py</code>、<code>audit.py</code>、<code>public_log.py</code>、<code>session_store.py</code>、<code>errors.py</code>、<code>schemas.py</code>、<code>config.py</code></td><td>小</td><td>快照打包與安全解壓／啟動自檢／correlation id 與計數器／管理審計／匿名公開日誌／會話記憶（記憶體）／領域例外／Pydantic 請求模型／全部設定集中一處。</td></tr>
+</table>
+
+<footer><span>服務層：一個能力一支，不互相 import 對方內部</span><span>3 / 6</span></footer>
+</section>
+
+<!-- ============ 4 ============ -->
+<section class="page">
+<header>
+  <div><div class="kick">http + storage</div><h1>HTTP 層與儲存<small>main.py 的三道門，和 data/ 的長相</small></h1></div>
+  <div class="kick">4 / 6</div>
+</header>
+
+<h2>每個請求都先過三道門</h2>
+<ul>
+  <li><code>_hardening_middleware():163</code>：給每個請求一個 request id、記日誌、加安全標頭、量耗時。</li>
+  <li><code>_origin_allowed():248</code>：只接受來源等在白名單的寫入；公開 https 但沒設 <code>ALLOWED_ORIGINS</code> 時會在 <code>/healthz</code> 留一條警告。</li>
+  <li><code>_admin_required():278</code> 或 <code>authz.require_roles()</code>：寫入要 token 或職員 session；驗證類端點不需要。</li>
+</ul>
+
+<h2>端點分五組（不用背全部，記住分組）</h2>
+<table>
+  <tr><th style="width:16%">組</th><th>端點</th></tr>
+  <tr><td>頁面</td><td><code>/</code>、<code>/verify</code>、<code>/issue</code>、<code>/showtime</code>、<code>/portal</code>、<code>/staff</code>、<code>/staff/login</code>、<code>/me/{cap}</code></td></tr>
+  <tr><td>驗證（公開）</td><td><code>GET /api/verify/{hash}</code>、<code>GET /api/status/{hash}</code>、<code>POST /api/verify/document</code>、<code>POST /api/verify/batch</code>、<code>POST /api/verify/disclosure</code>、<code>POST /api/extract/pdf</code>、<code>GET /api/qr/{hash}</code>、<code>GET /api/pdf/{hash}</code>、<code>GET /api/statuslist</code>、<code>GET /api/receipt/{id}</code>、<code>GET /api/log</code>、<code>GET /api/anomalies</code></td></tr>
+  <tr><td>寫入（要 token）</td><td><code>POST /api/issue</code>、<code>POST /api/issue/batch</code>、<code>POST /api/revoke</code>、<code>POST /api/custom/build</code>、<code>POST /api/disclose/{hash}</code></td></tr>
+  <tr><td>簽名方與金鑰</td><td><code>GET /api/signers</code>、<code>POST /api/signers</code>、<code>POST /api/signers/active</code>、<code>POST /api/signers/retire</code>、<code>GET /api/signers/keys</code>、<code>/api/admin/apikeys*</code></td></tr>
+  <tr><td>維運</td><td><code>GET /healthz</code>、<code>/api/version</code>、<code>/api/metrics</code>、<code>/api/diagnostics</code>、<code>/api/admin/audit</code>、<code>/api/admin/chain-snapshot</code>、<code>/api/notifications</code>、<code>/api/chat</code>、<code>/api/rag/status</code></td></tr>
+</table>
+
+<h2>data/ 長相</h2>
+<table>
+  <tr><th style="width:30%">路徑</th><th>內容</th></tr>
+  <tr><td><code>demo-chain/blocks/block-0000000NN.json</code></td><td>區塊本體，一個高度一個檔，5.5 KB。</td></tr>
+  <tr><td><code>demo-chain/info.yaml</code></td><td>鏈參數＋受信簽名方清單（含退役高度）。</td></tr>
+  <tr><td><code>demo-chain/keys/signer-*.pem</code></td><td>簽名方公鑰（私鑰另存、帶口令）。</td></tr>
+  <tr><td><code>demo-chain/holder_index/</code>、<code>rawjsondocs/</code></td><td>持有者索引與原始文件（只在機構側，鏈上沒有）。</td></tr>
+  <tr><td><code>receipts.json</code>、<code>revocation-index.json</code>、<code>apikeys.json</code>、<code>public-log.jsonl</code>、<code>audit-log.jsonl</code></td><td>衍生資料：可重建的索引與紀錄。<code>repository.py</code> 是唯一碰這些檔的層。</td></tr>
+  <tr><td><code>archive-20261127/</code></td><td>昨晚換掉的舊鏈（1.8 MB，可回滾，不是刪除）。</td></tr>
+</table>
+<p><code>repository.py</code> 有三種實作：JSON 檔、可選 sqlite、以及只讀的記憶體替身（測試用）。<code>/healthz</code> 的 <code>storage.backend</code> 會直接說現在用哪一種。</p>
+
+<footer><span>HTTP 只做驗證與轉發；檔案只有 repository 碰</span><span>4 / 6</span></footer>
+</section>
+
+<!-- ============ 5 ============ -->
+<section class="page">
+<header>
+  <div><div class="kick">front + tooling</div><h1>前端、測試、腳本<small>它們證明上面那些話不是空話</small></h1></div>
+  <div class="kick">5 / 6</div>
+</header>
+
+<h2>前端：五個一屏頁面，沒有框架</h2>
+<table>
+  <tr><th style="width:24%">頁面</th><th>JS</th><th>說明</th></tr>
+  <tr><td><code>issue.html</code></td><td><code>simple_issue.js</code> 139</td><td>三格填完、按下就簽發；成功後給編號、PDF、QR。</td></tr>
+  <tr><td><code>index.html</code>（<code>/verify</code>）</td><td><code>simple_verify.js</code> 336</td><td>貼編號或上傳 PDF；深連結 <code>?hash=</code> 自動查；結果卡＋四行過程。</td></tr>
+  <tr><td><code>showtime.html</code></td><td><code>showtime.js</code> 238</td><td>舞台四步：簽發→驗→撤銷→再驗，每步寫收據（真實毫秒）。</td></tr>
+  <tr><td><code>portal.html</code></td><td><code>main.js</code> 297、<code>registrar.js</code> 437、<code>verify.js</code> 243、<code>log.js</code> 57、<code>chat.js</code> 119</td><td>控制台：批量簽發、簽名方、公開日誌、AI 問答、診斷。</td></tr>
+  <tr><td><code>staff.html</code> / <code>staff_login.html</code></td><td><code>student.js</code> 54</td><td>職員工作台與登入（session cookie）。</td></tr>
+</table>
+<p>CSS 只有三支：<code>simple.css</code>（驗證／簽發）、<code>showtime.css</code>（投影）、<code>portal.css</code>（控制台）。<code>@media (min-width:900px)</code> 把卡寬放到 900px，是為了 1440 投影。</p>
+
+<h2>測試與腳本</h2>
+<table>
+  <tr><th style="width:26%">東西</th><th>證明什麼</th></tr>
+  <tr><td><code>scripts/run_all_tests.py</code> → 39/39</td><td>39 個模組：從雜湊正規化、簽名輪替、撤銷索引，到 QR 解碼、PDF 版面、限流、代理信任。</td></tr>
+  <tr><td><code>scripts/preflight.py</code> → 11/11</td><td>開攤前：本機健康、demo 可驗、撤銷樣本、公網可達、舞台 QR 能掃（含 260px 拍照模擬）、交付物、影片、海報 QR、印刷尺寸、繁體文案、提交包。</td></tr>
+  <tr><td><code>scripts/local_smoke.py</code></td><td>對「解壓後的提交包」跑一遍，確保評審打開的是能用的那一份。</td></tr>
+  <tr><td><code>scripts/record_stage.py</code> / <code>record_walkthrough.py</code></td><td>用 CDP 定速截圖再合成影片（無音軌、燒字幕）。</td></tr>
+  <tr><td><code>scripts/to_traditional.py</code></td><td>簡→港繁（opencc s2hk ＋ 三處港式覆蓋），一次改全站。</td></tr>
+  <tr><td><code>scripts/backup_chain.py</code> / <code>restore_drill.py</code>、<code>verify_statuslist.py</code>、<code>license_audit.py</code></td><td>快照與還原演練、第三方驗狀態列表、依賴授權盤點（無 GPL）。</td></tr>
+</table>
+
+<footer><span>39 個測試模組、11 項自檢、一支冒煙腳本</span><span>5 / 6</span></footer>
+</section>
+
+<!-- ============ 6 ============ -->
+<section class="page">
+<header>
+  <div><div class="kick">Q&amp;A</div><h1>被問到代碼時的十一個答案<small>每條 20–30 秒，不要展開</small></h1></div>
+  <div class="kick">6 / 6</div>
+</header>
+
+<div class="two">
+<div>
+<div class="qa"><b>1. 為什麼要 JCS 正規化？</b><br>沒有它，鍵的順序不同就會算出不同雜湊，同一份憑證在兩台機器會得到兩個編號。RFC 8785 把這件事釘死。</div>
+<div class="qa"><b>2. 為什麼三段雜湊再合成一個根？</b><br>改姓名只會動個人段，改成績只會動學術段；出問題時能指出是哪一段，而不是只說「整份不對」。</div>
+<div class="qa"><b>3. 簽名為什麼要多包一層 HMAC(nonce)？</b><br>讓同一份文件每次簽名都不同。否則兩張憑證簽名一樣，外人就能把它們關聯起來。</div>
+<div class="qa"><b>4. 撤銷為什麼不刪塊？</b><br>刪掉就無法證明它曾經存在。撤銷是寫一塊新的說它作廢，歷史保留。</div>
+<div class="qa"><b>5. 怎麼防有人偷改舊塊？</b><br>改一塊，它的雜湊就變，下一塊的 <code>prevHashSum</code> 對不上；<code>verify_chain()</code> 從 0 掃到尾，會指出第一個壞塊。</div>
+<div class="qa"><b>6. 簽名方退役了，舊塊怎麼辦？</b><br><code>info.yaml</code> 記 <code>retired_at_height</code>：退役前的塊仍算受信，之後簽的不算。這是「停止信任」與「鏈壞了」的分別。</div>
+</div>
+<div>
+<div class="qa"><b>7. 鏈上真的沒有個人資料？</b><br>只有三段雜湊、簽名與時間。姓名學號在機構側的 <code>rawjsondocs/</code> 與學生手上的 PDF。</div>
+<div class="qa"><b>8. 驗一次要做多少事？</b><br>六項檢查：鏈完整、簽名方受信、鏈上有紀錄、內容雜湊相符、簽名有效、未被撤銷。任何一項不過就是 INVALID／REVOKED。</div>
+<div class="qa"><b>9. 為什麼驗證要幾百毫秒、不是 14 毫秒？</b><br>寫入後第一次查驗要從 genesis 重算全鏈；空閒時 40–120 ms，機器有負載時到幾百毫秒。海報上的 14 ms 是安靜機器、27 塊時量的。</div>
+<div class="qa"><b>10. RAG 是必需的吗／真的用了 LLM？</b><br>不是必需：沒有模型時退回模板式回答，仍然附鏈上出處。有 Ollama 或 DeepSeek 時才是生成式。</div>
+<div class="qa"><b>11. 哪一部分是 demo 級？</b><br>限流是記憶體、會話是記憶體、通知預設 dry-run、sqlite 是可選、備份是 tar。這些我們會直說，不假裝是生產級。</div>
+</div>
+</div>
+
+<h2>最後一句，講完就停</h2>
+<p class="lead">「這套東西沒有一行在假裝自己是 blockchain：它是一條只增不改的雜湊鏈，加上後量子簽名，重點是<b>驗證的人不需要懂密碼學</b>——掃一個碼，六項檢查，一句結論。」</p>
+
+<div class="warn"><b>不要做</b>：不要現場改代碼、不要打開 <code>data/</code> 給人看裡面的姓名、不要把 <code>ADMIN_TOKEN</code> 打在畫面上、不要說「我們用了 AI」卻舉不出哪一行。</div>
+
+<footer><span>P14 · 2026-11-27</span><span>6 / 6</span></footer>
+</section>
+
+</body>
+</html>
