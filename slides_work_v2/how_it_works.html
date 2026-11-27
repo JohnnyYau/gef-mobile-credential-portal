@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mobile Credential Verification Portal — How It Works</title>
+<style>
+@page { size: A4; margin: 17mm 16mm 16mm; }
+* { box-sizing: border-box; }
+body { margin: 0; color: #1a1611; font-family: "Segoe UI", "Microsoft JhengHei", sans-serif;
+       font-size: 9.3pt; line-height: 1.62; }
+h1 { font-size: 23pt; line-height: 1.15; margin: 0 0 3mm; letter-spacing: -.015em; }
+h2 { font-size: 13pt; margin: 8mm 0 2.4mm; padding-bottom: 1.2mm;
+     border-bottom: 1.3pt solid #1a1611; page-break-after: avoid; }
+h2 .no { color: #a07f34; font-weight: 400; margin-right: 2.6mm; }
+h3 { font-size: 10.2pt; margin: 5mm 0 1.4mm; page-break-after: avoid; }
+p { margin: 0 0 2.6mm; }
+.lead { font-size: 11pt; line-height: 1.6; color: #332c23; }
+.kicker { font-size: 7.4pt; letter-spacing: .22em; text-transform: uppercase; color: #a07f34; }
+.byline { font-size: 8pt; color: #6d6459; margin-top: 2mm; }
+.rule { border: 0; border-top: 2.4pt solid #1a1611; margin: 5mm 0 6mm; }
+ul, ol { margin: 0 0 2.6mm; padding-left: 5.4mm; }
+li { margin-bottom: 1.1mm; }
+code { font-family: Consolas, "Courier New", monospace; font-size: 8.3pt;
+       background: #f4efe4; padding: .3mm 1mm; border-radius: 1mm; }
+pre { font-family: Consolas, "Courier New", monospace; font-size: 7.8pt; line-height: 1.45;
+      background: #f7f3ea; border-left: 2pt solid #c3a86a; padding: 2.4mm 3mm;
+      margin: 0 0 3mm; white-space: pre-wrap; page-break-inside: avoid; }
+table { width: 100%; border-collapse: collapse; margin: 0 0 3.4mm; font-size: 8.4pt; }
+th { text-align: left; font-weight: 600; border-bottom: 1pt solid #1a1611; padding: 1.2mm 1.6mm; }
+td { vertical-align: top; padding: 1.3mm 1.6mm; border-bottom: .4pt solid #e2d8c4; }
+tr { page-break-inside: avoid; }
+table.keep { page-break-inside: avoid; }
+table.keep tr:first-child { page-break-after: avoid; }
+.box { border: .9pt solid #c9b78f; padding: 3mm 3.4mm; margin: 0 0 3.6mm; background: #fcfaf4;
+       page-break-inside: avoid; }
+.box .t { font-size: 7.6pt; letter-spacing: .14em; text-transform: uppercase; color: #a07f34; margin-bottom: 1.4mm; }
+.warn { border-left: 2.4pt solid #a8452f; background: #fdf6f3; }
+.flow { display: flex; align-items: stretch; gap: 1.6mm; margin: 0 0 3.6mm; page-break-inside: avoid; }
+.flow div { flex: 1; border: .8pt solid #c9b78f; padding: 1.8mm 2mm; font-size: 7.6pt; line-height: 1.35; background: #fcfaf4; }
+.flow div b { display: block; font-size: 8pt; margin-bottom: .6mm; }
+.flow .arrow { flex: 0 0 4mm; border: 0; background: none; text-align: center; padding-top: 4mm; color: #a07f34; }
+.toc { columns: 2; column-gap: 8mm; font-size: 8.6pt; }
+.toc p { margin: 0 0 1mm; }
+.small { font-size: 8pt; color: #6d6459; }
+.pb { page-break-before: always; }
+.sig { margin-top: 8mm; font-size: 7.6pt; color: #8a8177; border-top: .5pt solid #d8cdb8; padding-top: 2mm; }
+</style>
+</head>
+<body>
+
+<div class="kicker">CityUHK · GEF 2025/26 · Booth P14</div>
+<h1>Mobile Credential Verification Portal<br>How the whole thing works</h1>
+<p class="lead">A diploma is a claim. Today, checking that claim means an email to a registry office, a
+PDF that anyone can retype, or a phone call that nobody makes. This system replaces that with a
+square on a page: you scan it, and within a second the browser answers <em>“this credential is
+valid”</em> or <em>“this credential has been revoked”</em> — without installing anything, without
+logging in, and without having to trust the server that answered.</p>
+<p class="byline">Technical description of the implementation as deployed on 27 November 2026 · 38 Python
+modules, ~6,200 lines of code · 56 HTTP routes · chain height 5, two registered signers</p>
+<hr class="rule">
+
+<div class="toc">
+<p><b>1.</b> The problem, stated precisely</p>
+<p><b>2.</b> Threat model: what is actually being defended</p>
+<p><b>3.</b> The credential: three sections and a canonical form</p>
+<p><b>4.</b> Identity: from document to one string</p>
+<p><b>5.</b> Signing: two layers, and why</p>
+<p><b>6.</b> The ledger: blocks and links</p>
+<p><b>7.</b> Verification: six checks</p>
+<p><b>8.</b> Revocation: append, never delete</p>
+<p><b>9.</b> Storage: five stores, two backends</p>
+<p><b>10.</b> The HTTP surface</p>
+<p><b>11.</b> The front end</p>
+<p><b>12.</b> Performance, and why the caching is shaped this way</p>
+<p><b>13.</b> Privacy</p>
+<p><b>14.</b> What this is not</p>
+<p><b>15.</b> Engineering practice</p>
+<p><b>16.</b> Running it</p>
+<p><b>17.</b> Glossary and file map</p>
+</div>
+
+<h2><span class="no">1</span>The problem, stated precisely</h2>
+<p>Universities issue credentials; employers, other universities and border officers check them.
+The check is slow, manual and unevenly applied. Meanwhile the artefact being checked — a PDF, a
+scanned letter — is trivially editable, and the edit is invisible: retyping <code>1ST HON</code> to
+<code>1ST HON.</code> changes nothing about how the document looks.</p>
+<p>So the requirement is not “store credentials online”. It is narrower and harder:</p>
+<div class="box">
+<div class="t">The requirement</div>
+<p style="margin:0">Given one artefact in front of me, decide whether <b>this exact content</b> was
+issued by <b>that institution</b>, and is <b>still valid right now</b> — using only public
+information, in under a second, on a phone, with no account.</p>
+</div>
+<p>Everything in the system follows from those four constraints. “Using only public information”
+is why the design is cryptographic rather than a database lookup. “Under a second on a phone” is
+why there is a QR code instead of a file upload. “Still valid right now” is why revocation is a
+first-class operation rather than a delete.</p>
+
+<h2><span class="no">2</span>Threat model: what is actually being defended</h2>
+<p>A design is only meaningful against named attacks. These are the ones this system answers, and
+the ones it does not.</p>
+<table class="keep"><tr><th style="width:38%">Attacker does this</th><th style="width:31%">System's answer</th><th>Residual risk</th></tr>
+<tr><td>Edits one character in a credential PDF or JSON</td>
+    <td>The document's hash changes, so check 4 (<code>hash_match</code>) fails and check 5 fails too</td>
+    <td>None that matters — this is the core guarantee</td></tr>
+<tr><td>Re-signs a forged credential without the institution's key</td>
+    <td>Signature verification needs the private key; only the public key is published</td>
+    <td>None, assuming the key is not stolen</td></tr>
+<tr><td>Copies a valid QR code from someone else's certificate</td>
+    <td>Nothing — a QR proves <em>the credential</em>, not <em>who is holding the phone</em></td>
+    <td>Real and unavoidable. The page says “this credential is valid”, never “this person is who they claim”</td></tr>
+<tr><td>Steals the issuer's private key</td>
+    <td><code>retire_signer(at_height)</code> marks the key untrusted from a given height; blocks signed before it stay valid</td>
+    <td>Anything signed between theft and detection looks valid. Detection latency is the exposure</td></tr>
+<tr><td>Deletes or rewrites a block file</td>
+    <td>Chain replay links heights, so a missing or edited block fails <code>verify_chain</code>; the API returns 503, not “not found”</td>
+    <td>An attacker who rewrites <em>every</em> block consistently and re-signs the whole chain would need the key anyway</td></tr>
+<tr><td>Runs a dishonest server that returns “VALID” for everything</td>
+    <td>Partially. The JSON is only a claim; the evidence (blocks, public keys) is portable and verifiable with the same open code</td>
+    <td>If you only read our website and never verify, you are trusting us. That is why the status list and receipts are signed and the source is public</td></tr>
+<tr><td>Replays an old “valid” answer after a revocation</td>
+    <td>Revocation is an appended block; any fresh read sees it</td>
+    <td>A client caching a status list offline can be stale until it refreshes — the same window any OCSP-style list has</td></tr>
+</table>
+<p>The honest summary: <b>the cryptography removes the need to trust the server for correctness of
+content; it cannot remove the need to trust the institution that holds the key, nor can it turn a
+credential into an identity document.</b></p>
+
+<h2><span class="no">3</span>The credential: three sections and a canonical form</h2>
+<p>A credential is one JSON object with exactly three sections. The split is not cosmetic: it lets
+verification say <em>which part</em> disagrees when something is wrong.</p>
+<pre>{
+  "PersonalParticulars": { "Surname": "CHAN", "GivenNames": "TAI MAN", "Sex": "M",
+                           "DOB": "19880808", "StudentID": "22000000" },
+  "AcademicInfo":        { "DegreeName": "Bachelor of Engineering / Electronic and Electrical Engineering",
+                           "DegreeStartDate": "20220815", "DegreeEndDate": "20260801",
+                           "Honour": "1ST HON", "Observations": "NO OFFICIAL OBSERVATIONS" },
+  "DocumentInfo":        { "DateOfIssue": "20260901", "AuthorizedSignature": "…",
+                           "IssuingO": "UNIVERSITY OF UTOPIA", "IssuingOU": "DEPT OF EE",
+                           "DocType": "CERTIFICATE OF DIPLOMA" }
+}</pre>
+<p>Before anything is hashed, the object is serialised with <b>RFC 8785 JSON Canonicalisation
+(JCS)</b>: keys sorted, numbers in one canonical form, strings escaped one way. Without this step a
+hash would depend on key order and whitespace, and the same credential typed on two machines would
+produce two different identities. Canonicalisation is what makes “the same content” a well-defined
+idea.</p>
+<div class="flow">
+  <div><b>JSON object</b>three sections, any key order</div><div class="arrow">→</div>
+  <div><b>JCS bytes</b>one canonical byte string</div><div class="arrow">→</div>
+  <div><b>SHA3-512</b>one digest</div><div class="arrow">→</div>
+  <div><b>base64url</b>no padding, URL-safe</div>
+</div>
+<p>Padding is stripped so the digest can live in a URL, a filename or a QR code without escaping.
+That choice is visible everywhere downstream: every identifier in this system is a 86-character
+base64url string.</p>
+
+<h2><span class="no">4</span>Identity: from document to one string</h2>
+<p>Each section is hashed separately, then the three digests are combined by a Merkle step into one
+root. That root is the credential's identity: <code>HashedDocument</code>.</p>
+<pre>h_pp  = hash_json(PersonalParticulars)      # sha3-512
+h_ai  = hash_json(AcademicInfo)
+h_di  = hash_json(DocumentInfo)
+root  = merkle_root([h_pp, h_ai, h_di])     # odd level duplicates the last leaf</pre>
+<p>Two properties make this worth the extra step. First, the root is <b>reproducible by anyone</b>:
+run the same three lines on the same document and you get the same 86 characters. Second, the
+parts stay separable — if the root does not match, the system can say that
+<code>AcademicInfo</code> is the section that disagrees, rather than “the document is wrong”.</p>
+<div class="box">
+<div class="t">Measured, not asserted</div>
+<p style="margin:0">In this deployment the diploma's root is
+<code>GFiY4d67yoi8X4wmwnL_8IX18_xo_F7HOQgWBdHZXubNTLhvVX_K1PCWuKZa8cntDWyq5Mnr7i8yvAopAjxrGQ</code>.
+Changing the surname from <code>CHAN</code> to <code>CHAN.</code> keeps two section hashes identical
+and changes the third and the root. That experiment is shipped as
+<code>scripts/learn/01_document_to_number.py</code> and takes eight seconds to run.</p>
+</div>
+
+<h2><span class="no">5</span>Signing: two layers, and why</h2>
+<p>The naive design signs the payload hash directly. This system signs
+<code>HMAC(key = nonce, message = payload_hash)</code> instead — a second layer, with a fresh random
+nonce per signature.</p>
+<pre>nonce     = 32 random bytes, base64url          # per signature, never reused
+message   = base64url( HMAC-SHA3-512(key=nonce, msg=payload_hash) )
+signature = Sign(private_key, message)          # ML-DSA-65, or RSA-PSS</pre>
+<p>The reason is binding, not secrecy. A bare signature over <code>payload_hash</code> can be lifted
+and replayed in any context that happens to verify the same hash. A signature over
+<code>HMAC(nonce, hash)</code> is welded to one nonce, and the nonce is recorded in the block. Move
+the signature to a different nonce and it fails — verified in
+<code>scripts/learn/02_sign_the_number.py</code>, where the same document signed twice produces two
+different signatures, both valid, and neither usable with the other's nonce.</p>
+<table>
+<tr><th style="width:26%">Field in the block</th><th>Meaning</th></tr>
+<tr><td><code>DSAlgo</code></td><td>Algorithm label, e.g. <code>ML_DSA_65</code></td></tr>
+<tr><td><code>DSsha256fgpt</code></td><td>SHA-256 fingerprint of the signer's public key (SPKI)</td></tr>
+<tr><td><code>DSnonce</code></td><td>The per-signature nonce; required to recompute the message</td></tr>
+<tr><td><code>DSignature</code></td><td>base64url signature bytes (ML-DSA-65 signatures are ~4.4 kB)</td></tr>
+<tr><td><code>DSmessageDigest</code></td><td>The signed message itself, so a verifier can compare without re-deriving</td></tr>
+<tr><td><code>DSscheme</code></td><td><code>hmac-nonce-wrap-v1</code> — a version switch; older blocks without it read as v1</td></tr>
+</table>
+<p><b>Algorithms.</b> The primary signer is ML-DSA-65 (FIPS 204), chosen because credential lifetimes
+are long and RSA/ECDSA are the algorithms a future quantum machine attacks first. A second signer,
+RSA-PSS-2048, runs alongside it: the block format is algorithm-labelled per signer, so rotation is a
+registry operation, not a migration. Verification dispatches on key type, and any exception —
+malformed, wrong length, unknown algorithm — returns <code>False</code>. There is no “probably fine”
+path in a signature check.</p>
+<h3>Key lifecycle</h3>
+<p>Retiring a signer must not retroactively invalidate history. The registry entry keeps the public
+key and gains a <code>retired_at_height</code> boundary; blocks at or below that height still
+verify, blocks above it are refused. Re-registering the same key clears the boundary. This is the
+difference between “we stopped trusting this key” and “the chain is broken” — the first is routine
+hygiene, the second invalidates every verdict in the ledger.</p>
+
+<h2><span class="no">6</span>The ledger: blocks and links</h2>
+<p>The ledger is a directory of JSON files, one per block, named by zero-padded height. There is no
+database, no daemon, no network protocol. A block looks like this:</p>
+<pre>{
+  "height": 1,
+  "contentHashAlgo": "sha3_512",
+  "prevHashSum": "BpHCjQB2AfwYaa…",      # sha3-512 of the ENTIRE previous block JSON
+  "timestamp": 1795…,                     # time.time_ns()
+  "schemaVersion": 2,
+  "payload": { "action": "ISSUE", "HashedDocument": "GFiY4d67…", … },
+  "DataSignatureInfo": [ { "DSAlgo": "ML_DSA_65", … } ]
+}</pre>
+<p>Appending is a fixed sequence, and the order is deliberate:</p>
+<ol>
+<li>Read <code>info.yaml</code> for the current height and hash algorithm — never trust the caller's values.</li>
+<li>Load the previous block and hash <b>its whole JSON</b>, not just its signature.</li>
+<li>Sign the payload once per signer, each with its own nonce.</li>
+<li>Write the block file atomically: write <code>.temp</code>, then <code>os.replace</code>.</li>
+<li>Only then update <code>last_block_height</code> in <code>info.yaml</code>, also atomically.</li>
+</ol>
+<p>Step 5 last, because the two failure modes are not equally bad. “Block written, height not
+updated” is recoverable — the file is there and the height is one behind. “Height points at a block
+that does not exist” makes every read raise, and the chain looks corrupt when it is merely
+inconsistent. The same reasoning explains why the hash covers the whole previous block: hashing
+only the signature would leave the timestamp uncommitted, and a block's timestamp is part of what
+was issued.</p>
+<div class="box warn">
+<div class="t">Demonstrated live</div>
+<p style="margin:0">Tamper with one character in block 1 and block 2 turns red without being
+touched — block 1 fails <code>next_link</code> and <code>signatures</code>, block 2 fails
+<code>prev_link</code>. <code>scripts/learn/03_link_the_blocks.py</code> does this on a copy in
+<code>%TEMP%</code>, then runs the full six checks against the tampered copy.</p>
+</div>
+
+<h2><span class="no">7</span>Verification: six checks</h2>
+<p>Every verification returns the same six booleans plus a verdict. They are independent pieces of
+evidence, not one judgement repeated.</p>
+<table>
+<tr><th style="width:27%">Check</th><th style="width:40%">What it proves</th><th>What it does not prove</th></tr>
+<tr><td><code>chain_integrity</code></td><td>Every block from genesis links and verifies</td><td>That this credential exists — it is a precondition</td></tr>
+<tr><td><code>signer_trusted</code></td><td>The issuing block's keys are in the registry (and were trusted at that height)</td><td>That the institution is honest</td></tr>
+<tr><td><code>on_chain_record</code></td><td>An ISSUE block exists for this hash</td><td>That the presented document matches it</td></tr>
+<tr><td><code>hash_match</code></td><td>The document you hold reproduces the hashes recorded on chain</td><td>Anything, if no document was supplied (reported as <code>null</code>)</td></tr>
+<tr><td><code>signature_valid</code></td><td>The block's signature verifies under the published public key</td><td>That the key holder had authority — that is a policy question</td></tr>
+<tr><td><code>not_revoked</code></td><td>No REVOKE block references this hash</td><td>That the credential was ever legitimate — that is check 3 plus 5</td></tr>
+</table>
+<h3>Two entry points, deliberately different</h3>
+<p><code>GET /api/verify/{hash}</code> answers everything computable <em>without the document</em>.
+Because no document is supplied, check 4 has no input:</p>
+<pre>"hash_match": None,   # requires the full document — not True, not False</pre>
+<p>Reporting <code>null</code> rather than <code>True</code> is a deliberate discipline: a result
+sheet with six ticks should mean six things were computed. The front end honours it with a third
+branch — <code>true</code> says “signature verified”, <code>false</code> says “verification failed”,
+anything else says “no signature to verify”. Collapsing that third case into “yes” is the kind of
+silent claim that makes a verification system worthless.</p>
+<p><code>POST /api/verify/document</code> takes the whole credential, recomputes the three section
+hashes, and <em>then</em> check 4 becomes a real boolean. That is the endpoint an employer uses when
+they hold the PDF, and the one the phone page uses when the page was opened with a hash and a
+document together.</p>
+<h3>The route itself</h3>
+<pre>996  @app.get("/api/verify/{hashed_document}")
+997  def verify_hash(hashed_document: str):
+998      _validate_hash(hashed_document)                  # shape: 16–200 chars of [A-Za-z0-9_-]
+999      result = chain_service.verify_hash(hashed_document)
+1000     if result.get("verdict") == "REVOKED":
+1001         result.update(chain_service.revoke_meta(hashed_document))
+1002     result["receipt_id"] = receipt_registry.register(...)   # a signed receipt of this answer
+1004     verification_log.record(...)                     # anonymised
+1006     return result</pre>
+<p>Eleven lines, zero arithmetic. The route validates shape, delegates, stamps a receipt, logs, and
+returns. <b>If you deleted the web layer the ledger would still be correct</b> — which is the whole
+point of keeping the arithmetic in three modules with no HTTP or UI imports.</p>
+
+<h2><span class="no">8</span>Revocation: append, never delete</h2>
+<p>Revoking appends a new block whose payload is <code>{"action": "REVOKE", "HashedDocument": …}</code>.
+The ISSUE block is untouched. Two consequences: the credential's history stays provable (you can
+show that it <em>was</em> issued, and when it stopped being valid), and revocation cannot be
+“undone” by editing a file — only by another append.</p>
+<p>A single pass builds the status index — hash → issue heights, revoke heights, first issue
+timestamp — so “issued?” and “revoked?” are answered by one scan rather than two, cached against the
+block directory's fingerprint. An unreadable block is <em>not</em> skipped during that scan: a
+corrupt chain must return 503, never “not revoked”. Swallowing that exception would turn a data
+failure into a positive verdict.</p>
+<h3>Offline status for employers</h3>
+<p><code>GET /api/statuslist</code> returns every revoked hash with reason and effective time, plus
+the chain height and last block hash, signed as one envelope (<code>gef26.statuslist.v2</code>).
+An employer can cache it and answer “revoked?” without calling us. The v1 signature of this list
+carried no nonce and no fingerprint, which made it unverifiable by anyone — a signature that cannot
+be checked is decoration, and it silently falsified the offline promise. v2 signs with the nonce,
+the real key fingerprint and the registry name travelling alongside, and publishes the keys at
+<code>GET /api/signers/keys</code>.</p>
+
+<h2><span class="no">9</span>Storage: five stores, two backends</h2>
+<p>The ledger is files on disk; everything around it (API keys, receipts, the anonymised log,
+notification outbox, revocation index) goes through one abstraction with two interchangeable
+implementations.</p>
+<table>
+<tr><th style="width:30%">Store</th><th style="width:34%">Records</th><th>Backends</th></tr>
+<tr><td><code>ApiKeyStore</code></td><td>employer key id → digest, name, timestamps, revoked</td><td>JSON file / SQLite</td></tr>
+<tr><td><code>ReceiptStore</code></td><td>receipt id → hash, verdict, endpoint, time</td><td>JSON file / SQLite</td></tr>
+<tr><td><code>LogStore</code></td><td>anonymised verification log (append-only JSONL)</td><td>JSONL / SQLite</td></tr>
+<tr><td><code>NotificationStore</code></td><td>notifier outbox and audit trail</td><td>JSONL / SQLite</td></tr>
+<tr><td><code>RevocationIndexStore</code></td><td>hash → issued height, revoked flag</td><td>JSON file / SQLite</td></tr>
+</table>
+<p>The JSON implementations read and write the existing files in their existing formats, so switching
+backends changes nothing observable to callers. The SQLite implementations use only the standard
+library, one short-lived connection per operation, and a per-store lock — so a crash cannot leave a
+half-written row, and threads never share a connection. This layer is deliberately not yet wired
+into every endpoint: reads first, then writes, because a migration you cannot roll back is not a
+migration.</p>
+<p>Corruption is handled as a distinct outcome. Missing or unparsable block files raise
+<code>ChainDataError</code>, which the API maps to 503. A verifier must never be told “this
+credential is not on the chain” when the truth is “I could not read the chain”.</p>
+
+<h2><span class="no">10</span>The HTTP surface</h2>
+<p>Fifty-six route decorators. They group into five families, and the grouping is the auth model:</p>
+<table>
+<tr><th style="width:24%">Family</th><th style="width:44%">Examples</th><th>Auth</th></tr>
+<tr><td>Verify (public)</td><td><code>/api/verify/{hash}</code>, <code>/api/verify/document</code>, <code>/api/status/{hash}</code>, <code>/api/qr/{hash}</code>, <code>/api/statuslist</code></td><td>none; rate limited</td></tr>
+<tr><td>Issue / revoke (admin)</td><td><code>/api/issue</code>, <code>/api/issue/batch</code>, <code>/api/revoke</code>, <code>/api/signers/*</code></td><td><code>X-Admin-Token</code> or staff session</td></tr>
+<tr><td>Holder (capability)</td><td><code>/api/me/{cap}</code>, <code>/api/holder-link</code></td><td>HMAC capability token, expiry, uniform 404 on failure</td></tr>
+<tr><td>Employer (API key)</td><td><code>/api/verify/batch</code>, <code>/api/receipt/{id}</code>, API key admin</td><td>key digest + per-key rate limit</td></tr>
+<tr><td>Explanatory</td><td><code>/api/chat</code>, <code>/api/rag/status</code>, <code>/api/metrics</code>, <code>/api/diagnostics</code></td><td>mixed; chat is grounded, never a verification path</td></tr>
+</table>
+<p>Hardening is middleware, not per-route politeness: body-size and JSON-depth limits, origin checks,
+per-client rate limits, and a public mode (<code>PUBLIC_MODE=1</code>) in which every admin endpoint
+returns 403 and the UI hides the admin surfaces entirely. In public mode the attack surface is the
+verification surface.</p>
+
+<h2><span class="no">11</span>The front end</h2>
+<p>Five pages, plain HTML/CSS/JS, no framework and no build step: verify, issue, the stage
+control panel, the staff console and the holder page. The verification page is the one that matters
+at a booth: it is a single screen, it renders one card, and it never asks the visitor to press a
+button.</p>
+<p>It contains no cryptography. A verdict arrives as a string — <code>"VALID ON CHAIN"</code>,
+<code>"REVOKED"</code>, <code>"INVALID"</code>, <code>"NOT FOUND"</code> — and a lookup table turns
+it into a headline. That separation is testable: change the table and the page lies, while the chain
+stays correct. It is one of the reasons the checks live in a module that imports neither HTTP nor
+DOM.</p>
+<p>Mobile behaviour was measured rather than assumed: at a 390×844 viewport the page's
+<code>scrollWidth</code> equals the viewport width, and the four check rows collapse to a single
+column. A QR code opened from a poster has to fit a phone that a visitor is holding at an angle.</p>
+
+<h2><span class="no">12</span>Performance, and why the caching is shaped this way</h2>
+<p>First measurements were unacceptable for a booth: the receipt took 3.5 s, then 11.1 s, on a chain
+of 63 blocks. The cause was structural, not a leak. Every append changed the block directory, which
+invalidated the chain-integrity cache, and a cold scan re-read and re-parsed every signer's PEM for
+every signature.</p>
+<p>Two fixes, both keyed on evidence rather than time alone:</p>
+<ul>
+<li><b>Directory fingerprint.</b> The cache key is <code>(block count, total bytes, newest mtime_ns)</code>. Any
+append, rewrite or truncation changes it, so a verdict-carrying cache cannot go stale by
+construction. A short TTL sits on top only to bound the one case the fingerprint cannot see — an
+edit that preserves every file's size and mtime.</li>
+<li><b>Public-key memoisation.</b> Keys are cached by <code>(mtime_ns, size)</code> of the PEM file, so a
+replaced key is picked up immediately. Caching by path alone would mean silently trusting a key that
+had been swapped underneath us.</li>
+</ul>
+<table>
+<tr><th style="width:40%">Measurement</th><th style="width:24%">Before</th><th>After</th></tr>
+<tr><td>Cold full-chain scan (63 blocks)</td><td>3,652 ms</td><td>849 ms</td></tr>
+<tr><td>Stage receipt, three consecutive verifies</td><td>3.5 s / 11.1 s / 1.5 s</td><td>123 / 133 / 41 ms</td></tr>
+<tr><td>Hash-level verify, warm, in-process (this chain)</td><td>—</td><td>99 ms</td></tr>
+<tr><td>Issue a credential</td><td>—</td><td>600–936 ms</td></tr>
+</table>
+<p>The remaining cost is honest work: ML-DSA verification is not free, and a chain that grows will
+need either incremental verification or a checkpoint signed by the registrar. Both are on the list;
+neither is disguised as done.</p>
+
+<h2><span class="no">13</span>Privacy</h2>
+<p>Only hashes and public metadata go on the chain. <code>PersonalParticulars</code> and
+<code>AcademicInfo</code> stay in the institution's own store; the block carries their digests plus
+<code>DocumentInfo</code>, which is the issue date, the issuing office and the document type.
+Surname, given names, date of birth and student ID are never written to a block.</p>
+<p>Two mechanisms exist for the “I need to show this, but not all of it” case. <b>Selective
+disclosure</b> commits each field with a salt (<code>gef-field-v1</code>) so a holder can reveal one
+field and prove it belongs to the committed record without revealing the rest. <b>Capability
+links</b> are HMAC-SHA256 tokens over <code>{sid, h, exp, v}</code>: they grant a holder access to
+their own page for a fixed window, and every failure returns the same 404 so a token cannot be
+probed for validity.</p>
+<p>What remains linkable: a credential hash is stable, so two verifications of the same credential
+are recognisably the same credential. The public log therefore stores hash prefixes, not full
+hashes, and the verification log is anonymised. This is a real tension — auditability versus
+unlinkability — and it is resolved toward “enough to detect abuse, not enough to build a profile”.</p>
+
+<h2><span class="no">14</span>What this is not</h2>
+<div class="box">
+<div class="t">Say this plainly</div>
+<p style="margin:0">There is <b>no consensus, no peers, no gossip, no network synchronisation</b>.
+It is an append-only hash chain with signatures, operated by one node. Calling it a blockchain would
+be wrong, and the wrong word invites the wrong questions.</p>
+</div>
+<p>The usual follow-up is “why not Ethereum?”. Three reasons, in order of weight:</p>
+<ol>
+<li><b>There is nothing to agree on.</b> One institution issues its own credentials. Consensus solves
+disagreement between mutually distrusting writers; there is one writer.</li>
+<li><b>Personal data does not belong on a public chain.</b> An append-only public ledger is
+permanent and world-readable; a hash of a student's record is a linkable identifier forever. Even
+hashes leak: a small candidate set can be brute-forced.</li>
+<li><b>Cost and latency.</b> Gas, blocks and finality for a fact that one signature already settles.</li>
+</ol>
+<p>Honest limitations, stated as limitations: a single node is a single point of failure; there is no
+incremental verification yet, so boot time grows with chain length; the issuer's key custody is a
+policy problem this code cannot solve; and physical possession of a QR still proves nothing about
+who is holding the phone.</p>
+
+<h2><span class="no">15</span>Engineering practice</h2>
+<p>The parts that are easy to skip are the parts that decide whether the demo survives a hostile
+question.</p>
+<ul>
+<li><b>Tests:</b> 39 test modules across the suite, run as one command, covering the crypto primitives,
+the chain lifecycle, revocation, capability tokens, the status list signature, batch verify, PDF
+extraction and the API surface.</li>
+<li><b>Preflight:</b> an eleven-item check that runs before a demo — chain integrity, signer registry,
+public URL reachability, QR decodability under a phone-camera simulation (downscale, blur, JPEG
+compression), and the revocation path rebuilt from the live chain rather than a hard-coded hash.</li>
+<li><b>Failure as a first-class outcome:</b> <code>ChainDataError</code> → 503; unknown algorithm →
+<code>False</code>, never “trusted”; missing document → <code>null</code>, never “passed”.</li>
+<li><b>Number discipline:</b> ~6,200 lines of code in <code>app/</code> (9,885 including blank lines
+and docstrings), ~5,100 in tests, ~2,100 in scripts, ~3,900 in the front end. Quoting the larger
+number as “code written” would be padding.</li>
+</ul>
+
+<h2><span class="no">16</span>Running it</h2>
+<pre>cd verification-portal
+.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8013
+# then: http://127.0.0.1:8013/verify?hash=&lt;HashedDocument&gt;
+
+.venv\Scripts\python.exe scripts\run_all_tests.py       # full suite
+.venv\Scripts\python.exe scripts\preflight.py           # 11 demo-day checks
+.venv\Scripts\python.exe scripts\learn\01_document_to_number.py
+.venv\Scripts\python.exe scripts\learn\02_sign_the_number.py
+.venv\Scripts\python.exe scripts\learn\03_link_the_blocks.py
+.venv\Scripts\python.exe scripts\learn\04_the_http_layer.py</pre>
+<p>The four <code>scripts/learn</code> files are the shortest honest path to understanding the
+system: each one runs in seconds, prints real numbers from the live chain, and asserts before it
+concludes. Reading them in order reproduces, in about ten minutes, what took weeks to build.</p>
+
+<h2><span class="no">17</span>Glossary and file map</h2>
+<table>
+<tr><th style="width:30%">Term</th><th>Meaning here</th></tr>
+<tr><td>JCS / RFC 8785</td><td>Canonical JSON serialisation; makes equal content produce equal bytes</td></tr>
+<tr><td>HashedDocument</td><td>Merkle root of the three section hashes; the credential's identity</td></tr>
+<tr><td>DataSignatureInfo</td><td>The signature record inside a block (algo, fingerprint, nonce, signature, digest, scheme)</td></tr>
+<tr><td>prevHashSum</td><td>SHA3-512 of the entire previous block JSON — the chain link</td></tr>
+<tr><td>DSscheme</td><td>Signature-record version; <code>hmac-nonce-wrap-v1</code></td></tr>
+<tr><td>retired_at_height</td><td>The height from which a signer stops being trusted; earlier blocks stay valid</td></tr>
+<tr><td>Capability token</td><td>Short-lived HMAC token granting a holder access to their own page</td></tr>
+<tr><td>Status list</td><td>Signed, cacheable snapshot of every revoked hash, for offline employers</td></tr>
+</table>
+<h3>Where the code lives</h3>
+<table>
+<tr><th style="width:34%">Module</th><th style="width:12%">Lines</th><th>Responsibility</th></tr>
+<tr><td><code>app/blockchain_util.py</code></td><td>825</td><td>Blocks, chain links, six checks, status index</td></tr>
+<tr><td><code>app/crypto_util.py</code></td><td>359</td><td>Canonical JSON, hashing, Merkle, sign/verify, fingerprints</td></tr>
+<tr><td><code>app/chain_core.py</code></td><td>357</td><td>Chain bootstrap, signer loading, seed and restore</td></tr>
+<tr><td><code>app/query_service.py</code></td><td>262</td><td>Hash-level and document-level verdicts, status, log tail</td></tr>
+<tr><td><code>app/issuance_service.py</code></td><td>118</td><td>Issue, revoke, revocation index rebuild</td></tr>
+<tr><td><code>app/signer_service.py</code></td><td>198</td><td>Multi-signer registry, activation, envelope signing</td></tr>
+<tr><td><code>app/disclosure.py</code></td><td>204</td><td>Salted field commitments, selective disclosure</td></tr>
+<tr><td><code>app/statuslist.py</code></td><td>59</td><td>Signed revocation snapshot (<code>v2</code>)</td></tr>
+<tr><td><code>app/capability.py</code></td><td>123</td><td>Holder capability tokens</td></tr>
+<tr><td><code>app/repository.py</code></td><td>1,204</td><td>Five stores, JSON and SQLite backends</td></tr>
+<tr><td><code>app/main.py</code></td><td>1,807</td><td>56 routes, middleware, HTML pages — no arithmetic</td></tr>
+</table>
+<p class="small">Full module list: 38 files in <code>app/</code>, 9,885 lines total, 6,198 excluding
+blank lines, comments and docstrings. The three modules that carry the guarantees —
+<code>crypto_util</code>, <code>blockchain_util</code>, <code>chain_core</code> — are 1,541 lines
+together and import neither HTTP nor UI.</p>
+
+<h2><span class="no">18</span>The whole thing in one paragraph</h2>
+<div class="box">
+<p style="margin:0 0 2mm">A credential is three sections of JSON; each is canonicalised and hashed, and the three hashes
+combine into one root that serves as the document's identity. That root is signed with a fresh nonce, so the
+signature is welded to one issuance and cannot be replayed. The signed payload is appended to a block that stores
+the hash of the entire previous block, which is what makes the history tamper-evident rather than merely stored.
+Anyone holding the public key can verify without trusting us; the six checks separate "we cannot find it" from
+"we found it and it is wrong"; and revocation is a new block, never a deletion. Everything above that — the HTTP
+routes, the five pages, the receipt, the QR code — only carries the answer around.</p>
+</div>
+<p>Ninety seconds, no jargon, and it is the same paragraph whether the listener is a professor, a parent or a
+recruiter.</p><p class="sig">Mobile Credential Verification Portal · CityUHK GEF 2025/26 · Booth P14 ·
+source: github.com/JohnnyYau/gef-mobile-credential-portal · all numbers in this document were measured
+on the deployment of 27 November 2026</p>
+
+</body>
+</html>
+
+
+
