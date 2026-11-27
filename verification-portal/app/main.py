@@ -1448,6 +1448,11 @@ def qr(hashed_document: str):
     # payload with mask 3 read first time. Rather than trust the auto choice,
     # render a few and keep the first one that actually decodes. Without OpenCV
     # there is nothing to check against, so fall back to mask 3.
+    #
+    # Both detectors have to agree. OpenCV's single-code reader and its
+    # multi-code reader are different front ends (a phone camera runs the
+    # multi one, our preflight runs both) and a mask that only one of them can
+    # read is a coin flip at the booth, not a working code.
     try:
         import cv2
         import numpy as np
@@ -1455,16 +1460,25 @@ def qr(hashed_document: str):
         return Response(content=render(3), media_type="image/png",
                         headers={"Cache-Control": "public, max-age=3600"})
 
+    def read_back(arr) -> tuple[str, str]:
+        single = cv2.QRCodeDetector().detectAndDecode(arr)[0] or ""
+        ok_multi, decoded, _pts, _ = cv2.QRCodeDetector().detectAndDecodeMulti(arr)
+        multi = " ".join(d for d in (decoded or []) if d) if ok_multi else ""
+        return single, multi
+
+    partial = None
     for mask in (None, 0, 1, 2, 3, 4, 5, 6, 7):
         data = render(mask)
         arr = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR)
         if arr is None:
             continue
-        text, _pts, _straight = cv2.QRCodeDetector().detectAndDecode(arr)
-        if text == url:
+        single, multi = read_back(arr)
+        if single == url and multi == url:
             return Response(content=data, media_type="image/png",
                             headers={"Cache-Control": "public, max-age=3600"})
-    return Response(content=render(3), media_type="image/png",
+        if partial is None and url in (single, multi):
+            partial = data
+    return Response(content=partial or render(3), media_type="image/png",
                     headers={"Cache-Control": "public, max-age=3600"})
 
 

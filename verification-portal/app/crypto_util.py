@@ -18,8 +18,10 @@ Design (per JSONSTRUCTURE.md)
 
 import base64
 import hashlib
+import os
 import re
 import secrets
+import threading
 
 import jcs
 from cryptography.hazmat.primitives import hashes, serialization
@@ -257,13 +259,36 @@ def fetch_privkey(keyfile_addr, password):
         return serialization.load_der_private_key(key_data, password_bytes)
 
 
+_PUBKEY_CACHE: dict[str, tuple[int, int, object]] = {}
+_PUBKEY_LOCK = threading.Lock()
+
+
 def fetch_pubkey(keyfile_addr):
+    """Load a public key, memoised on the file's (mtime, size).
+
+    U31: `verify_chain()` re-reads and re-parses the same signer key once per
+    block, which dominated a cold full-chain scan. A key file only changes on
+    registration or retirement, so keying the memo on (mtime_ns, size) keeps
+    the "no silent trust" property: any rewrite of the PEM drops the entry.
+    """
+    try:
+        st = os.stat(keyfile_addr)
+    except OSError:
+        raise
+    stamp = (st.st_mtime_ns, st.st_size)
+    with _PUBKEY_LOCK:
+        hit = _PUBKEY_CACHE.get(keyfile_addr)
+    if hit is not None and hit[0] == stamp[0] and hit[1] == stamp[1]:
+        return hit[2]
     with open(keyfile_addr, "rb") as key_file:
         key_data = key_file.read()
     try:
-        return serialization.load_pem_public_key(key_data)
+        key = serialization.load_pem_public_key(key_data)
     except ValueError:
-        return serialization.load_der_public_key(key_data)
+        key = serialization.load_der_public_key(key_data)
+    with _PUBKEY_LOCK:
+        _PUBKEY_CACHE[keyfile_addr] = (stamp[0], stamp[1], key)
+    return key
 
 
 # --------------------------------------------------------------------------
