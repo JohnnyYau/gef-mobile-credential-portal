@@ -16,22 +16,22 @@ invents a number: every figure comes from the running portal.
 
 **Students:** Yau Ka Chai Johnny · Yu Siu Kui · Yu Yeuk Lan Serena
 
-**Abstract (≈85 words):**
+**Abstract (≈95 words):**
 
-> An employer holding a diploma PDF has no cheap way to check that it is real,
-> so they email the registry and wait. This portal puts one certificate through
-> four checks on a single screen — the chain's integrity, the issuer's
-> signature, the certificate's hash, and its revocation status — and returns a
-> plain verdict with the measured milliseconds for each step. Credentials are
-> signed with ML-DSA-65 or RSA-PSS-2048. Only hashes and signatures reach the
-> chain, so no name or grade is ever stored there.
+> An employer holding a diploma PDF has no cheap way to check that it is real, so
+> they email the registry and wait. This portal answers that on one screen: the
+> certificate's hash is looked up in an append-only ledger, the issuer's signature
+> is verified against its public key, the document is compared hash for hash, and
+> the revocation list is checked. The verdict arrives with the milliseconds each
+> step took. Only hashes and signatures are stored — no name, no grade. It opens
+> from a QR code in any phone browser, with nothing to install.
 
 **Abstract (繁體，for the booth or a Chinese page):**
 
 > 一張文憑，四個環節。僱主收到一份 PDF，不必再打電話去教務處：入口網站把證書
 > 依次做鏈完整性、簽發方簽名、憑證雜湊、撤銷狀態四項查驗，在同一頁給出結論與
-> 每一步實測毫秒。簽名用 ML-DSA-65 或 RSA-PSS-2048；上鏈的只有雜湊與簽名，
-> 姓名與成績不會上鏈。
+> 每一步實測毫秒。簽名用 ML-DSA-65 或 RSA-PSS-2048；帳本上只有雜湊與簽名，
+> 姓名與成績不會寫進去。掃一枚碼就能在手機瀏覽器打開，不用安裝。
 
 **Video Demo:** https://youtu.be/nVgevH43FYA
 
@@ -77,12 +77,25 @@ names, but all three attachments are stale:
 
 > Dear Sir/Madam,
 >
-> Two corrections for the P14 row on the 2025/26 exhibition page, please.
+> Three corrections for the P14 row on the 2025/26 exhibition page, please.
 >
 > 1. The GitHub link points to a repository that no longer exists. It should be
 >    https://github.com/JohnnyYau/gef-mobile-credential-portal
 > 2. The poster image is an earlier draft. Please replace `img/P14_Poster.jpg`
 >    with the attached file of the same name and size (1587 × 2245).
+> 3. The abstract still describes a blockchain platform. The project became a
+>    verification portal, and the ledger is an append-only hash chain with no
+>    consensus layer, so "blockchain-based … distributed ledger technology"
+>    overstates it. Suggested replacement:
+>
+>    "An employer holding a diploma PDF has no cheap way to check that it is
+>    real, so they email the registry and wait. This portal answers that on one
+>    screen: the certificate's hash is looked up in an append-only ledger, the
+>    issuer's signature is verified against its public key, the document is
+>    compared hash for hash, and the revocation list is checked. The verdict
+>    arrives with the milliseconds each step took. Only hashes and signatures are
+>    stored — no name, no grade. It opens from a QR code in any phone browser,
+>    with nothing to install."
 >
 > The video link is unchanged and still correct. Thank you.
 >
