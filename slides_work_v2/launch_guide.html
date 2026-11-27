@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>P14 Launch Guide</title>
+<style>
+  @page { size: A4 portrait; margin: 14mm 15mm 12mm 15mm; }
+  html, body { margin: 0; padding: 0; background: #faf7f0; color: #1a1611; }
+  body { font-family: "Segoe UI", "Microsoft JhengHei", sans-serif; font-size: 9.8pt; line-height: 1.37; }
+  .pg { page-break-after: always; }
+  .pg:last-child { page-break-after: auto; }
+
+  .kicker { font-size: 7.4pt; letter-spacing: .22em; color: #8a8177; text-transform: uppercase; }
+  h1 { font-size: 24pt; line-height: 1.08; margin: 4mm 0 1.5mm; font-weight: 600; letter-spacing: -.01em; }
+  .sub { font-size: 10.2pt; color: #5d554b; margin-bottom: 4mm; }
+  h2 { font-size: 11.8pt; margin: 3.6mm 0 1.4mm; font-weight: 600; border-top: 1.1pt solid #1a1611; padding-top: 1.5mm; }
+  h2 span.n { color: #a8452f; margin-right: 2mm; }
+  p { margin: 0 0 2mm; }
+  .muted { color: #6d6459; }
+  code { font-family: Consolas, "Courier New", monospace; font-size: 8.4pt; }
+
+  .cmd { display: block; background: #1a1611; color: #f7f2e7; padding: 2.8mm 3.2mm;
+         border-radius: 1.5mm; white-space: pre-wrap; line-height: 1.48; margin: 1.8mm 0 2.2mm;
+         font-family: Consolas, "Courier New", monospace; font-size: 8.5pt; }
+  .cmd .c { color: #9c9488; }
+  .cmd .h { color: #d8bd7e; }
+
+  table { width: 100%; border-collapse: collapse; margin: 1.2mm 0 2.2mm; font-size: 8.9pt; }
+  th { text-align: left; font-size: 7.3pt; letter-spacing: .12em; color: #8a8177; font-weight: 600;
+       border-bottom: .8pt solid #1a1611; padding: 1mm 1.4mm; text-transform: uppercase; }
+  td { padding: 1mm 1.4mm; border-bottom: .4pt solid #ddd3c2; vertical-align: top; }
+  td.k { width: 26%; font-weight: 600; }
+
+  ul { margin: 0 0 2mm; padding-left: 4.8mm; }
+  li { margin-bottom: .6mm; }
+
+  .row { display: flex; gap: 4.5mm; page-break-inside: avoid; }
+  .col { flex: 1; }
+  .box { page-break-inside: avoid; border: .7pt solid #cdbfa5; border-radius: 1.5mm; padding: 2.3mm 2.7mm; background: #fdfbf6; }
+  .box .t { font-size: 7.3pt; letter-spacing: .13em; color: #8a8177; text-transform: uppercase; margin-bottom: .8mm; }
+  .box .v { font-size: 9.8pt; font-weight: 600; }
+  .box.dark { background: #1a1611; border-color: #1a1611; color: #f7f2e7; }
+  .box.dark .t { color: #c9b78f; }
+  .box.warn { border-color: #a8452f; background: #fdf6f3; }
+
+  .foot { font-size: 7.3pt; color: #8a8177; border-top: .5pt solid #ddd3c2; padding-top: 1.4mm; margin-top: 3.5mm; }
+  .foot b { color: #5d554b; font-weight: 600; }
+  svg { display: block; width: 100%; height: auto; margin: 1.5mm 0; }
+  .kv { font-family: Consolas, monospace; font-size: 8pt; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<!-- ============================ PAGE 1 ============================ -->
+<section class="pg">
+  <div class="kicker">GEF Mobile · P14 · Operations</div>
+  <h1>Launching the portal</h1>
+  <div class="sub">From a cold laptop to a booth that is safe to open — one command, then three checks that
+    tell you the truth. Nothing on this page changes the credential data.</div>
+
+  <h2><span class="n">0</span>One-time prerequisites</h2>
+  <table>
+    <tr><td class="k">The folder</td>
+        <td><code>…\GEF-mobile-project\verification-portal</code> — everything below runs from inside it</td></tr>
+    <tr><td class="k">Python</td>
+        <td><code>.venv\Scripts\python.exe</code> (3.13). If this is missing, nothing else will work.</td></tr>
+    <tr><td class="k">Tunnel binary</td>
+        <td><code>%LOCALAPPDATA%\cloudflared\cloudflared.exe</code> — the launcher uses this copy; a second one sits in
+            <code>C:\Program Files (x86)\cloudflared\</code>.</td></tr>
+    <tr><td class="k">The chain</td>
+        <td><code>data\demo-chain\</code> — 5 block files, <code>info.yaml</code> listing 2 signers, <code>keys\</code></td></tr>
+  </table>
+
+  <h2><span class="n">1</span>Launch — double-click, or one line</h2>
+  <p>Easiest: open the folder and double-click <code>start_showcase.bat</code>. From a PowerShell window instead:</p>
+  <div class="cmd"><span class="c"># from verification-portal\</span>
+.\start_showcase.ps1          <span class="c"># add -NoBrowser to skip opening the stage screen</span></div>
+
+  <p>It does six things, in the only order that works — each one is something that normally kills a demo:</p>
+
+  <svg viewBox="0 0 980 74" xmlns="http://www.w3.org/2000/svg">
+    <defs><marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+      <path d="M0,0 L7,3.2 L0,6.4 z" fill="#8a8177"/></marker></defs>
+    <g font-family="Segoe UI, Microsoft JhengHei" font-size="10">
+      <rect x="2" y="14" width="146" height="44" rx="3" fill="#fdfbf6" stroke="#cdbfa5"/>
+      <text x="15" y="32" font-size="7.6" letter-spacing="1.3" fill="#8a8177">1 · CLEAR</text>
+      <text x="15" y="48">free port 8013</text>
+
+      <rect x="168" y="14" width="146" height="44" rx="3" fill="#fdfbf6" stroke="#cdbfa5"/>
+      <text x="181" y="32" font-size="7.6" letter-spacing="1.3" fill="#8a8177">2 · TUNNEL</text>
+      <text x="181" y="48">public URL</text>
+
+      <rect x="334" y="14" width="146" height="44" rx="3" fill="#fdfbf6" stroke="#cdbfa5"/>
+      <text x="347" y="32" font-size="7.6" letter-spacing="1.3" fill="#8a8177">3 · ENV</text>
+      <text x="347" y="48">tokens + that URL</text>
+
+      <rect x="500" y="14" width="146" height="44" rx="3" fill="#1a1611"/>
+      <text x="513" y="32" font-size="7.6" letter-spacing="1.3" fill="#c9b78f">4 · SERVER</text>
+      <text x="513" y="48" fill="#f7f2e7">uvicorn :8013</text>
+
+      <rect x="666" y="14" width="146" height="44" rx="3" fill="#fdfbf6" stroke="#cdbfa5"/>
+      <text x="679" y="32" font-size="7.6" letter-spacing="1.3" fill="#8a8177">5 · PROVE</text>
+      <text x="679" y="48">healthz, in + out</text>
+
+      <rect x="832" y="14" width="146" height="44" rx="3" fill="#fdf6f3" stroke="#a8452f"/>
+      <text x="845" y="32" font-size="7.6" letter-spacing="1.3" fill="#a8452f">6 · PREFLIGHT</text>
+      <text x="845" y="48">11 checks</text>
+
+      <line x1="150" y1="36" x2="164" y2="36" stroke="#8a8177" marker-end="url(#ar)"/>
+      <line x1="316" y1="36" x2="330" y2="36" stroke="#8a8177" marker-end="url(#ar)"/>
+      <line x1="482" y1="36" x2="496" y2="36" stroke="#8a8177" marker-end="url(#ar)"/>
+      <line x1="648" y1="36" x2="662" y2="36" stroke="#8a8177" marker-end="url(#ar)"/>
+      <line x1="814" y1="36" x2="828" y2="36" stroke="#8a8177" marker-end="url(#ar)"/>
+    </g>
+  </svg>
+
+  <p class="muted">Step 2 retries by itself: Cloudflare rate-limits quick tunnels, so the script waits and asks again
+    up to six times. If it gives up, it says so — rerun a few minutes later.</p>
+
+  <p>What it prints when it worked:</p>
+  <div class="cmd"><span class="h">  PUBLIC</span>  https://<span class="c">something</span>.trycloudflare.com
+<span class="h">  LOCAL</span>   http://127.0.0.1:8013/showtime?token=demo-staff-token
+  QR on the stage points at the PUBLIC address.
+  assistant warmed (first chat is normally ~30 s)</div>
+
+  <p>It writes that address into <code>showcase-url.txt</code> and opens the stage screen for you. The public address
+    changes on every launch — that file is the source of truth, not this page.</p>
+
+  <h2><span class="n">2</span>“Ready” means these three — not “the window looks fine”</h2>
+  <div class="row">
+    <div class="box col"><div class="t">1 · it answers</div>
+      <div class="v">127.0.0.1:8013/healthz → 200</div>
+      <div class="muted" style="font-size:8.8pt;margin-top:.8mm">The same probe the launcher waits for before it prints anything.</div></div>
+    <div class="box col"><div class="t">2 · the ledger is the one you printed</div>
+      <div class="v">5 blocks · 2 signers · integrity ok</div>
+      <div class="muted" style="font-size:8.8pt;margin-top:.8mm">Staff console header. Not 11, not 66 — those are your own test issues.</div></div>
+    <div class="box col"><div class="t">3 · nothing is silently broken</div>
+      <div class="v">preflight: 11/11</div>
+      <div class="muted" style="font-size:8.8pt;margin-top:.8mm">A red line names the one thing to fix. All green = open the booth.</div></div>
+  </div>
+
+  <p style="margin-top:3mm">If a check disagrees with this page, the check is right. Every failure listed on page two has
+    already happened once on this machine — that is why the launcher exists at all.</p>
+
+  <div class="foot"><b>P14 · Launch guide</b> &nbsp;·&nbsp; page 1 of 2 &nbsp;·&nbsp; the portal writes nothing to the chain until someone issues or revokes</div>
+</section>
+
+<!-- ============================ PAGE 2 ============================ -->
+<section class="pg">
+  <h2 style="margin-top:0"><span class="n">3</span>Launching without a tunnel</h2>
+  <p>Hostile Wi-Fi: skip Cloudflare. Visitors then look at your screen and the QR is decoration — say so, rather than
+    letting someone scan a dead link.</p>
+  <div class="cmd"><span class="c"># verification-portal\ , one PowerShell window</span>
+$env:ADMIN_TOKEN="demo-staff-token"; $env:ISSUER_TOKEN="demo-issuer-token"
+$env:CAPABILITY_SECRET="showcase-capability-secret-2026"; $env:PUBLIC_MODE="0"; $env:DEMO_OPEN="1"
+$env:TRUSTED_PROXIES="127.0.0.1"      <span class="c"># no PUBLIC_BASE_URL: links stay on 127.0.0.1</span>
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8013 --no-proxy-headers</div>
+
+  <h2><span class="n">4</span>Stopping, restarting, and the lid</h2>
+  <ul>
+    <li><b>Stop:</b> Ctrl-C in the server window, close <code>cloudflared</code>. The launcher kills both next time anyway.</li>
+    <li><b>Restart mid-day:</b> run the launcher again — it frees 8013, gets a <b>new</b> public URL, and the stage QR follows,
+        because the server reads <code>PUBLIC_BASE_URL</code> at boot.</li>
+    <li><b>Closing the lid kills the tunnel.</b> Power plan “never sleep”, laptop plugged in — the most common way this demo dies.</li>
+  </ul>
+  <p class="muted" style="font-size:8.9pt">Flags: <code>-NoBrowser</code> (server + tunnel, no browser) &nbsp;·&nbsp;
+    <code>-Port 8014</code> (only if 8013 is taken — then every printed URL needs the new port) &nbsp;·&nbsp;
+    <code>-AdminToken …</code> (only if changed deliberately).</p>
+
+  <h2><span class="n">5</span>When it will not launch</h2>
+  <table>
+    <tr><th style="width:27%">Symptom</th><th style="width:26%">Cause</th><th>What to do</th></tr>
+    <tr><td><code>venv not found</code></td><td>Wrong folder</td>
+        <td>Run from inside <code>verification-portal</code>; the script resolves everything from its own location.</td></tr>
+    <tr><td><code>cloudflared not found</code></td><td>Binary not at that path</td>
+        <td>Use §3 and no tunnel, or copy the exe from <code>Program Files (x86)\cloudflared\</code>.</td></tr>
+    <tr><td><code>could not get a public URL</code></td><td>Quick-tunnel limit (429)</td>
+        <td>Wait a few minutes, rerun. Do not hammer it. Later, if a QR points at a dead host, the cause is a stale
+            <code>PUBLIC_BASE_URL</code> — relaunch through the launcher and both it and <code>showcase-url.txt</code> are rewritten.</td></tr>
+    <tr><td><code>portal did not become ready</code></td><td>Import error, or a stale process on 8013</td>
+        <td>Read <code>%TEMP%\showcase-portal.err</code>; the last traceback names the real fault.</td></tr>
+    <tr><td>Issuing says 口令不對</td><td>Issuer token typed as the admin token</td>
+        <td>機構口令 takes <code>demo-staff-token</code>. <code>demo-issuer-token</code> is batch-only.</td></tr>
+  </table>
+
+  <h2><span class="n">6</span>Not while people are watching</h2>
+  <div class="row">
+    <div class="box warn col">
+      <div class="t" style="color:#a8452f">four ways to lose the booth</div>
+      <ul style="margin-bottom:0">
+        <li>Run the launcher on stage — it kills 8013 and the tunnel, and mints an unprinted URL.</li>
+        <li>Set <code>PUBLIC_MODE=1</code>: issuing and revoking are off, so there is nothing to show.</li>
+        <li>Delete or “tidy” <code>data\</code> — every hash you have quoted lives there.</li>
+        <li>Issue with a real person’s name or student ID — append-only means it stays forever.</li>
+      </ul>
+      <div class="muted" style="font-size:8.6pt;margin-top:1.6mm">Back to the clean five blocks:
+        <code>docs\U32_booth_reset.md</code>, the night before, never at the booth.</div>
+    </div>
+    <div class="box dark col" style="flex:.66">
+      <div class="t">quick reference</div>
+      <div class="kv">
+        local &nbsp;127.0.0.1:8013<br>
+        stage &nbsp;/showtime?token=demo-staff-token<br>
+        verify /verify &nbsp;·&nbsp; issue /issue &nbsp;·&nbsp; staff /staff<br>
+        admin &nbsp;demo-staff-token<br>
+        url &nbsp;&nbsp;&nbsp;showcase-url.txt
+      </div>
+    </div>
+  </div>
+
+  <div class="foot"><b>P14 · Launch guide</b> &nbsp;·&nbsp; page 2 of 2 &nbsp;·&nbsp; if a check disagrees with this page, the check is right</div>
+</section>
+
+</body>
+</html>
