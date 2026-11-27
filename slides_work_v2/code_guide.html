@@ -40,7 +40,7 @@
 <header>
   <div>
     <div class="kick">GEF26 · P14 · code reference</div>
-    <h1>全代碼導覽<small>38 個後端模組 · 約 9,900 行 · 五個 HTML 十個 JS</small></h1>
+    <h1>全代碼導覽<small>38 個後端模組 · 約 6,200 行程式碼 · 五個 HTML 十個 JS</small></h1>
   </div>
   <div class="kick">INTERNAL</div>
 </header>
@@ -70,7 +70,7 @@
 <p>整條路徑上沒有任何一層「相信」上一層：核心自己驗簽，服務層自己算，HTTP 層只轉發。</p>
 
 <h2>三個數字</h2>
-<p><b>9,900</b> 行後端（其中 <code>repository.py</code> 1,205、<code>main.py</code> 1,808、<code>blockchain_util.py</code> 826）；<b>39</b> 個測試模組；<b>11</b> 項開攤前自檢。</p>
+<table><tr><th style="width:26%">範圍</th><th style="width:12%">檔案</th><th style="width:14%">總行數</th><th style="width:14%">扣空行註解</th><th>最大的一支</th></tr><tr><td>後端 <code>app/</code></td><td>38</td><td>9,885</td><td><b>6,198</b></td><td><code>main.py</code> 1,807、<code>repository.py</code> 1,204、<code>blockchain_util.py</code> 825</td></tr><tr><td>測試 <code>tests/</code></td><td>43</td><td>7,202</td><td><b>5,077</b></td><td>39 個測試模組，其餘是夾具</td></tr><tr><td>工具 <code>scripts/</code></td><td>17</td><td>2,997</td><td><b>2,079</b></td><td><code>preflight.py</code>、<code>record_*</code></td></tr><tr><td>前端 <code>static/</code></td><td>31</td><td>3,854</td><td><b>—</b></td><td>JS 2,153、HTML 997、CSS 704</td></tr></table><p>被問「寫了多少」時說：<b>後端約 6,200 行程式碼（連空行與註解 9,900），測試約 5,100，前端約 3,900</b>。不要把空行算進去充數——評審一開檔就看得出來。</p>
 
 <footer><span>P14 · Mobile Credential Verification Portal</span><span>1 / 6</span></footer>
 </section>
