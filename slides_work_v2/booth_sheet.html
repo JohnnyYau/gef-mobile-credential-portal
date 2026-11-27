@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="zh-Hant-HK">
+<head>
+<meta charset="utf-8">
+<title>P14 攤位速查 — 代碼怎麼講 / 現場怎麼跑</title>
+<style>
+  @page { size: A4; margin: 12mm 13mm; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; color: #1d1a16; background: #fff;
+    font-family: "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+    font-size: 8.4pt; line-height: 1.45;
+  }
+  .page { page-break-after: always; }
+  .page:last-child { page-break-after: auto; }
+  header { display: flex; align-items: baseline; justify-content: space-between;
+           border-bottom: 1.6pt solid #1d1a16; padding-bottom: 3mm; margin-bottom: 4mm; }
+  .kicker { font-size: 7pt; letter-spacing: .18em; color: #8a7a5c; text-transform: uppercase; }
+  h1 { font-size: 15pt; margin: 1.5mm 0 0; letter-spacing: .01em; }
+  h1 small { font-size: 8pt; font-weight: 400; color: #6b6257; margin-left: 3mm; letter-spacing: 0; }
+  .stamp { font-size: 7pt; color: #9a2b1e; border: .8pt solid #9a2b1e; padding: 1mm 2mm; border-radius: 1mm; }
+  h2 { font-size: 9.6pt; margin: 4.5mm 0 1.8mm; padding-left: 2.4mm; border-left: 2.4pt solid #b08a3e; }
+  p { margin: 0 0 1.6mm; }
+  .lead { font-size: 9pt; background: #faf6ec; border: .6pt solid #e3d9c2; padding: 2.6mm 3mm; border-radius: 1.4mm; }
+  .lead b { color: #9a2b1e; }
+  table { width: 100%; border-collapse: collapse; margin: 1.5mm 0 0; }
+  th, td { text-align: left; vertical-align: top; padding: 1.3mm 1.6mm; border-bottom: .5pt solid #ddd3c0; }
+  th { font-size: 7.2pt; color: #7d7059; font-weight: 600; letter-spacing: .06em; }
+  td code, p code, li code { font-family: Consolas, "Courier New", monospace; font-size: 7.6pt; color: #7a3c12; }
+  ul, ol { margin: 0 0 1.6mm; padding-left: 4.4mm; }
+  li { margin-bottom: .9mm; }
+  .two { display: flex; gap: 5mm; }
+  .two > div { flex: 1; }
+  .qa { margin-bottom: 2.2mm; }
+  .qa .q { font-weight: 600; }
+  .qa .a { color: #3f3a33; }
+  .warn { background: #fdf1ee; border: .6pt solid #e8c3ba; padding: 2.2mm 3mm; border-radius: 1.4mm; }
+  .warn b { color: #9a2b1e; }
+  .tick { color: #2f6b4f; font-weight: 600; }
+  .cross { color: #9a2b1e; font-weight: 600; }
+  footer { margin-top: 3mm; padding-top: 1.6mm; border-top: .5pt solid #ddd3c0;
+           font-size: 6.8pt; color: #8a8177; display: flex; justify-content: space-between; }
+  .mono { font-family: Consolas, "Courier New", monospace; }
+</style>
+</head>
+<body>
+
+<!-- ================= PAGE 1 ================= -->
+<section class="page">
+<header>
+  <div>
+    <div class="kicker">GEF26 · P14 · Booth copy</div>
+    <h1>代碼怎麼講<small>90 秒講完骨架，之後只回答被問到的部分</small></h1>
+  </div>
+  <div class="stamp">INTERNAL · 攤位用</div>
+</header>
+
+<p class="lead">一句定位：<b>我們不是 blockchain，是一條只增不改的雜湊鏈加數位簽名。</b>沒有共識、沒有 P2P、沒有礦工——因為簽發方只有一個，需要的是「可離線驗、可審計、可撤銷」，不是拜占庭容錯。</p>
+
+<h2>一張憑證的一生（照這條線講，不要跳）</h2>
+<ol>
+  <li>機構簽發：憑證內容（姓名／學位／日期）→ <code>hash_json()</code> 用 JCS 正規化後算 SHA3-512 → 三份欄位雜湊合成 <code>merkle_root()</code> 當文件編號。</li>
+  <li>簽名：<code>sign_json()</code> 先算 payload 雜湊，再包一層 <code>HMAC(key=nonce, msg=payloadHash)</code> 才簽，所以同一份文件每次簽名都不同（不讓兩張憑證因為簽名一樣被關聯）。</li>
+  <li>寫塊：<code>append_block()</code> 建區塊，記住前一塊的 <code>prevHashSum</code>，先寫 temp 再 rename——半途死掉不會留半個塊。</li>
+  <li>驗證：<code>verify_document()</code> 六項檢查（見右），任何一項不過就是 INVALID／REVOKED，不會「大致通過」。</li>
+</ol>
+
+<h2>檔案地圖（評審說「打開代碼看看」就開這幾行）</h2>
+<table>
+  <tr><th style="width:34%">檔案 · 位置</th><th>它負責什麼 · 一句話</th></tr>
+  <tr><td><code>app/crypto_util.py:77</code> hash_json</td><td>JCS 正規化 + SHA3-512，回傳 base64url；同一份 JSON 任何機器算出來都一樣。</td></tr>
+  <tr><td><code>app/crypto_util.py:307</code> sign_json</td><td>ML-DSA-65 或 RSA-PSS 簽名，外面包 HMAC(nonce)。</td></tr>
+  <tr><td><code>app/blockchain_util.py:413</code> append_block</td><td>原子寫入一個區塊檔，接上前一塊的雜湊。</td></tr>
+  <tr><td><code>app/blockchain_util.py:604</code> verify_chain</td><td>從第 0 塊重算全鏈：連結、高度、每一把簽名。</td></tr>
+  <tr><td><code>app/blockchain_util.py:721</code> verify_document</td><td>對外的那六項檢查，回傳 verdict。</td></tr>
+  <tr><td><code>app/main.py:776</code> /api/issue</td><td>唯一會寫入的入口，要 <code>X-Admin-Token</code>。</td></tr>
+  <tr><td><code>app/main.py:1423</code> /api/qr</td><td>QR 由 PUBLIC_BASE_URL 即時生成，兩種偵測器都讀得回才採用。</td></tr>
+  <tr><td><code>static/js/simple_verify.js</code></td><td>前端只做一件事：把 hash 貼上、把四行過程與結論畫出來。</td></tr>
+</table>
+
+<h2>三個一定會被問的「為什麼」</h2>
+<div class="two">
+  <div>
+    <p><b>為什麼鏈上不放 PDF，只放雜湊？</b><br>因為姓名、學號、成績不該進一個永久、公開、刪不掉的帳本。鏈上只有 64 bytes 的雜湊與簽名，PDF 留在機構與學生手上。</p>
+    <p><b>為什麼要 merkle root？</b><br>三段欄位各自雜湊再合成一個根，改姓名會動到個人段、改成績會動到學術段，出問題時能指出是哪一段被動過，而不是只說「整份不對」。</p>
+  </div>
+  <div>
+    <p><b>為什麼不用 Ethereum？</b><br>我們不需要全球共識，也不需要付 gas 換取「別人幫我記帳」。單一機構簽發、單一機構撤銷，一條本機可驗的鏈反而更快、更便宜、也不用把學生的個人資料送上公鏈。</p>
+    <p><b>那還算「鏈」嗎？</b><br>算：每塊存前一塊的雜湊，改一塊之後每一塊都對不上，這是 hash chain 的定義。不算的是共識層——我們明說沒有。</p>
+  </div>
+</div>
+
+<h2>用詞紅線（說錯一次，後面全部被追問）</h2>
+<div class="warn">
+  <span class="cross">不要說</span>：blockchain、上鏈上公鏈、去中心化、NFT、智能合約、挖礦。<br>
+  <span class="tick">要說</span>：雜湊鏈（hash chain）、只增不改的帳本（append-only ledger）、SHA3-512、ML-DSA（FIPS 204 後量子簽名）、六項檢查、撤銷可證明。
+</div>
+
+<footer>
+  <span>P14 Mobile Credential Verification Portal · CityUHK EE · GenAIC 2025/26</span>
+  <span>第 1 頁 / 共 2 頁</span>
+</footer>
+</section>
+
+<!-- ================= PAGE 2 ================= -->
+<section class="page">
+<header>
+  <div>
+    <div class="kicker">GEF26 · P14 · Run the booth</div>
+    <h1>現場怎麼跑<small>30 秒開場、90 秒演示、其餘時間回答</small></h1>
+  </div>
+  <div class="stamp">INTERNAL · 攤位用</div>
+</header>
+
+<h2>開場 30 秒（背下來，不要即興）</h2>
+<p class="lead">「一張學位證書，僱主怎麼知道它不是 P 圖？我們做了一個驗證入口：掃一個 QR、或貼一串編號，幾秒內給出六項檢查的結果。機構撤銷之後，同一張憑證會立刻變成『已註銷』——而全程沒有人把學生的個人資料上傳到任何伺服器。」</p>
+
+<h2>90 秒演示（照 /showtime 的四張卡走，每張一句）</h2>
+<table>
+  <tr><th style="width:12%">卡片</th><th style="width:26%">你會看到</th><th>你說什麼</th></tr>
+  <tr><td>01 簽發</td><td>第 N 塊 · 數百毫秒</td><td>「填三格，按下就上鏈。這一下做了正規化、雜湊、簽名、寫塊四件事。」</td></tr>
+  <tr><td>02 驗證</td><td>VALID · 數百毫秒</td><td>「任何人拿到編號都能驗，不需要註冊、不需要問我們。」</td></tr>
+  <tr><td>03 註銷</td><td>第 N+1 塊</td><td>「撤銷不是刪掉——刪掉就無法證明它曾經存在。我們寫一塊新的，說它作廢。」</td></tr>
+  <tr><td>04 再驗</td><td>已註銷 + QR</td><td>「同一張，結論反過來。注意：簽名沒有失效，失效的是機構的承諾。」</td></tr>
+</table>
+
+<h2>評審最可能問的六條</h2>
+<div class="two">
+  <div>
+    <div class="qa"><div class="q">Q：這是 blockchain 嗎？</div><div class="a">A：是 hash chain，不是 blockchain。沒有共識、沒有節點網路；我們刻意不做那部分，因為簽發方只有一個。</div></div>
+    <div class="qa"><div class="q">Q：改一條記錄會怎樣？</div><div class="a">A：那一塊的雜湊變了，下一塊的 prevHashSum 就對不上，整鏈從那裡開始紅。可以現場改一個字給你看。</div></div>
+    <div class="qa"><div class="q">Q：為什麼是後量子簽名？</div><div class="a">A：ML-DSA（FIPS 204），憑證壽命動輒幾十年，「今天簽、二十年後還要驗」就得先換掉 RSA。我們同時保留 RSA-PSS，兩把鑰匙都在鏈上，可以輪替。</div></div>
+  </div>
+  <div>
+    <div class="qa"><div class="q">Q：資料放哪？會不會外洩？</div><div class="a">A：鏈上只有雜湊與簽名，沒有姓名學號。學生的 PDF 在他們自己手上，機構另存一份。</div></div>
+    <div class="qa"><div class="q">Q：跟 PDF 上的印章有什麼不同？</div><div class="a">A：印章只能證明「有人蓋過」，不能證明「這份內容沒被改」；我們驗的是內容雜湊與簽名，而且撤銷狀態是即時的。</div></div>
+    <div class="qa"><div class="q">Q：做得完嗎？誰在用？</div><div class="a">A：可以掃這張 QR 自己試——手機瀏覽器打開就能驗，不用安裝。我們是課程專案，還沒有真實機構導入。</div></div>
+  </div>
+</div>
+
+<h2>出事了怎麼辦（每條 30 秒內處理完，不要debug）</h2>
+<table>
+  <tr><th style="width:26%">症狀</th><th>處置</th></tr>
+  <tr><td>掃 QR 打不開 / 502</td><td>隧道斷了。改播 <span class="mono">demo-media/GEF-mobile-stage-run.mp4</span>，同時在另一個終端跑 <code>start_showcase.ps1</code>；不要在人前重開。</td></tr>
+  <tr><td>畫面轉很久</td><td>機器被別的程式拖住。先關 Chrome 多餘分頁、BaiduNetdisk、Epic；口頭說「這個數字會隨機器負載浮動」。</td></tr>
+  <tr><td>QR 掃不到</td><td>把手機拉近／遠一點，或直接貼編號。真的不行就示範貼編號那條路徑，效果一樣。</td></tr>
+  <tr><td>評審要自己按</td><td>給他一張寫著三個網址的卡：驗證頁、簽發頁（只給驗證，不給 admin token）、GitHub。</td></tr>
+</table>
+
+<h2>三條紅線</h2>
+<ul>
+  <li>不在攤位改代碼、不重啟資料庫、不清 <code>data/</code>——今晚已經清過一次，開場時鏈上只有幾塊，會跟著你一起長大。</li>
+  <li>不說「blockchain」「去中心化」「NFT」，不說「我們用了 AI」卻舉不出哪一行。</li>
+  <li>不承諾做不到的事：沒有真實機構導入、沒有 300 dpi 印刷、沒有 app 版——被問就直說「我們只做網頁版」。</li>
+</ul>
+
+<footer>
+  <span>驗證頁 <span class="mono">/verify</span> · 簽發頁 <span class="mono">/issue</span> · 舞台 <span class="mono">/showtime</span> · 控制台 <span class="mono">/portal</span></span>
+  <span>第 2 頁 / 共 2 頁</span>
+</footer>
+</section>
+
+</body>
+</html>
