@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>How it works — diagrams</title>
+<style>
+@page { size: A4 landscape; margin: 10mm 11mm; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #fdfbf5; color: #1a1611;
+       font-family: "Segoe UI", "Microsoft JhengHei", sans-serif; }
+.pg { page-break-after: always; height: 178mm; display: flex; flex-direction: column; }
+.pg svg { flex: 1 1 auto; min-height: 0; }
+.pg:last-child { page-break-after: auto; }
+.head { display: flex; justify-content: space-between; align-items: baseline;
+        border-bottom: 1.4pt solid #1a1611; padding-bottom: 1.4mm; margin-bottom: 3mm; }
+.head h2 { font-size: 13pt; margin: 0; }
+.head .n { color: #b08a3e; margin-right: 2.4mm; font-weight: 400; }
+.head .k { font-size: 6.6pt; letter-spacing: .18em; text-transform: uppercase; color: #a07f34; }
+.cap { font-size: 10pt; line-height: 1.5; color: #3a332a; margin: 1mm 0 0; }
+.cap b { color: #1a1611; }
+svg { display: block; width: 100%; height: auto; }
+</style>
+</head>
+<body>
+
+<!-- ============ 1 ============ -->
+<section class="pg">
+  <div class="head"><h2><span class="n">1</span>A credential becomes one number</h2><div class="k">P14 · how it works</div></div>
+  <svg viewBox="0 0 1000 430" xmlns="http://www.w3.org/2000/svg">
+    <defs><marker id="a1" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+      <path d="M0,0 L7,3.2 L0,6.4" fill="none" stroke="#8a8177" stroke-width="1.1"/></marker></defs>
+    <g font-family="Segoe UI, Microsoft JhengHei" font-size="13">
+      <rect x="18" y="26" width="228" height="92" rx="4" fill="#fff" stroke="#1a1611" stroke-width="1.2"/>
+      <text x="34" y="52" font-size="10.5" letter-spacing="1.6" fill="#a07f34">PERSONAL</text>
+      <text x="34" y="76" font-size="12.5">CHAN TAI MAN</text>
+      <text x="34" y="98" font-size="11" fill="#6d6459">1988-08-08 · 22000000</text>
+
+      <rect x="18" y="140" width="228" height="92" rx="4" fill="#fff" stroke="#1a1611" stroke-width="1.2"/>
+      <text x="34" y="166" font-size="10.5" letter-spacing="1.6" fill="#a07f34">ACADEMIC</text>
+      <text x="34" y="190" font-size="12.5">BEng Electronic &amp; Electrical</text>
+      <text x="34" y="212" font-size="11" fill="#6d6459">2022-08-15 → 2026-08-01 · 1ST HON</text>
+
+      <rect x="18" y="254" width="228" height="92" rx="4" fill="#fff" stroke="#1a1611" stroke-width="1.2"/>
+      <text x="34" y="280" font-size="10.5" letter-spacing="1.6" fill="#a07f34">DOCUMENT</text>
+      <text x="34" y="304" font-size="12.5">UNIVERSITY OF UTOPIA</text>
+      <text x="34" y="326" font-size="11" fill="#6d6459">issued 2026-09-01 · DIPLOMA</text>
+
+      <line x1="246" y1="72" x2="330" y2="72" stroke="#8a8177" stroke-width="1" marker-end="url(#a1)"/>
+      <line x1="246" y1="186" x2="330" y2="186" stroke="#8a8177" stroke-width="1" marker-end="url(#a1)"/>
+      <line x1="246" y1="300" x2="330" y2="300" stroke="#8a8177" stroke-width="1" marker-end="url(#a1)"/>
+
+      <rect x="336" y="56" width="252" height="32" rx="16" fill="#f4efe4" stroke="#c9b78f"/>
+      <text x="352" y="77" font-family="Consolas, monospace" font-size="11.5">okllEy5F…S1fjRA</text>
+      <rect x="336" y="170" width="252" height="32" rx="16" fill="#f4efe4" stroke="#c9b78f"/>
+      <text x="352" y="191" font-family="Consolas, monospace" font-size="11.5">2xvZgmiB…R1hOFg</text>
+      <rect x="336" y="284" width="252" height="32" rx="16" fill="#f4efe4" stroke="#c9b78f"/>
+      <text x="352" y="305" font-family="Consolas, monospace" font-size="11.5">btWlE_29…Pkfn4w</text>
+
+      <path d="M588,72 C640,72 640,190 688,190" fill="none" stroke="#8a8177" stroke-width="1"/>
+      <path d="M588,186 L688,190" fill="none" stroke="#8a8177" stroke-width="1"/>
+      <path d="M588,300 C640,300 640,190 688,190" fill="none" stroke="#8a8177" stroke-width="1" marker-end="url(#a1)"/>
+
+      <rect x="694" y="120" width="286" height="140" rx="6" fill="#1a1611"/>
+      <text x="716" y="150" font-size="10" letter-spacing="1.8" fill="#c9b78f">ONE NUMBER · THE IDENTITY</text>
+      <text x="716" y="182" font-family="Consolas, monospace" font-size="14" fill="#fdfbf5">GFiY4d67yoi8X4wm</text>
+      <text x="716" y="206" font-family="Consolas, monospace" font-size="14" fill="#fdfbf5">wnL_8IX18_xo_F7HOQ</text>
+      <text x="716" y="230" font-family="Consolas, monospace" font-size="14" fill="#b08a3e">… gWBdHZXubNTLhvVX</text>
+      <text x="716" y="250" font-size="10.5" fill="#9c9488">86 characters, in the QR code</text>
+
+      <text x="18" y="392" font-size="12" fill="#3a332a">Three sections, three hashes, one root. Any machine, same result —</text>
+      <text x="18" y="412" font-size="12" fill="#3a332a">no database lookup, no trusted server, just arithmetic.</text>
+    </g>
+  </svg>
+  <p class="cap"></p>
+</section>
+
+<!-- ============ 2 ============ -->
+<section class="pg">
+  <div class="head"><h2><span class="n">2</span>Change one character</h2><div class="k">P14 · how it works</div></div>
+  <svg viewBox="0 0 1000 430" xmlns="http://www.w3.org/2000/svg">
+    <g font-family="Segoe UI, Microsoft JhengHei" font-size="13">
+      <rect x="24" y="26" width="430" height="330" rx="5" fill="#fff" stroke="#cdbfa5"/>
+      <text x="46" y="56" font-size="10.5" letter-spacing="1.8" fill="#2f6b46">ORIGINAL</text>
+      <rect x="46" y="72" width="386" height="66" rx="3" fill="#f7f3ea" stroke="#e2d8c4"/>
+      <text x="62" y="98" font-family="Consolas, monospace" font-size="12">"Surname": "CHAN",</text>
+      <text x="62" y="120" font-family="Consolas, monospace" font-size="12">"GivenNames": "TAI MAN",</text>
+      <text x="46" y="172" font-size="11" fill="#6d6459">section hash</text>
+      <text x="46" y="194" font-family="Consolas, monospace" font-size="12.5">okllEy5Fs7HBWX1yIH…S1fjRA</text>
+      <text x="46" y="234" font-size="11" fill="#6d6459">the credential's number</text>
+      <text x="46" y="256" font-family="Consolas, monospace" font-size="12.5">GFiY4d67yoi8X4wmwn…AjxrGQ</text>
+      <rect x="46" y="278" width="118" height="30" rx="15" fill="#eef5ef" stroke="#2f6b46"/>
+      <text x="72" y="298" font-size="12" fill="#2f6b46">VALID</text>
+
+      <rect x="546" y="26" width="430" height="330" rx="5" fill="#fff" stroke="#c9a49a"/>
+      <text x="568" y="56" font-size="10.5" letter-spacing="1.8" fill="#a8452f">EDITED — ONE FULL STOP</text>
+      <rect x="568" y="72" width="386" height="66" rx="3" fill="#fdf6f3" stroke="#e0c3ba"/>
+      <text x="584" y="98" font-family="Consolas, monospace" font-size="12">"Surname": "CHAN<tspan fill="#a8452f" font-weight="bold">.</tspan>",</text>
+      <text x="584" y="120" font-family="Consolas, monospace" font-size="12">"GivenNames": "TAI MAN",</text>
+      <text x="568" y="172" font-size="11" fill="#6d6459">section hash</text>
+      <text x="568" y="194" font-family="Consolas, monospace" font-size="12.5" fill="#a8452f">SC85GmVxufv_7HzEPe…</text>
+      <text x="568" y="234" font-size="11" fill="#6d6459">the credential's number</text>
+      <text x="568" y="256" font-family="Consolas, monospace" font-size="12.5" fill="#a8452f">QSkwP7CBmjrbjoKwxc…</text>
+      <rect x="568" y="278" width="150" height="30" rx="15" fill="#fdf0ec" stroke="#a8452f"/>
+      <text x="592" y="298" font-size="12" fill="#a8452f">NOT ON THE CHAIN</text>
+
+      <text x="474" y="212" font-size="30" fill="#a8452f">≠</text>
+
+      <text x="24" y="392" font-size="12" fill="#3a332a">You cannot see the difference on paper. The hash sees it instantly —</text>
+      <text x="24" y="412" font-size="12" fill="#3a332a">and the number that no longer matches anything is exactly what a forger produces.</text>
+    </g>
+  </svg>
+</section>
+
+<!-- ============ 3 ============ -->
+<section class="pg">
+  <div class="head"><h2><span class="n">3</span>Signing: the signature belongs to one issuance</h2><div class="k">P14 · how it works</div></div>
+  <svg viewBox="0 0 1000 430" xmlns="http://www.w3.org/2000/svg">
+    <defs><marker id="a3" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+      <path d="M0,0 L7,3.2 L0,6.4" fill="none" stroke="#8a8177" stroke-width="1.1"/></marker></defs>
+    <g font-family="Segoe UI, Microsoft JhengHei" font-size="12">
+      <rect x="20" y="40" width="170" height="64" rx="4" fill="#fff" stroke="#1a1611"/>
+      <text x="38" y="66" font-size="11" fill="#6d6459">the credential</text>
+      <text x="38" y="88" font-family="Consolas, monospace" font-size="11">payload</text>
+
+      <line x1="192" y1="72" x2="246" y2="72" stroke="#8a8177" marker-end="url(#a3)"/>
+      <text x="196" y="62" font-size="10" fill="#8a8177">SHA3-512</text>
+
+      <rect x="250" y="40" width="180" height="64" rx="4" fill="#f4efe4" stroke="#c9b78f"/>
+      <text x="268" y="66" font-size="11" fill="#6d6459">one hash</text>
+      <text x="268" y="88" font-family="Consolas, monospace" font-size="11">a7Kd…9xQ</text>
+
+      <rect x="250" y="140" width="180" height="64" rx="4" fill="#fdf7e8" stroke="#b08a3e"/>
+      <text x="268" y="164" font-size="11" fill="#a07f34">a fresh random nonce</text>
+      <text x="268" y="186" font-family="Consolas, monospace" font-size="11">cn9ymagpD3d1…</text>
+
+      <line x1="432" y1="72" x2="486" y2="112" stroke="#8a8177" marker-end="url(#a3)"/>
+      <line x1="432" y1="172" x2="486" y2="132" stroke="#8a8177" marker-end="url(#a3)"/>
+
+      <rect x="490" y="86" width="180" height="72" rx="4" fill="#fff" stroke="#1a1611"/>
+      <text x="508" y="112" font-size="11" fill="#6d6459">wrap them together</text>
+      <text x="508" y="134" font-family="Consolas, monospace" font-size="11">HMAC(nonce, hash)</text>
+
+      <line x1="672" y1="122" x2="726" y2="122" stroke="#8a8177" marker-end="url(#a3)"/>
+      <rect x="730" y="86" width="180" height="72" rx="4" fill="#f4efe4" stroke="#c9b78f"/>
+      <text x="748" y="112" font-size="11" fill="#6d6459">the message</text>
+      <text x="748" y="134" font-family="Consolas, monospace" font-size="11">Wjg3ysLw…vOy6</text>
+
+      <rect x="730" y="164" width="230" height="78" rx="4" fill="#1a1611"/>
+      <text x="748" y="186" font-size="9.5" letter-spacing="1.4" fill="#c9b78f">THE SIGNATURE · private key</text>
+      <text x="748" y="208" font-family="Consolas, monospace" font-size="11" fill="#fdfbf5">p6akhxeBGEp4NUa…</text>
+      <text x="748" y="228" font-size="9" fill="#9c9488">4,412 characters, one per signer</text>
+
+      <line x1="20" y1="250" x2="980" y2="250" stroke="#e2d8c4"/>
+      <text x="20" y="278" font-size="10.5" letter-spacing="1.8" fill="#2f6b46">HOW ANYONE ELSE CHECKS IT</text>
+
+      <rect x="20" y="292" width="150" height="56" rx="4" fill="#fff" stroke="#2f6b46"/>
+      <text x="36" y="316" font-size="11">public key</text>
+      <text x="36" y="336" font-size="10" fill="#6d6459">published, 451 bytes</text>
+      <text x="186" y="326" font-size="14" fill="#8a8177">+</text>
+      <rect x="212" y="292" width="150" height="56" rx="4" fill="#fff" stroke="#2f6b46"/>
+      <text x="228" y="316" font-size="11">the nonce</text>
+      <text x="228" y="336" font-size="10" fill="#6d6459">stored in the block</text>
+      <text x="378" y="326" font-size="14" fill="#8a8177">+</text>
+      <rect x="404" y="292" width="150" height="56" rx="4" fill="#fff" stroke="#2f6b46"/>
+      <text x="420" y="316" font-size="11">the payload</text>
+      <text x="420" y="336" font-size="10" fill="#6d6459">what you were shown</text>
+
+      <line x1="558" y1="320" x2="612" y2="320" stroke="#2f6b46" marker-end="url(#a3)"/>
+      <rect x="616" y="292" width="150" height="56" rx="4" fill="#eef5ef" stroke="#2f6b46"/>
+      <text x="632" y="316" font-size="11" fill="#2f6b46">recompute</text>
+      <text x="632" y="336" font-size="10" fill="#4a443c">same three steps</text>
+
+      <line x1="770" y1="320" x2="824" y2="320" stroke="#2f6b46" marker-end="url(#a3)"/>
+      <text x="836" y="316" font-size="13" fill="#2f6b46">✓ valid</text>
+      <text x="836" y="338" font-size="10" fill="#6d6459">nothing to trust</text>
+
+      <text x="20" y="392" font-size="12" fill="#3a332a">The same credential, signed twice, yields two different signatures — both valid,</text>
+      <text x="20" y="412" font-size="12" fill="#3a332a">neither usable with the other's nonce. A signature cannot be lifted and reused.</text>
+    </g>
+  </svg>
+</section>
+
+<!-- ============ 4 ============ -->
+<section class="pg">
+  <div class="head"><h2><span class="n">4</span>Each block is welded to the one before it</h2><div class="k">P14 · how it works</div></div>
+  <svg viewBox="0 0 1000 440" xmlns="http://www.w3.org/2000/svg">
+    <g font-family="Segoe UI, Microsoft JhengHei" font-size="11">
+      <text x="20" y="26" font-size="10.5" letter-spacing="1.8" fill="#2f6b46">AS IT IS NOW — EVERY LINK CHECKS OUT</text>
+      <g>
+        <rect x="20" y="42" width="160" height="96" rx="4" fill="#fff" stroke="#1a1611"/>
+        <text x="36" y="64" font-family="Consolas, monospace" font-size="10" fill="#6d6459">#0</text>
+        <text x="36" y="86" font-size="11.5">genesis</text>
+        <text x="36" y="110" font-family="Consolas, monospace" font-size="9.5" fill="#8a8177">prev: ""</text>
+
+        <rect x="212" y="42" width="160" height="96" rx="4" fill="#fff" stroke="#1a1611"/>
+        <text x="228" y="64" font-family="Consolas, monospace" font-size="10" fill="#6d6459">#1</text>
+        <text x="228" y="86" font-size="11.5">diploma issued</text>
+        <text x="228" y="110" font-family="Consolas, monospace" font-size="9.5" fill="#8a8177">prev: BpHCjQ…</text>
+
+        <rect x="404" y="42" width="160" height="96" rx="4" fill="#fff" stroke="#1a1611"/>
+        <text x="420" y="64" font-family="Consolas, monospace" font-size="10" fill="#6d6459">#2</text>
+        <text x="420" y="86" font-size="11.5">transcript issued</text>
+        <text x="420" y="110" font-family="Consolas, monospace" font-size="9.5" fill="#8a8177">prev: 66AAz3…</text>
+
+        <rect x="596" y="42" width="160" height="96" rx="4" fill="#fff" stroke="#1a1611"/>
+        <text x="612" y="64" font-family="Consolas, monospace" font-size="10" fill="#6d6459">#3 · #4</text>
+        <text x="612" y="86" font-size="11.5">issued on stage</text>
+        <text x="612" y="110" font-family="Consolas, monospace" font-size="9.5" fill="#8a8177">prev: h-gW0l…</text>
+
+        <rect x="788" y="42" width="160" height="96" rx="4" fill="#fff" stroke="#1a1611"/>
+        <text x="804" y="64" font-family="Consolas, monospace" font-size="10" fill="#6d6459">#5</text>
+        <text x="804" y="86" font-size="11.5">revoke</text>
+        <text x="804" y="110" font-family="Consolas, monospace" font-size="9.5" fill="#8a8177">prev: R3mb4N…</text>
+      </g>
+      <g stroke="#2f6b46" fill="none" stroke-width="1.1">
+        <path d="M180,90 L206,90" marker-end="url(#a3)"/>
+        <path d="M372,90 L398,90" marker-end="url(#a3)"/>
+        <path d="M564,90 L590,90" marker-end="url(#a3)"/>
+        <path d="M756,90 L782,90" marker-end="url(#a3)"/>
+      </g>
+      <text x="212" y="160" font-size="10.5" fill="#6d6459">each arrow = SHA3-512 of the entire block on its left, not just its signature</text>
+
+      <text x="20" y="206" font-size="10.5" letter-spacing="1.8" fill="#a8452f">TAMPER WITH #1 — ONE CHARACTER</text>
+      <g>
+        <rect x="20" y="222" width="160" height="96" rx="4" fill="#fff" stroke="#1a1611"/>
+        <text x="36" y="244" font-family="Consolas, monospace" font-size="10" fill="#6d6459">#0</text>
+        <text x="36" y="266" font-size="11.5">genesis</text>
+        <text x="36" y="290" font-size="10" fill="#2f6b46">✓ unchanged</text>
+
+        <rect x="212" y="222" width="160" height="96" rx="4" fill="#fdf6f3" stroke="#a8452f" stroke-width="2"/>
+        <text x="228" y="244" font-family="Consolas, monospace" font-size="10" fill="#a8452f">#1 · EDITED</text>
+        <text x="228" y="266" font-size="11.5">DIPLOMA<tspan fill="#a8452f" font-weight="bold">.</tspan><tspan font-size="9" fill="#a8452f">  ← one full stop</tspan></text>
+        <text x="228" y="290" font-size="10" fill="#a8452f">✗ its own hash changed</text>
+
+        <rect x="404" y="222" width="160" height="96" rx="4" fill="#fdf6f3" stroke="#a8452f" stroke-width="2"/>
+        <text x="420" y="244" font-family="Consolas, monospace" font-size="10" fill="#a8452f">#2</text>
+        <text x="420" y="266" font-size="11.5">never touched</text>
+        <text x="420" y="290" font-size="10" fill="#a8452f">✗ link broken</text>
+
+        <rect x="596" y="222" width="160" height="96" rx="4" fill="#fff" stroke="#cdbfa5"/>
+        <text x="612" y="244" font-family="Consolas, monospace" font-size="10" fill="#6d6459">#3 · #4</text>
+        <text x="612" y="266" font-size="11.5" fill="#2f6b46">still fine</text>
+        <text x="612" y="290" font-size="10" fill="#6d6459">but nobody says so</text>
+
+        <rect x="788" y="222" width="160" height="96" rx="4" fill="#fff" stroke="#cdbfa5"/>
+        <text x="804" y="244" font-family="Consolas, monospace" font-size="10" fill="#6d6459">#5</text>
+        <text x="804" y="266" font-size="11.5">revoke</text>
+        <text x="804" y="290" font-size="10" fill="#6d6459">verdict: NO</text>
+      </g>
+      
+      <text x="20" y="352" font-size="12" fill="#3a332a">The neighbour turns red even though nobody edited it — because "the block before me was</text>
+      <text x="20" y="372" font-size="12" fill="#3a332a">changed" is precisely what you must be told. And one red link refuses the whole chain:</text>
+      <text x="20" y="392" font-size="12" fill="#3a332a">the answer is never "mostly valid".</text>
+    </g>
+  </svg>
+</section>
+
+<!-- ============ 5 ============ -->
+<section class="pg">
+  <div class="head"><h2><span class="n">5</span>Six gates, one verdict</h2><div class="k">P14 · how it works</div></div>
+  <svg viewBox="0 0 1000 430" xmlns="http://www.w3.org/2000/svg">
+    <g font-family="Segoe UI, Microsoft JhengHei" font-size="11">
+      <line x1="40" y1="150" x2="726" y2="150" stroke="#1a1611" stroke-width="1.4"/>
+      <g>
+        <circle cx="90" cy="150" r="7" fill="#fff" stroke="#1a1611" stroke-width="1.4"/>
+        <text x="90" y="126" font-size="10" fill="#6d6459" text-anchor="middle">1</text>
+        <text x="90" y="184" font-size="11" text-anchor="middle">chain intact</text>
+        <text x="90" y="202" font-size="9.5" fill="#8a8177" text-anchor="middle">all links</text>
+        <text x="90" y="216" font-size="9.5" fill="#8a8177" text-anchor="middle">checked</text>
+
+        <circle cx="212" cy="150" r="7" fill="#fff" stroke="#1a1611" stroke-width="1.4"/>
+        <text x="212" y="126" font-size="10" fill="#6d6459" text-anchor="middle">2</text>
+        <text x="212" y="184" font-size="11" text-anchor="middle">signer trusted</text>
+        <text x="212" y="202" font-size="9.5" fill="#8a8177" text-anchor="middle">key in</text>
+        <text x="212" y="216" font-size="9.5" fill="#8a8177" text-anchor="middle">the registry</text>
+
+        <circle cx="334" cy="150" r="7" fill="#fff" stroke="#1a1611" stroke-width="1.4"/>
+        <text x="334" y="126" font-size="10" fill="#6d6459" text-anchor="middle">3</text>
+        <text x="334" y="184" font-size="11" text-anchor="middle">found on chain</text>
+        <text x="334" y="202" font-size="9.5" fill="#8a8177" text-anchor="middle">an ISSUE</text>
+        <text x="334" y="216" font-size="9.5" fill="#8a8177" text-anchor="middle">block exists</text>
+
+        <circle cx="452" cy="150" r="7" fill="#fff" stroke="#8a8177" stroke-width="1.4" stroke-dasharray="3 2"/>
+        <text x="452" y="126" font-size="10" fill="#8a8177" text-anchor="middle">4</text>
+        <text x="452" y="184" font-size="11" fill="#8a8177" text-anchor="middle">content matches</text>
+        <text x="452" y="202" font-size="9.5" fill="#8a8177" text-anchor="middle">not asked</text>
+        <text x="452" y="216" font-size="9.5" fill="#8a8177" text-anchor="middle">here</text>
+
+        <circle cx="574" cy="150" r="7" fill="#fff" stroke="#1a1611" stroke-width="1.4"/>
+        <text x="574" y="126" font-size="10" fill="#6d6459" text-anchor="middle">5</text>
+        <text x="574" y="184" font-size="11" text-anchor="middle">signature valid</text>
+        <text x="574" y="202" font-size="9.5" fill="#8a8177" text-anchor="middle">public key</text>
+        <text x="574" y="216" font-size="9.5" fill="#8a8177" text-anchor="middle">check</text>
+
+        <circle cx="678" cy="150" r="7" fill="#fff" stroke="#1a1611" stroke-width="1.4"/>
+        <text x="678" y="126" font-size="10" fill="#6d6459" text-anchor="middle">6</text>
+        <text x="678" y="184" font-size="11" text-anchor="middle">not revoked</text>
+        <text x="678" y="202" font-size="9.5" fill="#8a8177" text-anchor="middle">no REVOKE</text>
+        <text x="678" y="216" font-size="9.5" fill="#8a8177" text-anchor="middle">block</text>
+      </g>
+
+      <rect x="740" y="98" width="230" height="104" rx="6" fill="#1a1611"/>
+      <text x="762" y="134" font-size="10" letter-spacing="1.8" fill="#c9b78f">VERDICT</text>
+      <text x="762" y="168" font-size="19" fill="#fdfbf5">VALID ON CHAIN</text>
+      <text x="762" y="190" font-size="10" fill="#9c9488">or REVOKED / NOT FOUND / NO</text>
+
+      <text x="30" y="252" font-size="10.5" letter-spacing="1.8" fill="#a8452f">WHAT "NOT ASKED" LOOKS LIKE</text>
+      <rect x="30" y="266" width="300" height="34" rx="3" fill="#f7f3ea" stroke="#c9b78f"/>
+      <text x="44" y="288" font-family="Consolas, monospace" font-size="11.5">"hash_match": null</text>
+      <text x="348" y="288" font-size="11" fill="#4a443c">Not "passed". The question was not asked.</text>
+
+      <text x="30" y="330" font-size="10.5" letter-spacing="1.8" fill="#2f6b46">WHY THAT MATTERS</text>
+      <text x="30" y="352" font-size="12" fill="#3a332a">A result sheet with six ticks must mean six things were computed. Turning "unknown"</text>
+      <text x="30" y="372" font-size="12" fill="#3a332a">into "yes" is how a verification system starts lying quietly — and the page has a third</text>
+      <text x="30" y="392" font-size="12" fill="#3a332a">branch for exactly that case: "no signature to verify".</text>
+    </g>
+  </svg>
+</section>
+
+<!-- ============ 6 ============ -->
+<section class="pg">
+  <div class="head"><h2><span class="n">6</span>Revocation adds a block; it never deletes one</h2><div class="k">P14 · how it works</div></div>
+  <svg viewBox="0 0 1000 430" xmlns="http://www.w3.org/2000/svg">
+    <g font-family="Segoe UI, Microsoft JhengHei" font-size="11">
+      <line x1="60" y1="210" x2="940" y2="210" stroke="#8a8177" stroke-width="1.2"/>
+      <text x="60" y="248" font-size="10" fill="#8a8177">time →</text>
+
+      <rect x="80" y="150" width="150" height="120" rx="4" fill="#fff" stroke="#1a1611"/>
+      <text x="94" y="172" font-family="Consolas, monospace" font-size="10" fill="#6d6459">#1</text>
+      <text x="94" y="196" font-size="11.5">ISSUE</text>
+      <text x="94" y="218" font-size="9.5" fill="#8a8177">the diploma</text>
+      <text x="94" y="236" font-family="Consolas, monospace" font-size="9" fill="#8a8177">GFiY4d…</text>
+      <text x="94" y="258" font-size="9.5" fill="#2f6b46">still on the chain</text>
+
+      <rect x="270" y="176" width="110" height="68" rx="4" fill="#fff" stroke="#cdbfa5"/>
+      <text x="284" y="198" font-family="Consolas, monospace" font-size="10" fill="#6d6459">#2</text>
+      <text x="284" y="220" font-size="10.5" fill="#4a443c">transcript</text>
+
+      <rect x="414" y="176" width="110" height="68" rx="4" fill="#fff" stroke="#cdbfa5"/>
+      <text x="428" y="198" font-family="Consolas, monospace" font-size="10" fill="#6d6459">#3 · #4</text>
+      <text x="428" y="220" font-size="10.5" fill="#4a443c">issued live</text>
+
+      <rect x="558" y="150" width="150" height="120" rx="4" fill="#fdf6f3" stroke="#a8452f" stroke-width="2"/>
+      <text x="572" y="172" font-family="Consolas, monospace" font-size="10" fill="#a8452f">#5</text>
+      <text x="572" y="196" font-size="11.5" fill="#a8452f">REVOKE</text>
+      <text x="572" y="218" font-size="9.5" fill="#6d6459">"this hash"</text>
+      <text x="572" y="236" font-size="9.5" fill="#6d6459">reason + date</text>
+
+      <path d="M558,190 C420,90 200,90 155,146" fill="none" stroke="#a8452f" stroke-width="1.3" stroke-dasharray="4 3"/>
+      <path d="M155,146 l10,-2 l-3,9 z" fill="#a8452f"/>
+      <text x="270" y="104" font-size="10.5" fill="#a8452f">points back at #1 — the evidence of what was issued survives</text>
+
+      <line x1="740" y1="120" x2="740" y2="300" stroke="#e2d8c4"/>
+      <text x="768" y="150" font-size="10.5" letter-spacing="1.8" fill="#6d6459">TWO THINGS THIS BUYS</text>
+      <text x="768" y="180" font-size="11.5" fill="#3a332a">You can prove it <tspan font-weight="bold">was</tspan> issued,</text>
+      <text x="768" y="200" font-size="11.5" fill="#3a332a">and when it stopped being valid.</text>
+      <text x="768" y="234" font-size="11.5" fill="#3a332a">Nothing can be "un-revoked"</text>
+      <text x="768" y="254" font-size="11.5" fill="#3a332a">by editing a file — only by another</text>
+      <text x="768" y="274" font-size="11.5" fill="#3a332a">signed block, in public.</text>
+
+      <text x="60" y="352" font-size="12" fill="#3a332a">A certificate that has been withdrawn still leaves a record of having existed. That is not</text>
+      <text x="60" y="372" font-size="12" fill="#3a332a">a bug in the design — for a qualification, the trace matters as much as the status.</text>
+    </g>
+  </svg>
+</section>
+
+<!-- ============ 7 ============ -->
+<section class="pg">
+  <div class="head"><h2><span class="n">7</span>Four layers, and only the bottom one knows the answer</h2><div class="k">P14 · how it works</div></div>
+  <svg viewBox="0 0 1000 430" xmlns="http://www.w3.org/2000/svg">
+    <defs><marker id="a7" markerWidth="10" markerHeight="10" refX="7" refY="3.4" orient="auto">
+      <path d="M0,0 L7.5,3.4 L0,6.8" fill="none" stroke="#b08a3e" stroke-width="1.3"/></marker></defs>
+    <g font-family="Segoe UI, Microsoft JhengHei" font-size="12">
+      <rect x="60" y="34" width="620" height="66" rx="4" fill="#fff" stroke="#cdbfa5"/>
+      <text x="82" y="60" font-size="10.5" letter-spacing="1.6" fill="#a07f34">FRONT END · 5 pages, no framework</text>
+      <text x="82" y="84" font-size="11.5" fill="#3a332a">turns the word "VALID ON CHAIN" into a card a person reads</text>
+
+      <rect x="60" y="112" width="620" height="66" rx="4" fill="#fff" stroke="#cdbfa5"/>
+      <text x="82" y="138" font-size="10.5" letter-spacing="1.6" fill="#a07f34">HTTP · 56 routes</text>
+      <text x="82" y="162" font-size="11.5" fill="#3a332a">checks the shape of the input, then carries JSON — 11 lines, zero arithmetic</text>
+
+      <rect x="60" y="190" width="620" height="66" rx="4" fill="#fff" stroke="#cdbfa5"/>
+      <text x="82" y="216" font-size="10.5" letter-spacing="1.6" fill="#a07f34">SERVICES · assemble the verdict</text>
+      <text x="82" y="240" font-size="11.5" fill="#3a332a">puts the six booleans in one dictionary; decides nothing</text>
+
+      <rect x="60" y="268" width="620" height="94" rx="4" fill="#1a1611"/>
+      <text x="82" y="294" font-size="10.5" letter-spacing="1.6" fill="#c9b78f">CORE · 1,541 lines, no HTTP, no UI</text>
+      <text x="82" y="320" font-size="11.5" fill="#fdfbf5">canonicalises, hashes, signs, links blocks, runs the six checks</text>
+      <text x="82" y="344" font-size="11.5" fill="#fdfbf5">this is the only place that can answer, and it answers from files on disk</text>
+
+      <line x1="712" y1="368" x2="712" y2="66" stroke="#b08a3e" stroke-width="1.5" marker-end="url(#a7)"/>
+      <text x="736" y="240" font-size="11.5" fill="#a07f34" transform="rotate(-90 736 240)" text-anchor="middle">the answer only travels up</text>
+
+      <g font-size="10.5" fill="#6d6459">
+        <text x="60" y="398">Delete the web layer and the ledger is still correct. Delete the core and nothing works</text>
+        <text x="60" y="418">— which is the right shape for a system whose whole claim is "you don't have to trust us".</text>
+      </g>
+    </g>
+  </svg>
+</section>
+
+<!-- ============ 8 ============ -->
+<section class="pg">
+  <div class="head"><h2><span class="n">8</span>What was measured, before and after</h2><div class="k">P14 · how it works</div></div>
+  <svg viewBox="0 0 1000 430" xmlns="http://www.w3.org/2000/svg">
+    <g font-family="Segoe UI, Microsoft JhengHei" font-size="12">
+      <text x="40" y="46" font-size="10.5" letter-spacing="1.8" fill="#a8452f">BEFORE · EVERY VERIFY RE-READ AND RE-CHECKED EVERYTHING</text>
+      <rect x="40" y="60" width="780" height="34" fill="#f0d9d2" stroke="#a8452f"/>
+      <text x="52" y="83" font-size="12" fill="#a8452f">3.5 s … 11.1 s on stage (63 blocks, every signature re-verified per request)</text>
+
+      <text x="40" y="140" font-size="10.5" letter-spacing="1.8" fill="#2f6b46">AFTER · CACHE KEYED ON THE DIRECTORY'S FINGERPRINT</text>
+      <rect x="40" y="154" width="86" height="34" fill="#dfeade" stroke="#2f6b46"/>
+      <text x="140" y="177" font-size="12" fill="#2f6b46">123 / 133 / 41 ms — and 99 ms warm, measured again today</text>
+
+      <line x1="40" y1="220" x2="960" y2="220" stroke="#e2d8c4"/>
+
+      <text x="40" y="252" font-size="10.5" letter-spacing="1.8" fill="#6d6459">WHY IT IS ALLOWED TO BE CACHED AT ALL</text>
+      <rect x="40" y="266" width="430" height="88" rx="4" fill="#f7f3ea" stroke="#c9b78f"/>
+      <text x="58" y="292" font-size="11.5" fill="#3a332a">the key is <tspan font-family="Consolas, monospace">(count, bytes, newest mtime)</tspan></text>
+      <text x="58" y="314" font-size="11" fill="#4a443c">every append, rewrite or truncation changes it</text>
+      <text x="58" y="336" font-size="11" fill="#4a443c">a short TTL covers the one case it cannot see</text>
+
+      <rect x="500" y="266" width="460" height="88" rx="4" fill="#f7f3ea" stroke="#c9b78f"/>
+      <text x="518" y="292" font-size="11.5" fill="#3a332a">public keys cached by the <tspan font-family="Consolas, monospace">PEM file's (mtime, size)</tspan></text>
+      <text x="518" y="314" font-size="11" fill="#4a443c">a swapped key is picked up immediately</text>
+      <text x="518" y="336" font-size="11" fill="#4a443c">caching by filename would silently trust it</text>
+
+      <text x="40" y="392" font-size="12" fill="#3a332a">Same answer, 28× faster — and the rule that made it safe is the one worth saying out</text>
+      <text x="40" y="412" font-size="12" fill="#3a332a">loud: <tspan font-weight="bold">a verdict may never go stale</tspan>. Cache the work, never the trust.</text>
+    </g>
+  </svg>
+</section>
+
+</body>
+</html>
+
+
+
+
+
+
+
