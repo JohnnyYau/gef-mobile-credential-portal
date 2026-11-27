@@ -61,7 +61,46 @@
     return body;
   }
 
-  function showResult(data) {
+  /* /api/admin/pdf and /api/custom/file are staff routes: a plain <a> opens them
+   * in a new tab with no X-Admin-Token and gets 401. Fetch with the token and
+   * hand the blob to the browser instead. */
+  function adminHeaders() {
+    var headers = { "Accept": "application/pdf, application/json" };
+    var t = token() || sessionStorage.getItem(TOKEN_KEY) || "";
+    if (t) { headers["X-Admin-Token"] = t; }
+    return headers;
+  }
+
+  async function saveFile(url, filename, button) {
+    var label = button.textContent;
+    button.disabled = true;
+    button.textContent = "下載中…";
+    try {
+      var res = await fetch(url, { headers: adminHeaders() });
+      if (!res.ok) {
+        setError(res.status === 401 || res.status === 403
+          ? "下載要機構口令：在上面那格填一次，這台瀏覽器就會記住。"
+          : "下載失敗（" + res.status + "）。");
+        return;
+      }
+      var blob = await res.blob();
+      var href = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = href;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(function () { URL.revokeObjectURL(href); }, 4000);
+    } catch (err) {
+      setError("下載失敗：" + err.message);
+    } finally {
+      button.disabled = false;
+      button.textContent = label;
+    }
+  }
+
+  function showResult(data, studentId) {
     var hash = data.hashed_document || "";
     var height = data.height;
     var out = $("result");
@@ -78,42 +117,56 @@
     actions.appendChild(open);
 
     /* /api/admin/pdf is an admin route: a plain <a> opens it in a new tab with
-     * no X-Admin-Token header and gets 401. Fetch it with the token instead and
-     * hand the blob to the browser. */
+     * no X-Admin-Token header and gets 401. Fetch it with the token instead. */
     var pdf = el("button", "ghost", "下載憑證 PDF");
     pdf.type = "button";
-    pdf.addEventListener("click", async function () {
-      var headers = {};
-      var t = token() || sessionStorage.getItem(TOKEN_KEY) || "";
-      if (t) { headers["X-Admin-Token"] = t; }
-      var label = pdf.textContent;
-      pdf.disabled = true;
-      pdf.textContent = "下載中…";
-      try {
-        var res = await fetch("/api/admin/pdf/" + encodeURIComponent(hash), { headers: headers });
-        if (!res.ok) {
-          setError(res.status === 401 || res.status === 403
-            ? "下載要機構口令：在上面那格填一次，這台瀏覽器就會記住。"
-            : "下載失敗（" + res.status + "）。");
-          return;
-        }
-        var blob = await res.blob();
-        var url = URL.createObjectURL(blob);
-        var a = document.createElement("a");
-        a.href = url;
-        a.download = "credential-" + hash.slice(0, 10) + ".pdf";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
-      } catch (err) {
-        setError("下載失敗：" + err.message);
-      } finally {
-        pdf.disabled = false;
-        pdf.textContent = label;
-      }
+    pdf.addEventListener("click", function () {
+      saveFile("/api/admin/pdf/" + encodeURIComponent(hash),
+               "credential-" + hash.slice(0, 10) + ".pdf", pdf);
     });
     actions.appendChild(pdf);
+
+    if (data.file_id) {
+      var json = el("button", "ghost", "下載 JSON");
+      json.type = "button";
+      json.addEventListener("click", function () {
+        saveFile("/api/custom/file/" + encodeURIComponent(data.file_id) + "/json",
+                 "credential-" + hash.slice(0, 10) + ".json", json);
+      });
+      actions.appendChild(json);
+    }
+
+    var sid = studentId || (data.document && data.document.PersonalParticulars
+      && data.document.PersonalParticulars.StudentID) || "";
+    if (sid) {
+      var link = el("button", "ghost", "複製學生連結");
+      link.type = "button";
+      link.addEventListener("click", async function () {
+        link.disabled = true;
+        try {
+          var res = await fetch("/api/holder-link?student_id=" + encodeURIComponent(sid) +
+                                "&hashed_document=" + encodeURIComponent(hash),
+                                { headers: adminHeaders() });
+          var body = await res.json().catch(function () { return null; });
+          if (!res.ok || !body || !body.path) {
+            setError(res.status === 401 || res.status === 403
+              ? "拿連結要機構口令：在上面那格填一次。"
+              : "拿不到學生連結（" + res.status + "）。");
+            return;
+          }
+          var url = location.origin + body.path;
+          if (!navigator.clipboard) { setError(url); return; }
+          await navigator.clipboard.writeText(url);
+          link.textContent = "已複製連結";
+          setTimeout(function () { link.textContent = "複製學生連結"; }, 1600);
+        } catch (err) {
+          setError("拿不到學生連結：" + err.message);
+        } finally {
+          link.disabled = false;
+        }
+      });
+      actions.appendChild(link);
+    }
 
     var copy = el("button", "ghost", "複製驗證碼");
     copy.type = "button";
@@ -130,7 +183,8 @@
     out.appendChild(box);
     out.appendChild(actions);
     out.appendChild(el("div", "hashbox", hash));
-    out.appendChild(el("p", "hint", "把 PDF 或這串驗證碼給對方，就可以驗了。"));
+    out.appendChild(el("p", "hint",
+      "把學生連結給對方：他自己能下載 PDF，也能隨時看這張憑證還有效沒有效。"));
     $("tokenHint").textContent = "口令已記住，這台瀏覽器下次不用再填。";
     out.hidden = false;
     out.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -168,7 +222,7 @@
         return;
       }
       if (t) { sessionStorage.setItem(TOKEN_KEY, t); }
-      showResult(data);
+      showResult(data, body.student_id);
     } catch (err) {
       setError("連不上籤發服務：" + err.message);
     } finally {
