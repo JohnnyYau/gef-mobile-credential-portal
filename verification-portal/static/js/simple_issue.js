@@ -77,10 +77,42 @@
     open.href = "/verify?hash=" + encodeURIComponent(hash);
     actions.appendChild(open);
 
-    var pdf = el("a", "ghost", "下載憑證 PDF");
-    pdf.href = "/api/admin/pdf/" + encodeURIComponent(hash);
-    pdf.target = "_blank";
-    pdf.rel = "noopener";
+    /* /api/admin/pdf is an admin route: a plain <a> opens it in a new tab with
+     * no X-Admin-Token header and gets 401. Fetch it with the token instead and
+     * hand the blob to the browser. */
+    var pdf = el("button", "ghost", "下載憑證 PDF");
+    pdf.type = "button";
+    pdf.addEventListener("click", async function () {
+      var headers = {};
+      var t = token() || sessionStorage.getItem(TOKEN_KEY) || "";
+      if (t) { headers["X-Admin-Token"] = t; }
+      var label = pdf.textContent;
+      pdf.disabled = true;
+      pdf.textContent = "下載中…";
+      try {
+        var res = await fetch("/api/admin/pdf/" + encodeURIComponent(hash), { headers: headers });
+        if (!res.ok) {
+          setError(res.status === 401 || res.status === 403
+            ? "下載要機構口令：在上面那格填一次，這台瀏覽器就會記住。"
+            : "下載失敗（" + res.status + "）。");
+          return;
+        }
+        var blob = await res.blob();
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = "credential-" + hash.slice(0, 10) + ".pdf";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+      } catch (err) {
+        setError("下載失敗：" + err.message);
+      } finally {
+        pdf.disabled = false;
+        pdf.textContent = label;
+      }
+    });
     actions.appendChild(pdf);
 
     var copy = el("button", "ghost", "複製驗證碼");
