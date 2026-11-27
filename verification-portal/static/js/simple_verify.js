@@ -297,10 +297,54 @@
     }
   }
 
+  /* This page — not the ledger — remembers a rejected upload. The chain keeps
+   * no record of a tampered file (it simply was never written), so if the demo
+   * edits a credential and reverts it, the verdict is VALID again and the earlier
+   * rejection would vanish. Keeping the note in sessionStorage lets the page say
+   * "you tried a version of this that did not match" without pretending the
+   * ledger knows anything about it. Cleared when the tab closes. */
+  var MISMATCH_KEY = "gef26_mismatch_seen";
+
+  function mismatchStore() {
+    try { return JSON.parse(sessionStorage.getItem(MISMATCH_KEY) || "{}"); }
+    catch (err) { return {}; }
+  }
+
+  function rememberMismatch(sid) {
+    if (!sid) { return; }
+    var store = mismatchStore();
+    store[sid] = Date.now();
+    try { sessionStorage.setItem(MISMATCH_KEY, JSON.stringify(store)); } catch (err) { /* private mode */ }
+  }
+
+  function mismatchNote(sid) {
+    if (!sid) { return ""; }
+    var when = mismatchStore()[sid];
+    if (!when) { return ""; }
+    var t = new Date(when);
+    var hh = ("0" + t.getHours()).slice(-2) + ":" + ("0" + t.getMinutes()).slice(-2);
+    return "附註：這一頁在 " + hh + " 提交過一份學號 " + sid + " 但對不上的版本。" +
+      "現在這份是真的，剛才那份不是。鏈上沒有留下剛才那份的任何東西——它從沒被寫進去過。";
+  }
+
+  /* Only JSON uploads carry a readable student id in the browser; a PDF stays
+   * opaque here and simply gets no note. */
+  async function studentIdOf(file) {
+    if (!file || !/\.(json|txt)$/i.test(file.name || "")) { return ""; }
+    try {
+      var doc = JSON.parse(await file.text());
+      var pp = doc && doc.PersonalParticulars;
+      return (pp && pp.StudentID) ? String(pp.StudentID) : "";
+    } catch (err) {
+      return "";
+    }
+  }
+
   async function verifyFile(file) {
     setBusy(true);
     setError("");
     var started = Date.now();
+    var sid = await studentIdOf(file);
     try {
       var form = new FormData();
       form.append("file", file);
@@ -308,6 +352,16 @@
       var body = await res.json().catch(function () { return null; });
       if (!res.ok) { fail(res, body); return; }
       buildResult(body, Date.now() - started);
+      if (body.hash_match === false) {
+        rememberMismatch(sid);
+      } else if (body.hash_match === true) {
+        var note = mismatchNote(sid);
+        if (note) {
+          /* under the verdict, above the buttons: the eye is still there */
+          var box = $("result");
+          box.insertBefore(el("p", "note", note), box.children[1] || null);
+        }
+      }
     } catch (err) {
       setError("上傳失敗：" + err.message);
     } finally {
