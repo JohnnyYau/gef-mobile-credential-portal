@@ -59,3 +59,37 @@ method is the demo; the four receipt times are the results.
 If the organisers need the listing fields above, use this file. If they need the
 poster rebuilt inside their template, that is a reprint and a new layout — worth
 doing only if they ask explicitly.
+
+---
+
+## The P14 row already on the 2025/26 page
+
+`cityuhk-ee-gef.github.io/exhibition2025/` already carries P14 with our three
+names, but all three attachments are stale:
+
+| field | on the page now | problem |
+|---|---|---|
+| GitHub | `github.com/wts220828/Gef26-project-blockchain` | **404** — that account now holds only `Find-Elective` |
+| Poster | `img/P14_Poster.jpg` | the earlier dark-blue A3 (problem / solution / roles), not the A0 we print |
+| Video | `youtu.be/nVgevH43FYA` | the 2-minute demo, recorded before the U27 UI pass |
+
+## Message to the organisers
+
+> Dear Sir/Madam,
+>
+> Two corrections for the P14 row on the 2025/26 exhibition page, please.
+>
+> 1. The GitHub link points to a repository that no longer exists. It should be
+>    https://github.com/JohnnyYau/gef-mobile-credential-portal
+> 2. The poster image is an earlier draft. Please replace `img/P14_Poster.jpg`
+>    with the attached file of the same name and size (1587 × 2245).
+>
+> The video link is unchanged and still correct. Thank you.
+>
+> Yau Ka Chai Johnny, Yu Siu Kui, Yu Yeuk Lan Serena — P14
+
+## If only one thing gets changed
+
+The GitHub link. A 404 is unambiguous; a different-looking poster is a matter of
+taste, and the video still shows the same product doing the same four steps.
+
