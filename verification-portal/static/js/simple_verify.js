@@ -317,6 +317,10 @@
     try { sessionStorage.setItem(MISMATCH_KEY, JSON.stringify(store)); } catch (err) { /* private mode */ }
   }
 
+  function clearMismatch() {
+    try { sessionStorage.removeItem(MISMATCH_KEY); } catch (err) { /* private mode */ }
+  }
+
   function mismatchNote(sid) {
     if (!sid) { return ""; }
     var when = mismatchStore()[sid];
@@ -359,7 +363,15 @@
         if (note) {
           /* under the verdict, above the buttons: the eye is still there */
           var box = $("result");
-          box.insertBefore(el("p", "note", note), box.children[1] || null);
+          var line = el("p", "note", note + " ");
+          var wipe = el("button", "linkish", "清除這行");
+          wipe.type = "button";
+          wipe.addEventListener("click", function () {
+            clearMismatch();
+            line.remove();
+          });
+          line.appendChild(wipe);
+          box.insertBefore(line, box.children[1] || null);
         }
       }
     } catch (err) {
@@ -439,6 +451,9 @@
     });
 
     var params = new URLSearchParams(window.location.search);
+    /* /verify?clear=1 wipes this tab's "you tried a tampered version" notes —
+     * handy between visitors, and it is the only place that memory lives. */
+    if (params.get("clear")) { clearMismatch(); }
     var deep = params.get("hash") || params.get("h");
     if (deep && HASH_RE.test(deep)) {
       $("hashInput").value = deep;
