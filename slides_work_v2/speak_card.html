@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="zh-Hant-HK">
+<head>
+<meta charset="utf-8">
+<title>P14 開口卡</title>
+<style>
+@page { size: A4; margin: 13mm 14mm; }
+* { box-sizing: border-box; }
+body { margin: 0; color: #17130f; font-family: "Microsoft JhengHei", "Noto Sans TC", sans-serif; }
+.pg { page-break-after: always; }
+.pg:last-child { page-break-after: auto; }
+
+.top { display: flex; justify-content: space-between; align-items: flex-end;
+       border-bottom: 2.4pt solid #17130f; padding-bottom: 2mm; margin-bottom: 4mm; }
+.kick { font-size: 7.4pt; letter-spacing: .2em; color: #8a7a5c; text-transform: uppercase; }
+h1 { font-size: 22pt; margin: 1mm 0 0; letter-spacing: -.01em; }
+h1 small { font-size: 8.6pt; color: #6b6257; font-weight: 400; margin-left: 3mm; letter-spacing: 0; }
+.badge { font-size: 8pt; color: #8a8177; text-align: right; line-height: 1.5; }
+
+.rule { font-size: 12.2pt; color: #3c352c; background: #f7f1e2; border-left: 3pt solid #b08a3e;
+        padding: 2.6mm 3mm; margin-bottom: 4.5mm; line-height: 1.55; }
+
+h2 { font-size: 10.4pt; margin: 4.2mm 0 2mm; padding-left: 2mm; border-left: 2.6pt solid #17130f; }
+h2 span { font-size: 7.6pt; color: #8a8177; font-weight: 400; margin-left: 2mm; }
+
+.step { display: flex; gap: 3mm; margin-bottom: 4.2mm; align-items: flex-start; page-break-inside: avoid; }
+.num { flex: 0 0 8mm; height: 8mm; border: 1.4pt solid #17130f; border-radius: 50%;
+       display: flex; align-items: center; justify-content: center; font-size: 11pt; font-weight: 700; }
+.body { flex: 1; }
+.say { font-size: 17pt; line-height: 1.5; margin: 0 0 .8mm; letter-spacing: .01em; }
+.say b { font-weight: 700; }
+.do { font-size: 7.8pt; color: #8a8177; letter-spacing: .04em; }
+
+.res { border: .8pt solid #cdbfa5; padding: 2.4mm 3mm; margin-bottom: 2.4mm; page-break-inside: avoid; }
+.res .t { font-size: 8pt; color: #8a7a5c; letter-spacing: .12em; margin-bottom: 1mm; }
+.res .s { font-size: 13.2pt; line-height: 1.45; }
+.res.ok { background: #f3f8f1; }
+.res.rev { background: #fdf3f1; }
+
+.box { border: 2pt solid #17130f; padding: 3.2mm 4mm; margin: 4mm 0; page-break-inside: avoid; }
+.box .t { font-size: 7.6pt; letter-spacing: .16em; color: #8a7a5c; margin-bottom: 1.6mm; }
+.box .s { font-size: 17pt; line-height: 1.45; }
+.box .n { font-size: 8pt; color: #6b6257; margin-top: 1.6mm; line-height: 1.5; }
+
+table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+th { font-size: 7.4pt; letter-spacing: .12em; color: #8a7a5c; text-align: left;
+     border-bottom: .8pt solid #17130f; padding: 1mm .8mm; font-weight: 400; }
+td { vertical-align: top; padding: 1.28mm .8mm; border-bottom: .4pt solid #e6ddcb; }
+td.q { width: 46mm; font-size: 8.6pt; color: #4a443c; }
+td.a { font-size: 9.2pt; line-height: 1.55; }
+tr { page-break-inside: avoid; }
+
+.foot { margin-top: 2.6mm; padding-top: 1.4mm; border-top: .5pt solid #cdbfa5;
+        font-size: 7.2pt; color: #8a8177; display: flex; justify-content: space-between; }
+</style>
+</head>
+<body>
+
+<!-- ============ SIDE 1 ============ -->
+<section class="pg">
+  <div class="top">
+    <div>
+      <div class="kick">P14 · show time · 2026-11-28</div>
+      <h1>開口卡<small>照著讀，不用想</small></h1>
+    </div>
+    <div class="badge">Mobile Credential<br>Verification Portal</div>
+  </div>
+
+  <p class="rule">這張紙只有一個用法：<b>眼睛看著下一句，把它讀出來。</b>
+  不用記、不用組織句子、不用想下一句要講什麼。讀完一句，做那句話下面的動作。</p>
+
+  <h2>一 · 四步，就四步<span>全部照讀</span></h2>
+
+  <div class="step">
+    <div class="num">1</div>
+    <div class="body">
+      <p class="say">「你好，<b>掃這個 QR</b>，三秒內它會告訴你這張文憑是不是真的。」</p>
+      <div class="do">動作：把 QR 轉向他，手指指著 QR，然後閉嘴等他掃。</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="num">2</div>
+    <div class="body">
+      <p class="say">（他掃的時候，<b>不要講話</b>。螢幕出結果再開口。）</p>
+      <div class="do">動作：手指移到結果那一行，不要解釋過程。</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="num">3</div>
+    <div class="body">
+      <p class="say">「這張是<b>有效的</b>。發出日期、課程、第幾塊，都在這一行。」</p>
+      <div class="do">動作：等他看完，停一秒。不要急著往下講。</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="num">4</div>
+    <div class="body">
+      <p class="say">「你會信這個結果嗎？」</p>
+      <div class="do">動作：把問題丟回去，讓他講。他講的時候你只要點頭。</div>
+    </div>
+  </div>
+
+  <h2>二 · 螢幕出什麼，就讀那一句<span>三種情況</span></h2>
+
+  <div class="res ok">
+    <div class="t">如果顯示「這張憑證有效」</div>
+    <div class="s">「有效的。六項檢查全部通過，最後一項是『沒有被撤銷』。」</div>
+  </div>
+
+  <div class="res rev">
+    <div class="t">如果顯示「已註銷」</div>
+    <div class="s">「這張被學校撤銷了，原因寫在下面這行。撤銷不是刪掉，是再寫一塊說它作廢。」</div>
+  </div>
+
+  <div class="res">
+    <div class="t">如果顯示「查不到」／一片空白</div>
+    <div class="s">「這張不在鏈上，所以它不可能是我們發的。」</div>
+  </div>
+
+  <div class="box">
+    <div class="t">腦一片空白的時候，就讀這句</div>
+    <div class="s">「你掃一下就知道。」</div>
+    <div class="n">這句之後一定有一個動作（指 QR），動作會幫你買到十秒。十秒之後你就會想起下一步。</div>
+  </div>
+
+  <div class="foot"><span>P14 · Mobile Credential Verification Portal</span><span>第 1 面 · 開口與四步</span></div>
+</section>
+
+<!-- ============ SIDE 2 ============ -->
+<section class="pg">
+  <div class="top">
+    <div>
+      <div class="kick">P14 · Q&amp;A</div>
+      <h1>被問的時候<small>答案照讀，一句起兩句止</small></h1>
+    </div>
+    <div class="badge">不知道就說不知道<br>沒有人會因此扣分</div>
+  </div>
+
+  <table>
+    <tr><th>他會問</th><th>你照讀</th></tr>
+
+    <tr><td class="q">這是什麼？</td>
+        <td class="a">「一個文憑驗證系統。掃一個 QR，三秒判斷真假，不用裝 app，也不用相信我們的伺服器。」</td></tr>
+
+    <tr><td class="q">跟 PDF 有什麼分別？</td>
+        <td class="a">「PDF 改一個字再另存，看不出來。這裡改一個字，雜湊就變，整條鏈會指出哪一塊壞了。」</td></tr>
+
+    <tr><td class="q">用了 blockchain 嗎？</td>
+        <td class="a">「沒有共識層，所以我不叫它 blockchain。是 append-only 的雜湊鏈加簽名，每一塊記住前一塊的雜湊。」</td></tr>
+
+    <tr><td class="q">為什麼不用 Ethereum？</td>
+        <td class="a">「我們不需要共識，也沒有人要付 gas。而且學生的姓名成績不該放公網鏈上。」</td></tr>
+
+    <tr><td class="q">簽名用什麼？</td>
+        <td class="a">「ML-DSA-65，FIPS 204 的後量子簽名。另一把 RSA-PSS 並存，可以輪替。」</td></tr>
+
+    <tr><td class="q">學校的私鑰洩漏怎麼辦？</td>
+        <td class="a">「把那把鑰匙標記為某個高度之後失效。之前簽的仍然有效，之後的不再採用。」</td></tr>
+
+    <tr><td class="q">學生的資料放上鏈了？</td>
+        <td class="a">「只放雜湊。姓名學號留在學校資料庫，鏈上只有三段雜湊和課程、日期這類公開欄位。」</td></tr>
+
+    <tr><td class="q">這是你寫的嗎？</td>
+        <td class="a">「核心三支是我寫的，樣板是跟 AI 一起生成的，但每一段我都能解釋。」</td></tr>
+
+    <tr><td class="q">你隊友做什麼？</td>
+        <td class="a">「他負責示範跟收集回饋，技術細節我答。」<br><span style="color:#8a8177">然後立刻轉頭叫他過來，不要替他答。</span></td></tr>
+
+    <tr><td class="q">這可以真的用嗎？</td>
+        <td class="a">「今天這一條鏈上有五塊、兩把鑰匙、跑得動。要上 production 還缺權限管理和備份。」</td></tr>
+  </table>
+
+  <div class="box">
+    <div class="t">唯一一句救命話</div>
+    <div class="s">「這個我沒把握，不想亂講。你留個電郵，我查完回你。」</div>
+    <div class="n">EE 的教授三分鐘就聽得出你在編。不知道＋不編，比知道＋講錯安全得多。</div>
+  </div>
+
+  <h2>三 · 給隊友的三句<span>貼在他看得到的地方</span></h2>
+  <div class="res">
+    <div class="s" style="font-size:10.4pt;line-height:1.7">
+      「掃這個 QR，三秒內它會告訴你這張文憑是不是真的。」<br>
+      「這張是有效的，這張是被撤銷的，原因寫在下面。」<br>
+      「技術細節他講得比我清楚，我叫他過來。」<br>
+      <span style="color:#8a8177;font-size:8.4pt">規則：聽不懂就換人，不要猜。</span>
+    </div>
+  </div>
+
+  <h2>四 · 三件不要講<span>講了會被追問</span></h2>
+  <div class="res">
+    <div class="s" style="font-size:9.6pt;line-height:1.7">
+      不要說「這只是網頁版」——說「不用安裝，掃了就開」。<br>
+      不要說「blockchain」——說「雜湊鏈」。<br>
+      不要報 9,900 行——說「後端約 6,200 行」。
+    </div>
+  </div>
+
+  <div class="foot"><span>P14 · Mobile Credential Verification Portal</span><span>第 2 面 · 被問與救援</span></div>
+</section>
+
+</body>
+</html>
+
+
+
