@@ -27,6 +27,9 @@ BASE = "http://127.0.0.1:8013"
 
 VALID = ("GFiY4d67yoi8X4wmwnL_8IX18_xo_F7HOQgWBdHZXubNTLhvVX_K1PCWuKZa8cntDWyq5Mn"
          "r7i8yvAopAjxrGQ")
+# Fallback only: the live chain is cleared before a show, so the revoked sample
+# that exists on stage is whatever the last REVOKE block wrote. `revoked_hash()`
+# reads that off the local chain; this constant is the value it had before.
 REVOKED = ("8pgPh4z-x2UUzV_eJxU3Eac-n1zblwOoKalGg0Tvf8Hg-7Pj8Vo78QiRrSgahOSLNU0ISvu"
            "rUAwmFaYfGumMIQ")
 
@@ -71,11 +74,32 @@ def c_valid():
     return j["verdict"] == "VALID ON CHAIN", f"verdict {j['verdict']}, block {block}"
 
 
+def revoked_hash() -> str:
+    """The newest REVOKE on the local chain, falling back to the old constant.
+
+    A show starts from a cleared chain, so any hard-coded hash goes stale the
+    moment the chain is rebuilt — the check would report a missing credential
+    while the product is perfectly fine.
+    """
+    blocks = PORTAL / "data" / "demo-chain" / "blocks"
+    newest = None
+    try:
+        for path in sorted(blocks.glob("*.json")):
+            payload = json.loads(path.read_text(encoding="utf-8")).get("payload") or {}
+            if payload.get("action") == "REVOKE" and payload.get("HashedDocument"):
+                newest = payload["HashedDocument"]
+    except (OSError, ValueError):
+        return REVOKED
+    return newest or REVOKED
+
+
 def c_revoked():
-    _, body = get(f"{BASE}/api/verify/{REVOKED}")
+    hashed = revoked_hash()
+    _, body = get(f"{BASE}/api/verify/{hashed}")
     j = json.loads(body)
     ok = j["verdict"] == "REVOKED" and j["status"]["revoked"]
-    return ok, f"verdict {j['verdict']}, reason {j['reason']!r}"
+    reason = (j.get("reason") or j.get("status", {}).get("reason") or "")
+    return ok, f"verdict {j['verdict']}, reason {reason!r}"
 
 
 def tunnel_url() -> str:
